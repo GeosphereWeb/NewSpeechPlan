@@ -1,15 +1,19 @@
 <resources>
     <string name="app_name">NEW Speech Planing</string>
-    <string name="CIRCUIT_ASSEMBLY_WITH_CIRCUIT_OBSERVER">Circuit assembly with circuit observer</string>
-    <string name="CIRCUIT_OVERSEER_CONGREGATION_VISIT">circuit observer congregation visit</string>
-    <string name="CONVENTION">convention</string>
-    <string name="MEMORIAL">memorial</string>
-    <string name="SPECIAL_LECTURE">special lecture</string>
-    <string name="MISCELLANEOUS">miscellaneaous</string>
-    <string name="MINISTERIAL_SERVANT">ministerial servant</string>
-    <string name="ELDER">Elder</string>
-    <string name="UNKNOWN">Unknown</string>
+
+    <string name="event_circuit_assembly_with_circuit_overseer">Circuit assembly with circuit observer</string>
+    <string name="event_circuit_overseer_congregation_visit">circuit observer congregation visit</string>
+    <string name="event_convention">convention</string>
+    <string name="event_memorial">memorial</string>
+    <string name="event_special_lecture">special lecture</string>
+    <string name="event_miscellaneous">miscellaneaous</string>
+    <string name="event_unknown">unknown</string>
+    
+    <string name="spiritual_status_ministerial_servant">ministerial servant</string>
+    <string name="spiritual_status_elder">Elder</string>
+    <string name="spiritual_status_unknown">unknown</string>
+
     <string name="ACTIVE">active</string>
-    <string name="cancel_lbl">abbrechen</string>
+    <string name="cancel">cancel</string>
     <string name="ok_lbl">OK</string>
 </resources>
