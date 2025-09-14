@@ -1,12 +1,15 @@
 package de.geosphere.speechplaning.di
 
 import com.google.firebase.firestore.FirebaseFirestore
+import de.geosphere.speechplaning.data.EventMapper
 import de.geosphere.speechplaning.data.repository.CongregationRepository
 import de.geosphere.speechplaning.data.repository.DistrictRepository
 import de.geosphere.speechplaning.data.repository.SpeakerRepository
 import de.geosphere.speechplaning.data.repository.SpeechRepository
+import de.geosphere.speechplaning.data.SpiritualStatusMapper
 import de.geosphere.speechplaning.data.services.FirestoreService
 import de.geosphere.speechplaning.data.services.FirestoreServiceImpl
+import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
 @Suppress("ForbiddenComment")
@@ -21,6 +24,9 @@ val appModule =
         single { SpeechRepository(get()) }
         single { CongregationRepository(get()) }
         single { SpeakerRepository(get()) }
+
+        single { SpiritualStatusMapper(androidContext()) }
+        single { EventMapper(androidContext()) }
 
         // Use Cases Speech
 
