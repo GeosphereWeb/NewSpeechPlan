@@ -19,5 +19,6 @@ de/geosphere/speechplaning/data/database/**/*.class
 de/geosphere/speechplaning/data/network/**/*.class
 de/geosphere/speechplaning/di/**/*.class
 de/geosphere/speechplaning/mockup/**/*.class
-**/*Activity.class
-**/*Fragment.class
+**/*Activity*.class
+**/*Fragment*.class
+**/*Application*.class
