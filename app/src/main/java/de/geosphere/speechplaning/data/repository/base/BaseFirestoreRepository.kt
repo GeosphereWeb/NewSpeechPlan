@@ -50,7 +50,7 @@ abstract class BaseFirestoreRepository<T : Any>(
             }
         } catch (e: Exception) {
             val idForErrorMessage = if (isEntityIdBlank(entityId)) "[new]" else entityId
-            throw RuntimeException("Failed to save entity $idForErrorMessage in $collectionPath", e)
+            throw RuntimeException("Failed to save entity '$idForErrorMessage' in $collectionPath", e)
         }
     }
 
@@ -63,7 +63,7 @@ abstract class BaseFirestoreRepository<T : Any>(
                 .await()
             documentSnapshot.toObject(clazz)
         } catch (e: Exception) {
-            throw RuntimeException("Failed to get entity $id from $collectionPath", e)
+            throw RuntimeException("Failed to get entity '$id' from $collectionPath", e)
         }
     }
 
@@ -79,14 +79,18 @@ abstract class BaseFirestoreRepository<T : Any>(
     }
 
     override suspend fun delete(id: String) {
+        // 1. Validate input first. This will throw IllegalArgumentException directly.
+        require(id.isNotBlank()) { "Document ID cannot be blank for deletion." }
+
+        // 2. Try the Firestore operation.
         try {
-            require(id.isNotBlank()) { "Document ID cannot be blank for deletion." }
             firestore.collection(collectionPath)
                 .document(id)
                 .delete()
                 .await()
         } catch (e: Exception) {
-            throw RuntimeException("Failed to delete entity $id from $collectionPath", e)
+            // This catch block is now only for Firestore exceptions.
+            throw RuntimeException("Failed to delete entity '$id' from $collectionPath", e)
         }
     }
 }
