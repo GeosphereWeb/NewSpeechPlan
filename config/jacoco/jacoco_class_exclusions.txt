@@ -13,11 +13,14 @@ android/**/*.*
 **/*_ViewBinding.class
 **/*_Impl.class
 **/*_HiltModules*.*
+**/*Composable*.class
 de/geosphere/speechplaning/data/model/**/*.class
 de/geosphere/speechplaning/data/services/**/*.class
 de/geosphere/speechplaning/data/database/**/*.class
 de/geosphere/speechplaning/data/network/**/*.class
 de/geosphere/speechplaning/di/**/*.class
+de/geosphere/speechplaning/ui/components/**/*.class
+de/geosphere/speechplaning/ui/theme/**/*.class
 de/geosphere/speechplaning/mockup/**/*.class
 **/*Activity*.class
 **/*Fragment*.class
