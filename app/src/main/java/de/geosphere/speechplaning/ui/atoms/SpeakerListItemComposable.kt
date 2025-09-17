@@ -122,11 +122,6 @@ fun SpeakerListItemComposable(
     )
 }
 
-enum class OrderName {
-    FIRSTNAME_LASTNAME,
-    LASTNAME_FIRSTNAME
-}
-
 @ThemePreviews
 @Composable
 private fun SpeakerListItemPreview() = PreviewKoin {
