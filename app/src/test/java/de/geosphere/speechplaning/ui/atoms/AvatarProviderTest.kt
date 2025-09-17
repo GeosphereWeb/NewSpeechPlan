@@ -2,36 +2,20 @@ package de.geosphere.speechplaning.ui.atoms
 
 import de.geosphere.speechplaning.R
 import de.geosphere.speechplaning.data.SpiritualStatus
-import org.junit.Test
-import kotlin.test.assertEquals
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 
 class AvatarProviderTest {
 
-    @Test
-    fun `getAvatar returns correct avatar for ELDER status`() {
-        // Arrange
-        val status = SpiritualStatus.ELDER
-        // Act & Assert
-        assertEquals(R.drawable.business_man_man_avatar_icon, AvatarProvider.getAvatar(status))
-    }
-
-    @Test
-    fun `getAvatar returns correct avatar for MINISTERIAL SERVANT status`() {
-        // Verify that when SpiritualStatus.MINISTERIAL_SERVANT is passed, the function returns
-        // R.drawable.man_avatar_male_icon.
-        // Arrange
-        val status = SpiritualStatus.MINISTERIAL_SERVANT
-        // Act & Assert
-        assertEquals(R.drawable.man_avatar_male_icon, AvatarProvider.getAvatar(status))
-    }
-
-    @Test
-    fun `getAvatar returns correct avatar for UKNOWN status`() {
-        // Verify that when SpiritualStatus.MINISTERIAL_SERVANT is passed, the function returns
-        // R.drawable.man_avatar_male_icon.
-        // Arrange
-        val status = SpiritualStatus.UNKNOWN
-        // Act & Assert
-        assertEquals(R.drawable.man_goatee_user_avatar_icon, AvatarProvider.getAvatar(status))
+    @ParameterizedTest
+    @EnumSource(SpiritualStatus::class)
+    fun `getAvatar returns correct drawable for each spiritual status`(status: SpiritualStatus) {
+        val expectedDrawable = when (status) {
+            SpiritualStatus.ELDER -> R.drawable.business_man_man_avatar_icon
+            SpiritualStatus.MINISTERIAL_SERVANT -> R.drawable.man_avatar_male_icon
+            SpiritualStatus.UNKNOWN -> R.drawable.man_goatee_user_avatar_icon
+        }
+        assertEquals(expectedDrawable, AvatarProvider.getAvatar(status))
     }
 }
