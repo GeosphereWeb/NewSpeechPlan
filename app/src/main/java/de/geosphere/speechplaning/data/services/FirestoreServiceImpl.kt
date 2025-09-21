@@ -178,6 +178,50 @@ class FirestoreServiceImpl(private val firestore: FirebaseFirestore) : Firestore
         }
     }
 
+    override suspend fun <T : Any> getDocumentFromSubcollection(
+        parentCollectionPath: String,
+        parentDocumentId: String,
+        subcollectionName: String,
+        documentId: String,
+        objectClass: Class<T>
+    ): T? {
+        return try {
+            if (parentDocumentId.isBlank() || documentId.isBlank()) return null
+            val documentSnapshot = firestore.collection(parentCollectionPath)
+                .document(parentDocumentId)
+                .collection(subcollectionName)
+                .document(documentId)
+                .get()
+                .await()
+            documentSnapshot.toObject(objectClass)
+        } catch (e: FirebaseFirestoreException) {
+            Log.e(
+                TAG,
+                "Error getting document '$documentId' from subcollection '$subcollectionName' " +
+                    "under '$parentCollectionPath/$parentDocumentId'",
+                e
+            )
+            throw RuntimeException(
+                "Error getting document '$documentId' from subcollection '$subcollectionName' " +
+                    "under '$parentCollectionPath/$parentDocumentId'",
+                e
+            )
+        } catch (e: Exception) { // General fallback
+            Log.e(
+                TAG,
+                "Unexpected error getting document '$documentId' from subcollection '$subcollectionName' " +
+                    "under '$parentCollectionPath/$parentDocumentId'",
+                e
+            )
+            throw RuntimeException(
+                "Unexpected error getting document '$documentId' from subcollection '$subcollectionName' " +
+                    "under '$parentCollectionPath/$parentDocumentId'",
+                e
+            )
+        }
+    }
+
+
     override suspend fun deleteDocumentFromSubcollection(
         parentCollection: String,
         parentId: String,

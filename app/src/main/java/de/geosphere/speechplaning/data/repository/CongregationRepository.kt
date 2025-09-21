@@ -1,43 +1,55 @@
 package de.geosphere.speechplaning.data.repository
 
 import de.geosphere.speechplaning.data.model.Congregation
+import de.geosphere.speechplaning.data.repository.base.BaseFirestoreSubcollectionRepository
 import de.geosphere.speechplaning.data.services.FirestoreService
 
+private const val CONGREGATIONS_SUBCOLLECTION = "congregations"
+private const val DISTRICTS_COLLECTION = "districts"
+
 @Suppress("TooGenericExceptionCaught", "TooGenericExceptionThrown")
-class CongregationRepository(private val firestoreService: FirestoreService) {
+class CongregationRepository(
+    firestoreService: FirestoreService
+) : BaseFirestoreSubcollectionRepository<Congregation>(
+    firestoreService = firestoreService,
+    subcollectionName = CONGREGATIONS_SUBCOLLECTION,
+    clazz = Congregation::class.java
+) {
+
+    override fun extractIdFromEntity(entity: Congregation): String {
+        return entity.id
+    }
+
+    /**
+     * Erwartet districtId als parentIds[0].
+     * Der Pfad zur Collection, die das Elterndokument (District) enthält, ist die Root-Collection "districts".
+     */
+    override fun buildParentCollectionPath(vararg parentIds: String): String {
+        require(parentIds.size == 1) { "Expected districtId as the sole parentId" }
+        // Die "congregations" Subcollection hängt direkt unter einem Dokument in der "districts" Collection.
+        // Daher ist der Pfad zur *Collection des Parent-Dokuments* einfach "districts".
+        return DISTRICTS_COLLECTION
+    }
+
+    /**
+     * Erwartet districtId als parentIds[0].
+     * Gibt die districtId zurück, da dies das direkte Elterndokument der Congregations-Subcollection ist.
+     */
+    override fun getParentDocumentId(vararg parentIds: String): String {
+        require(parentIds.size == 1) { "Expected districtId as the sole parentId" }
+        return parentIds[0] // districtId
+    }
 
     /**
      * Speichert eine Versammlung in der Subcollection eines bestimmten Districts.
-     * Wenn die ID der Versammlung leer ist, wird ein neues Dokument erstellt.
-     * Ansonsten wird das bestehende Dokument aktualisiert.
      *
      * @param districtId Die ID des Districts, zu dem die Versammlung gehört.
      * @param congregation Das zu speichernde Congregation-Objekt.
      * @return Die ID des gespeicherten Dokuments.
      */
     suspend fun saveCongregation(districtId: String, congregation: Congregation): String {
-        return try {
-            if (congregation.id.isBlank()) {
-                val newId = firestoreService.addDocumentToSubcollection(
-                    parentCollection = "districts",
-                    parentId = districtId,
-                    subcollection = "congregations",
-                    data = congregation
-                )
-                congregation.copy(id = newId).id // Sicherstellen, dass die ID zurückgegeben wird
-            } else {
-                firestoreService.setDocumentInSubcollection(
-                    parentCollection = "districts",
-                    parentId = districtId,
-                    subcollection = "congregations",
-                    documentId = congregation.id,
-                    data = congregation
-                )
-                congregation.id
-            }
-        } catch (e: Exception) {
-            throw RuntimeException("Failed to save congregation in district $districtId", e)
-        }
+        // Ruft die save-Methode der Basisklasse auf und übergibt die districtId als parentId.
+        return super.save(congregation, districtId)
     }
 
     /**
@@ -47,16 +59,8 @@ class CongregationRepository(private val firestoreService: FirestoreService) {
      * @return Eine Liste von Congregation-Objekten.
      */
     suspend fun getCongregationsForDistrict(districtId: String): List<Congregation> {
-        return try {
-            firestoreService.getDocumentsFromSubcollection(
-                parentCollection = "districts",
-                parentId = districtId,
-                subcollection = "congregations",
-                objectClass = Congregation::class.java
-            )
-        } catch (e: Exception) {
-            throw RuntimeException("Failed to get congregations for district $districtId", e)
-        }
+        // Ruft die getAll-Methode der Basisklasse auf und übergibt die districtId als parentId.
+        return super.getAll(districtId)
     }
 
     /**
@@ -66,18 +70,7 @@ class CongregationRepository(private val firestoreService: FirestoreService) {
      * @param congregationId Die ID der zu löschenden Versammlung.
      */
     suspend fun deleteCongregation(districtId: String, congregationId: String) {
-        try {
-            firestoreService.deleteDocumentFromSubcollection(
-                parentCollection = "districts",
-                parentId = districtId,
-                subcollection = "congregations",
-                documentId = congregationId
-            )
-        } catch (e: Exception) {
-            throw RuntimeException(
-                "Failed to delete congregation " +
-                    "$congregationId", e
-            )
-        }
+        // Ruft die delete-Methode der Basisklasse auf und übergibt die districtId als parentId.
+        super.delete(congregationId, districtId)
     }
 }
