@@ -25,3 +25,5 @@ de/geosphere/speechplaning/mockup/**/*.class
 **/*Activity*.class
 **/*Fragment*.class
 **/*Application*.class
+de/geosphere/speechplaning/Screen*.class
+de/geosphere/speechplaning/BottomNavigationItem*.class
