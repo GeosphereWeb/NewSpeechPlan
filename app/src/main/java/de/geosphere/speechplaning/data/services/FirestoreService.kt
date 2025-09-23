@@ -1,9 +1,9 @@
-@file:Suppress("MaxLineLength")
 package de.geosphere.speechplaning.data.services
 
 import com.google.firebase.firestore.CollectionReference
 import de.geosphere.speechplaning.data.model.SavableDataClass
 
+@Suppress("TooManyFunctions")
 interface FirestoreService {
 
     // ... (bestehende Methoden bleiben unverändert) ...
@@ -11,9 +11,10 @@ interface FirestoreService {
     suspend fun <T> getDocuments(collection: String, type: Class<T>): List<T>
     suspend fun <T : SavableDataClass> saveDocument(collection: String, document: T): String
     fun <T> getCollection(clazz: Class<T>): CollectionReference
-    fun getSpeakersSubcollection(congregationId: String): CollectionReference // Ist spezifisch, überlegen ob generischer
-    suspend fun <T : Any> saveDocumentWithId(collectionPath: String, documentId: String, document: T): Boolean
 
+    // Ist spezifisch, überlegen ob generischer
+    fun getSpeakersSubcollection(congregationId: String): CollectionReference
+    suspend fun <T : Any> saveDocumentWithId(collectionPath: String, documentId: String, document: T): Boolean
 
     // NEUE METHODEN FÜR SUBCOLLECTIONS
     suspend fun <T : Any> addDocumentToSubcollection(
@@ -37,6 +38,14 @@ interface FirestoreService {
         subcollection: String,
         objectClass: Class<T>
     ): List<T>
+
+    suspend fun <T : Any> getDocumentFromSubcollection(
+        parentCollectionPath: String,
+        parentDocumentId: String,
+        subcollectionName: String,
+        documentId: String,
+        objectClass: Class<T>
+    ): T?
 
     suspend fun deleteDocumentFromSubcollection(
         parentCollection: String,

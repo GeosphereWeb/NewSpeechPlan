@@ -62,6 +62,18 @@ class SpiritualStatusMapperTest {
     }
 
     @Test
+    fun `mapToStatus returns UNKNOWN for an invalid string`() {
+        // Arrange
+        val invalidStatusString = "NOT_A_VALID_STATUS"
+
+        // Act
+        val result = mapper.mapToStatus(invalidStatusString)
+
+        // Assert
+        assertEquals(SpiritualStatus.UNKNOWN, result, "Should return UNKNOWN for a string that is not in the map")
+    }
+
+    @Test
     fun `mapToString should return UNKNOWN string when a status is missing from the map`() {
         // Arrange
         // Simuliert, dass ein regulärer Eintrag in der internen Map fehlt.

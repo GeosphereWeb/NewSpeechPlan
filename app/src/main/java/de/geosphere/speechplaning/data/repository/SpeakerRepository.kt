@@ -1,12 +1,44 @@
 package de.geosphere.speechplaning.data.repository
 
 import de.geosphere.speechplaning.data.model.Speaker
-import de.geosphere.speechplaning.data.services.FirestoreService // Import geändert
+import de.geosphere.speechplaning.data.repository.base.BaseFirestoreSubcollectionRepository
+import de.geosphere.speechplaning.data.services.FirestoreService
+
+private const val SPEAKERS_SUBCOLLECTION = "speakers"
+private const val DISTRICTS_COLLECTION = "districts"
+private const val CONGREGATIONS_SUBCOLLECTION = "congregations"
 
 @Suppress("TooGenericExceptionCaught", "TooGenericExceptionThrown")
-class SpeakerRepository(private val firestoreService: FirestoreService) { // Konstruktor geändert
+class SpeakerRepository(
+    firestoreService: FirestoreService
+) : BaseFirestoreSubcollectionRepository<Speaker>(
+    firestoreService = firestoreService,
+    subcollectionName = SPEAKERS_SUBCOLLECTION,
+    clazz = Speaker::class.java
+) {
 
-    private fun parentCongregationsPath(districtId: String) = "districts/$districtId/congregations"
+    override fun extractIdFromEntity(entity: Speaker): String {
+        return entity.id
+    }
+
+    /**
+     * Erwartet districtId als parentIds[0] und congregationId als parentIds[1].
+     */
+    override fun buildParentCollectionPath(vararg parentIds: String): String {
+        require(parentIds.size == 2) { "Expected districtId and congregationId as parentIds" }
+        val districtId = parentIds[0]
+        // Der Pfad zur Collection, die das Elterndokument (Congregation) enthält.
+        return "$DISTRICTS_COLLECTION/$districtId/$CONGREGATIONS_SUBCOLLECTION"
+    }
+
+    /**
+     * Erwartet districtId als parentIds[0] und congregationId als parentIds[1].
+     * Gibt die congregationId zurück, da dies das direkte Elterndokument der Speakers-Subcollection ist.
+     */
+    override fun getParentDocumentId(vararg parentIds: String): String {
+        require(parentIds.size == 2) { "Expected districtId and congregationId as parentIds" }
+        return parentIds[1] // congregationId
+    }
 
     /**
      * Speichert einen Redner in der Subcollection einer bestimmten Versammlung.
@@ -17,30 +49,8 @@ class SpeakerRepository(private val firestoreService: FirestoreService) { // Kon
      * @return Die ID des gespeicherten Dokuments.
      */
     suspend fun saveSpeaker(districtId: String, congregationId: String, speaker: Speaker): String {
-        return try {
-            val parentPath = parentCongregationsPath(districtId)
-            if (speaker.id.isBlank()) {
-                val newId = firestoreService.addDocumentToSubcollection(
-                    parentCollection = parentPath, // z.B. districts/districtXYZ
-                    parentId = congregationId,    // ID der Congregation
-                    subcollection = "speakers",
-                    data = speaker
-                )
-                speaker.copy(id = newId).id
-            } else {
-                firestoreService.setDocumentInSubcollection(
-                    parentCollection = parentPath,
-                    parentId = congregationId,
-                    subcollection = "speakers",
-                    documentId = speaker.id,
-                    data = speaker
-                )
-                speaker.id
-            }
-        } catch (e: Exception) {
-            // Es ist besser, spezifischere Fehler-Wrapper zu verwenden, wenn möglich
-            throw RuntimeException("Failed to save speaker for congregation $congregationId", e)
-        }
+        // Ruft die save-Methode der Basisklasse auf und übergibt die parentIds in der korrekten Reihenfolge.
+        return super.save(speaker, districtId, congregationId)
     }
 
     /**
@@ -51,38 +61,19 @@ class SpeakerRepository(private val firestoreService: FirestoreService) { // Kon
      * @return Eine Liste von Speaker-Objekten.
      */
     suspend fun getSpeakersForCongregation(districtId: String, congregationId: String): List<Speaker> {
-        return try {
-            val parentPath = parentCongregationsPath(districtId)
-            firestoreService.getDocumentsFromSubcollection(
-                parentCollection = parentPath,
-                parentId = congregationId,
-                subcollection = "speakers",
-                objectClass = Speaker::class.java
-            )
-        } catch (e: Exception) {
-            throw RuntimeException("Failed to get speakers for congregation $congregationId", e)
-        }
+        // Ruft die getAll-Methode der Basisklasse auf.
+        return super.getAll(districtId, congregationId)
     }
 
     /**
      * Löscht einen bestimmten Redner.
-     *
      *
      * @param districtId Die ID des Districts.
      * @param congregationId Die ID der Versammlung, zu der der Redner gehört.
      * @param speakerId Die ID des zu löschenden Redners.
      */
     suspend fun deleteSpeaker(districtId: String, congregationId: String, speakerId: String) {
-        try {
-            val parentPath = parentCongregationsPath(districtId)
-            firestoreService.deleteDocumentFromSubcollection(
-                parentCollection = parentPath,
-                parentId = congregationId,
-                subcollection = "speakers",
-                documentId = speakerId
-            )
-        } catch (e: Exception) {
-            throw RuntimeException("Failed to delete speaker $speakerId", e)
-        }
+        // Ruft die delete-Methode der Basisklasse auf.
+        super.delete(speakerId, districtId, congregationId)
     }
 }
