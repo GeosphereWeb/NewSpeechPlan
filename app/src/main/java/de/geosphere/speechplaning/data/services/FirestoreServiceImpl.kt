@@ -8,7 +8,6 @@ import de.geosphere.speechplaning.MyApplication.Companion.TAG
 import de.geosphere.speechplaning.data.model.Chairman
 import de.geosphere.speechplaning.data.model.Congregation
 import de.geosphere.speechplaning.data.model.District
-import de.geosphere.speechplaning.data.model.LecturePlanning
 import de.geosphere.speechplaning.data.model.SavableDataClass
 import de.geosphere.speechplaning.data.model.Speaker
 import de.geosphere.speechplaning.data.model.Speech
@@ -72,7 +71,6 @@ class FirestoreServiceImpl(private val firestore: FirebaseFirestore) : Firestore
             Chairman::class.java -> firestore.collection("chairmen")
             Congregation::class.java -> firestore.collection("congregations")
             District::class.java -> firestore.collection("districts")
-            LecturePlanning::class.java -> firestore.collection("lecturesPlanning")
             Speaker::class.java -> {
                 Log.w(
                     TAG, "Attempted to get Speaker collection as a top-level collection. " +
