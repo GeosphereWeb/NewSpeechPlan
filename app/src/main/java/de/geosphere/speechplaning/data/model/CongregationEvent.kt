@@ -1,6 +1,7 @@
 package de.geosphere.speechplaning.data.model
 
 import com.google.firebase.firestore.DocumentId
+import de.geosphere.speechplaning.data.Event
 import java.time.LocalDate // Using java.time.LocalDate as discussed
 
 /**
@@ -19,22 +20,10 @@ data class CongregationEvent(
     @DocumentId val id: String = "",
     val congregationId: String = "",
     val date: LocalDate,
-    val eventType: EventType,
+    val eventType: Event,
     val speechId: String? = null,
     val speakerId: String? = null,
     val chairmanId: String? = null,
     val notes: String? = null
 ) : SavableDataClass() // Assuming SavableDataClass is a suitable base class
 
-/**
- * Defines the type of a congregational event.
- */
-enum class EventType {
-    PUBLIC_TALK,
-    WATCHTOWER_STUDY,
-    MEMORIAL,
-    SPECIAL_EVENT,
-    CONVENTION, // Added based on potential need
-    CIRCUIT_ASSEMBLY, // Added based on potential need
-    OTHER // For any other type of event
-}

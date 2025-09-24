@@ -1,7 +1,7 @@
 package de.geosphere.speechplaning.data.repository
 
+import de.geosphere.speechplaning.data.Event
 import de.geosphere.speechplaning.data.model.CongregationEvent
-import de.geosphere.speechplaning.data.model.EventType
 import de.geosphere.speechplaning.data.services.FirestoreService
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -43,7 +43,7 @@ internal class CongregationEventRepositoryTest {
             id = testEventId,
             congregationId = testCongregationId,
             date = LocalDate.now(),
-            eventType = EventType.PUBLIC_TALK,
+            eventType = Event.MEMORIAL,
             speechId = "speechXYZ",
             speakerId = "speakerABC",
             chairmanId = "chairman123",
@@ -54,7 +54,7 @@ internal class CongregationEventRepositoryTest {
             id = "",
             congregationId = testCongregationId,
             date = LocalDate.now().plusDays(7),
-            eventType = EventType.WATCHTOWER_STUDY,
+            eventType = Event.MEMORIAL,
             notes = "Notizen für ein brandneues Event"
         )
     }
