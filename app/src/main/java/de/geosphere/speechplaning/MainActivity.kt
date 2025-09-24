@@ -83,6 +83,7 @@ class MainActivity :
                 districtRepository.save(it)
             }
         }
+
         val speechRepository: SpeechRepository by inject()
         val test2 = MockedListOfDummyClasses.speechesMockupList
         test2.forEach {
@@ -94,8 +95,6 @@ class MainActivity :
 
         setContent {
             val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-
-
 
             SpeechPlaningTheme {
                 val navController = rememberNavController()

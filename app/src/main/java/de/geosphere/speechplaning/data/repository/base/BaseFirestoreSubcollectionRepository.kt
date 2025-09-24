@@ -4,10 +4,12 @@ import de.geosphere.speechplaning.data.services.FirestoreService
 
 /**
  * Abstrakte Basisklasse für Firestore-Repositories, die mit Subcollections arbeiten.
+ * Implementiert das [FirestoreSubcollectionRepository] Interface, wobei der Typ
+ * der Parent-IDs auf [String] spezialisiert wird.
  *
  * @param T Der Typ der Entität in der Subcollection.
  * @param firestoreService Die Instanz des FirestoreService.
- * @param subcollectionName Der Name der Subcollection (z.B. \"speakers\", \"congregations\").
+ * @param subcollectionName Der Name der Subcollection (z.B. "speakers", "congregations").
  * @param clazz Die Klassenreferenz der Entität (z.B. MyEntity::class.java).
  */
 @Suppress("TooGenericExceptionCaught", "TooGenericExceptionThrown")
@@ -15,7 +17,7 @@ abstract class BaseFirestoreSubcollectionRepository<T : Any>(
     protected val firestoreService: FirestoreService,
     private val subcollectionName: String,
     private val clazz: Class<T>
-) {
+) : FirestoreSubcollectionRepository<T, String> { // <--- HIER wird PID auf String spezialisiert
 
     /**
      * Extrahiert die ID aus der Entität. Muss von Subklassen überschrieben werden,
@@ -25,7 +27,7 @@ abstract class BaseFirestoreSubcollectionRepository<T : Any>(
     internal abstract fun extractIdFromEntity(entity: T): String
 
     /**
-     * Prüft, ob die ID der Entität als \"leer\" oder \"neu\" betrachtet werden soll.
+     * Prüft, ob die ID der Entität als "leer" oder "neu" betrachtet werden soll.
      * Standardmäßig wird String.isBlank() verwendet.
      */
     protected open fun isEntityIdBlank(id: String): Boolean {
@@ -34,37 +36,25 @@ abstract class BaseFirestoreSubcollectionRepository<T : Any>(
 
     /**
      * Erstellt den Pfad zur Collection, die das Elterndokument enthält.
-     * @param parentIds Die IDs der übergeordneten Dokumente, die zur Pfadkonstruktion benötigt werden.
+     * @param parentIds Die IDs der übergeordneten Dokumente (hier als Strings).
      *                  Die Reihenfolge und Bedeutung hängt von der Implementierung der Subklasse ab.
-     *                  Beispiel für Speaker (districtId, congregationId): \"districts/${parentIds[0]}/congregations\"
-     *                  Beispiel für Congregation (districtId): \"districts\"
      */
     internal abstract fun buildParentCollectionPath(vararg parentIds: String): String
 
     /**
      * Ermittelt die ID des direkten Elterndokuments der Subcollection.
-     * @param parentIds Die IDs der übergeordneten Dokumente.
-     *                  Beispiel für Speaker (districtId, congregationId): parentIds[1] (congregationId)
-     *                  Beispiel für Congregation (districtId): parentIds[0] (districtId)
+     * @param parentIds Die IDs der übergeordneten Dokumente (hier als Strings).
      */
     internal abstract fun getParentDocumentId(vararg parentIds: String): String
 
-    /**
-     * Speichert eine Entität in der Subcollection. Wenn die Entität bereits eine ID hat,
-     * wird sie aktualisiert, ansonsten wird ein neues Dokument erstellt.
-     *
-     * @param entity Die zu speichernde Entität.
-     * @param parentIds Die IDs der übergeordneten Dokumente, die zur Pfadkonstruktion benötigt werden.
-     * @return Die ID der gespeicherten Entität (entweder die existierende oder die neu generierte).
-     */
-    suspend fun save(entity: T, vararg parentIds: String): String {
+    override suspend fun save(entity: T, vararg parentIds: String): String {
         val entityId = extractIdFromEntity(entity)
+        // Da parentIds hier schon String sind, ist keine Konvertierung von PID nötig.
         val actualParentCollectionPath = buildParentCollectionPath(*parentIds)
         val actualParentDocumentId = getParentDocumentId(*parentIds)
 
         return try {
             if (isEntityIdBlank(entityId)) {
-                // FirestoreService.addDocumentToSubcollection gibt die neue ID zurück
                 firestoreService.addDocumentToSubcollection(
                     parentCollection = actualParentCollectionPath,
                     parentId = actualParentDocumentId,
@@ -79,7 +69,7 @@ abstract class BaseFirestoreSubcollectionRepository<T : Any>(
                     documentId = entityId,
                     data = entity
                 )
-                entityId // Gibt die existierende ID zurück
+                entityId
             }
         } catch (e: Exception) {
             val idForErrorMessage = if (isEntityIdBlank(entityId)) "[new]" else entityId
@@ -91,13 +81,28 @@ abstract class BaseFirestoreSubcollectionRepository<T : Any>(
         }
     }
 
-    /**
-     * Ruft alle Entitäten aus der Subcollection ab.
-     *
-     * @param parentIds Die IDs der übergeordneten Dokumente.
-     * @return Eine Liste von Entitäten des Typs T.
-     */
-    suspend fun getAll(vararg parentIds: String): List<T> {
+    override suspend fun getById(id: String, vararg parentIds: String): T? {
+        if (id.isBlank()) return null
+        val actualParentCollectionPath = buildParentCollectionPath(*parentIds)
+        val actualParentDocumentId = getParentDocumentId(*parentIds)
+        return try {
+            firestoreService.getDocumentFromSubcollection(
+                parentCollectionPath = actualParentCollectionPath,
+                parentDocumentId = actualParentDocumentId,
+                subcollectionName = subcollectionName,
+                documentId = id, // 'id' ist hier die Entitäts-ID, nicht verwechseln mit parentIds
+                objectClass = clazz
+            )
+        } catch (e: Exception) {
+            throw RuntimeException(
+                "Failed to get entity '$id' from subcollection '$subcollectionName' under " +
+                    "parent '$actualParentDocumentId' in '$actualParentCollectionPath'",
+                e
+            )
+        }
+    }
+
+    override suspend fun getAll(vararg parentIds: String): List<T> {
         val actualParentCollectionPath = buildParentCollectionPath(*parentIds)
         val actualParentDocumentId = getParentDocumentId(*parentIds)
         return try {
@@ -116,42 +121,8 @@ abstract class BaseFirestoreSubcollectionRepository<T : Any>(
         }
     }
 
-    /**
-     * Ruft eine spezifische Entität anhand ihrer ID aus der Subcollection ab.
-     *
-     * @param entityId Die ID der abzurufenden Entität.
-     * @param parentIds Die IDs der übergeordneten Dokumente.
-     * @return Die gefundene Entität oder null, wenn nicht vorhanden.
-     */
-    suspend fun getById(entityId: String, vararg parentIds: String): T? {
-        if (entityId.isBlank()) return null
-        val actualParentCollectionPath = buildParentCollectionPath(*parentIds)
-        val actualParentDocumentId = getParentDocumentId(*parentIds)
-        return try {
-            firestoreService.getDocumentFromSubcollection(
-                parentCollectionPath = actualParentCollectionPath,
-                parentDocumentId = actualParentDocumentId,
-                subcollectionName = subcollectionName,
-                documentId = entityId,
-                objectClass = clazz
-            )
-        } catch (e: Exception) {
-            throw RuntimeException(
-                "Failed to get entity '$entityId' from subcollection '$subcollectionName' under " +
-                    "parent '$actualParentDocumentId' in '$actualParentCollectionPath'",
-                e
-            )
-        }
-    }
-
-    /**
-     * Löscht eine Entität anhand ihrer ID aus der Subcollection.
-     *
-     * @param entityId Die ID der zu löschenden Entität.
-     * @param parentIds Die IDs der übergeordneten Dokumente.
-     */
-    suspend fun delete(entityId: String, vararg parentIds: String) {
-        require(entityId.isNotBlank()) { "Document ID cannot be blank for deletion." }
+    override suspend fun delete(id: String, vararg parentIds: String) {
+        require(id.isNotBlank()) { "Document ID cannot be blank for deletion." }
         val actualParentCollectionPath = buildParentCollectionPath(*parentIds)
         val actualParentDocumentId = getParentDocumentId(*parentIds)
         try {
@@ -159,11 +130,11 @@ abstract class BaseFirestoreSubcollectionRepository<T : Any>(
                 parentCollection = actualParentCollectionPath,
                 parentId = actualParentDocumentId,
                 subcollection = subcollectionName,
-                documentId = entityId
+                documentId = id // 'id' ist hier die Entitäts-ID
             )
         } catch (e: Exception) {
             throw RuntimeException(
-                "Failed to delete entity '$entityId' from subcollection " +
+                "Failed to delete entity '$id' from subcollection " +
                     "'$subcollectionName' under parent '$actualParentDocumentId' in '$actualParentCollectionPath'",
                 e
             )
