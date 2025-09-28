@@ -1,9 +1,12 @@
 package de.geosphere.speechplaning
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +41,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -63,18 +67,29 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
+import com.google.firebase.auth.FirebaseAuth
 import de.geosphere.speechplaning.data.AuthUiState
 import de.geosphere.speechplaning.ui.auth.AuthViewModel
 import de.geosphere.speechplaning.ui.theme.SpeechPlaningTheme
 import kotlinx.serialization.Serializable
-import org.koin.androidx.compose.koinViewModel
+import org.koin.android.ext.android.inject
 import org.koin.core.component.KoinComponent
 
 class MainActivity : ComponentActivity(), KoinComponent {
 
+    private val viewModel: AuthViewModel by inject()
+
     private val signInLauncher = registerForActivityResult(
         FirebaseAuthUIActivityResultContract(),
-    ) { /* No-op, the AuthStateListener in the ViewModel will handle the result */ }
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            FirebaseAuth.getInstance().currentUser?.let {
+                viewModel.onSignInSuccess(it)
+            }
+        } else {
+            // Anmeldung fehlgeschlagen, evtl. Fehlermeldung anzeigen
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -87,22 +102,27 @@ class MainActivity : ComponentActivity(), KoinComponent {
         }
 
         setContent {
-            val viewModel: AuthViewModel = koinViewModel()
             val authState by viewModel.uiState.collectAsStateWithLifecycle()
 
+            // Einmalige Überprüfung des Benutzerstatus beim ersten Start
+            LaunchedEffect(Unit) {
+                viewModel.checkCurrentUser()
+            }
+
             SpeechPlaningTheme {
-                when (authState) {
+                when (val state = authState) {
                     is AuthUiState.Authenticated -> {
                         val navController = rememberNavController()
-                        MainScreen(navController, logOut = { AuthUI.getInstance().signOut(this) })
+                        MainScreen(navController, logOut = { viewModel.signOut() })
                     }
                     AuthUiState.Unauthenticated -> {
-                        launchSignInFlow()
+                        launchSignInFlow(signInLauncher)
+                    }
+                    is AuthUiState.Error -> {
+                        ErrorScreen(message = state.message, onSignOut = { viewModel.signOut() })
                     }
                     AuthUiState.NeedsApproval -> {
-                        NeedsApprovalScreen {
-                            AuthUI.getInstance().signOut(this)
-                        }
+                        NeedsApprovalScreen { viewModel.signOut() }
                     }
                     AuthUiState.Loading -> {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -114,7 +134,7 @@ class MainActivity : ComponentActivity(), KoinComponent {
         }
     }
 
-    private fun launchSignInFlow() {
+    private fun launchSignInFlow(signInLauncher: ActivityResultLauncher<Intent>) {
         val providers = arrayListOf(
             AuthUI.IdpConfig.EmailBuilder().build(),
             AuthUI.IdpConfig.GoogleBuilder().build(),
@@ -125,6 +145,29 @@ class MainActivity : ComponentActivity(), KoinComponent {
             .setIsSmartLockEnabled(false)
             .build()
         signInLauncher.launch(signInIntent)
+    }
+}
+
+@Composable
+fun ErrorScreen(message: String, onSignOut: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            Text(
+                text = message,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.error
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = onSignOut) {
+                Text("Erneut versuchen")
+            }
+        }
     }
 }
 

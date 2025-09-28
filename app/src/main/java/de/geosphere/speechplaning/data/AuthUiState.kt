@@ -26,4 +26,9 @@ sealed interface AuthUiState {
      * Repräsentiert einen nicht angemeldeten Zustand.
      */
     data object Unauthenticated : AuthUiState
+
+    /**
+     * Repräsentiert einen Fehlerzustand, z.B. bei fehlgeschlagener Anmeldung.
+     */
+    data class Error(val message: String) : AuthUiState
 }

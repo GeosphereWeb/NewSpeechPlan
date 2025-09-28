@@ -1,20 +1,32 @@
 package de.geosphere.speechplaning.ui.auth
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseUser
 import de.geosphere.speechplaning.data.repository.AuthRepository
+import kotlinx.coroutines.launch
 
 /**
  * Das ViewModel, das der UI den Authentifizierungsstatus bereitstellt.
- * Es enthält selbst keine Logik, sondern reicht den Zustand nur aus dem
- * anwendungsweiten [AuthRepository] durch.
- *
- * @param authRepository Das zentrale Repository für den Authentifizierungsstatus.
  */
-class AuthViewModel(authRepository: AuthRepository) : ViewModel() {
+class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
+
+    val uiState = authRepository.authUiState
 
     /**
-     * Der UI-Zustand, der direkt vom anwendungsweiten AuthRepository stammt.
-     * Die UI beobachtet diesen Flow, um auf Änderungen zu reagieren.
+     * Prüft den aktuellen Anmeldestatus. Wird von der UI einmalig aufgerufen.
      */
-    val uiState = authRepository.authUiState
+    fun checkCurrentUser() {
+        authRepository.checkCurrentUser()
+    }
+
+    fun onSignInSuccess(user: FirebaseUser) {
+        viewModelScope.launch {
+            authRepository.onSignInSuccess(user)
+        }
+    }
+
+    fun signOut() {
+        authRepository.signOut()
+    }
 }

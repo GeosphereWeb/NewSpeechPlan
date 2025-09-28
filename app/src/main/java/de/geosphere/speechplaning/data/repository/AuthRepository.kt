@@ -1,5 +1,6 @@
 package de.geosphere.speechplaning.data.repository
 
+import com.google.firebase.auth.FirebaseUser
 import de.geosphere.speechplaning.data.AuthUiState
 import kotlinx.coroutines.flow.StateFlow
 
@@ -10,7 +11,21 @@ import kotlinx.coroutines.flow.StateFlow
 interface AuthRepository {
     /**
      * Ein Flow, der den aktuellen UI-Zustand der Authentifizierung bereitstellt.
-     * Die UI-Schicht (via ViewModel) kann diesen Flow beobachten, um auf Änderungen zu reagieren.
      */
     val authUiState: StateFlow<AuthUiState>
+
+    /**
+     * Prüft beim App-Start einmalig, ob bereits ein Nutzer angemeldet ist.
+     */
+    fun checkCurrentUser()
+
+    /**
+     * Verarbeitet das Ergebnis einer erfolgreichen Anmeldung.
+     */
+    suspend fun onSignInSuccess(user: FirebaseUser)
+
+    /**
+     * Meldet den aktuellen Benutzer ab.
+     */
+    fun signOut()
 }
