@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ListAlt
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.outlined.ListAlt
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.FolderShared
@@ -39,7 +40,6 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -94,7 +94,7 @@ class MainActivity : ComponentActivity(), KoinComponent {
                 when (authState) {
                     is AuthUiState.Authenticated -> {
                         val navController = rememberNavController()
-                        MainScreen(navController)
+                        MainScreen(navController, logOut = { AuthUI.getInstance().signOut(this) })
                     }
                     AuthUiState.Unauthenticated -> {
                         launchSignInFlow()
@@ -153,7 +153,7 @@ fun NeedsApprovalScreen(onSignOut: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(navController: NavHostController) {
+fun MainScreen(navController: NavHostController, logOut: () -> Unit) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -161,7 +161,7 @@ fun MainScreen(navController: NavHostController) {
 
     Scaffold(
         topBar = {
-            TopBarComponents(scrollBehavior)
+            TopBarComponents(scrollBehavior, logOut = { logOut() })
         },
         content = { innerPadding ->
             NavHost(
@@ -189,7 +189,7 @@ fun MainScreen(navController: NavHostController) {
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-private fun TopBarComponents(scrollBehavior: TopAppBarScrollBehavior) {
+private fun TopBarComponents(scrollBehavior: TopAppBarScrollBehavior, logOut: () -> Unit) {
     CenterAlignedTopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -209,6 +209,12 @@ private fun TopBarComponents(scrollBehavior: TopAppBarScrollBehavior) {
             IconButton(onClick = { /* do something */ }) {
                 Icon(
                     imageVector = Icons.Filled.Menu,
+                    contentDescription = "Localized description"
+                )
+            }
+            IconButton(onClick = { logOut() }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Logout,
                     contentDescription = "Localized description"
                 )
             }

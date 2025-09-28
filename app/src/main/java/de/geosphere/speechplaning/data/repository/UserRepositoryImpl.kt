@@ -1,3 +1,4 @@
+
 package de.geosphere.speechplaning.data.repository
 
 import com.google.firebase.auth.FirebaseUser
@@ -12,19 +13,23 @@ class UserRepositoryImpl(private val firestore: FirebaseFirestore) : UserReposit
 
     override suspend fun getOrCreateUser(firebaseUser: FirebaseUser): AppUser {
         val document = usersCollection.document(firebaseUser.uid)
-        // Wichtig: Source.SERVER erzwingt das Lesen vom Server und umgeht den Cache.
         val snapshot = document[Source.SERVER].await()
 
         return if (snapshot.exists()) {
-            snapshot.toObject(AppUser::class.java)!!
+            // Manuelle und robuste Zuordnung, um "toObject()"-Fehler zu umgehen
+            AppUser(
+                uid = snapshot.id,
+                email = snapshot.getString("email"),
+                displayName = snapshot.getString("displayName"), // Liest den Namen, auch wenn er null ist
+                approved = snapshot.getBoolean("approved") ?: false // Fällt auf false zurück, falls nicht vorhanden
+            )
         } else {
             // Beim Erstellen eines neuen Nutzers wird `approved` explizit auf `false` gesetzt.
-            // Das stellt sicher, dass das Feld im Firestore-Dokument immer existiert.
             val newUser = AppUser(
                 uid = firebaseUser.uid,
                 email = firebaseUser.email,
-                displayName = firebaseUser.displayName,
-                approved = false // KORRIGIERT: Name an Firestore-Schema und AppUser-Klasse angepasst
+                displayName = firebaseUser.displayName, // Hier ist der displayName von Firebase Auth noch null
+                approved = false
             )
             document.set(newUser).await()
             newUser
