@@ -80,7 +80,6 @@ dependencies {
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.lifecycle.runtime.compose) // HINZUGEFÜGT
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
@@ -97,9 +96,6 @@ dependencies {
     // Import the Firebase BoM
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
-    implementation(libs.firebase.auth.ktx)
-    implementation(libs.firebase.ui.auth)
-    implementation(libs.play.services.auth)
     // Add the dependencies for any other desired Firebase products
     // https://firebase.google.com/docs/android/setup#available-libraries
     // Add the dependency for the Realtime Database library
@@ -112,8 +108,7 @@ dependencies {
     implementation(libs.koin.androidx.compose)
     implementation(libs.org.jacoco.core)
     implementation(libs.firebase.firestore.ktx)
-    implementation(libs.androidx.ui.test.junit4.android)
-    implementation(libs.androidx.compose.material3) // Für
+    implementation(libs.androidx.ui.test.junit4.android) // Für
 
     // Unit Tests
     testImplementation(kotlin("test"))
