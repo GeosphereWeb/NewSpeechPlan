@@ -2,56 +2,69 @@ package de.geosphere.speechplaning.ui.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import de.geosphere.speechplaning.data.AuthUiState
+import de.geosphere.speechplaning.data.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
-// Repräsentiert den UI-Zustand (z.B. Ladezustand, Erfolg, Fehler)
-data class AuthUiState(
+// Definiere diesen lokalen UI-Zustand am besten außerhalb oder oberhalb des ViewModels.
+// Er beschreibt nur den Zustand einer *Aktion*, nicht den globalen App-Zustand.
+data class LoginActionUiState(
     val isLoading: Boolean = false,
-    val success: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val isSuccess: Boolean = false // Um eine Aktion wie Navigation auszulösen
 )
 
 open class AuthViewModel(
-    private val auth: FirebaseAuth
+    private val authRepository: AuthRepository // Injiziert per Koin
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(AuthUiState())
-    open val uiState: StateFlow<AuthUiState> = _uiState
+    // Globaler Authentifizierungs-Zustand aus dem Repository
+    val authUiState: StateFlow<AuthUiState> = authRepository.authUiState
 
-    // Registriert einen neuen Benutzer
-    open fun createUserWithEmailAndPassword(email: String, passwort: String) {
+    // Lokaler Zustand für Aktionen wie Registrierung oder Anmeldung
+    private val _loginActionUiState = MutableStateFlow(LoginActionUiState())
+    val loginActionUiState: StateFlow<LoginActionUiState> = _loginActionUiState
+
+    fun createUserWithEmailAndPassword(email: String, password: String) {
         viewModelScope.launch {
-            _uiState.value = AuthUiState(isLoading = true)
+            _loginActionUiState.value = LoginActionUiState(isLoading = true)
             try {
-                auth.createUserWithEmailAndPassword(email, passwort).await()
-                _uiState.value = AuthUiState(success = true)
+                authRepository.createUserWithEmailAndPassword(email, password)
+                // Erfolg wird durch den globalen `authUiState` signalisiert,
+                // wir müssen hier nichts weiter tun. Der `AuthStateListener` übernimmt.
+                _loginActionUiState.value = LoginActionUiState(isSuccess = true) // Optional für Navigation
             } catch (e: FirebaseAuthUserCollisionException) {
-                _uiState.value = AuthUiState(error = "Ein Konto mit dieser E-Mail existiert bereits.")
+                _loginActionUiState.value = LoginActionUiState(error = "Ein Konto mit dieser E-Mail existiert bereits.")
             } catch (e: Exception) {
-                _uiState.value = AuthUiState(error = "Registrierung fehlgeschlagen: ${e.message}")
+                _loginActionUiState.value = LoginActionUiState(error = "Registrierung fehlgeschlagen: " +
+                    "${e.localizedMessage}")
             }
         }
     }
 
-    // Meldet einen bestehenden Benutzer an
-    open fun signInWithEmailAndPassword(email: String, passwort: String) {
+    fun signInWithEmailAndPassword(email: String, password: String) {
         viewModelScope.launch {
-            _uiState.value = AuthUiState(isLoading = true)
+            _loginActionUiState.value = LoginActionUiState(isLoading = true)
             try {
-                auth.signInWithEmailAndPassword(email, passwort).await()
-                _uiState.value = AuthUiState(success = true)
+                authRepository.signInWithEmailAndPassword(email, password)
+                // Erfolg wird ebenfalls durch den `authUiState` signalisiert.
+                _loginActionUiState.value = LoginActionUiState(isSuccess = true) // Optional für Navigation
             } catch (e: Exception) {
-                // ALT:
-                // _uiState.value = AuthUiState(error = "Anmeldung fehlgeschlagen: ${e.message}")
-
-                // NEU: Zeige die spezifische Fehlermeldung an
-                _uiState.value = AuthUiState(error = "Fehler: ${e.localizedMessage}")
+                _loginActionUiState.value = LoginActionUiState(error = "Anmeldung fehlgeschlagen: " +
+                    "${e.localizedMessage}")
             }
         }
+    }
+
+    // Nützlich, um Fehlermeldungen zurückzusetzen, nachdem sie angezeigt wurden.
+    fun resetActionState() {
+        _loginActionUiState.value = LoginActionUiState()
+    }
+
+    fun signOut() {
+        authRepository.signOut()
     }
 }

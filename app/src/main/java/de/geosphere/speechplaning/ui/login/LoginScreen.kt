@@ -1,5 +1,6 @@
 package de.geosphere.speechplaning.ui.login
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -19,6 +21,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,9 +30,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import de.geosphere.speechplaning.data.AuthUiState
 import de.geosphere.speechplaning.di.PreviewKoin
 import de.geosphere.speechplaning.ui.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.ui.theme.ThemePreviews
@@ -42,8 +49,35 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    // Wir beobachten den Zustand aus dem ViewModel
-    val authUiState by authViewModel.uiState.collectAsState()
+    /// --- ÄNDERUNG 1: Beide Zustände beobachten ---
+    // Der globale Authentifizierungs-Status (wird vom AuthStateListener im Repo aktualisiert)
+    val authUiState by authViewModel.authUiState.collectAsState()
+    // Der Zustand der Login/Registrierungs-Aktion (wird direkt im ViewModel gesetzt)
+    val loginActionUiState by authViewModel.loginActionUiState.collectAsState()
+
+    // --- NEU: Effekt zum Zurücksetzen des Fehlerzustands ---
+    // Wenn die Anzeige des LoginScreens verlassen wird (onDispose),
+    // wird der temporäre Fehler- oder Ladezustand zurückgesetzt.
+    DisposableEffect(Unit) {
+        onDispose {
+            authViewModel.resetActionState()
+        }
+    }
+
+    // --- NEU: Context für den Toast holen ---
+    val context = LocalContext.current
+    // --- NEU: LaunchedEffect, der auf den authUiState reagiert ---
+    LaunchedEffect(authUiState) {
+        if (authUiState is AuthUiState.Authenticated) {
+            Toast.makeText(
+                context,
+                "Anmeldung erfolgreich!",
+                Toast.LENGTH_SHORT
+            ).show()
+            // Hier würdest du typischerweise als Nächstes
+            // zum Hauptbildschirm deiner App navigieren.
+        }
+    }
 
     // Ein Container für unsere UI-Elemente
     Column(
@@ -53,7 +87,7 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // --- E-Mail-Feld ---
+        // --- E-Mail-Feld (unverändert) ---
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
@@ -64,7 +98,7 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // --- Passwort-Feld ---
+        // --- Passwort-Feld (unverändert) ---
         PasswortTextfeld(
             value = password,
             onValueChange = { password = it.trim() },
@@ -74,20 +108,18 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // --- Buttons für Registrierung und Anmeldung ---
+        // --- Buttons (unverändert) ---
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceAround
         ) {
             Button(onClick = {
-                // Aufruf der ViewModel-Funktion für die Registrierung
                 authViewModel.createUserWithEmailAndPassword(email, password)
             }) {
                 Text("Registrieren")
             }
 
             Button(onClick = {
-                // Aufruf der ViewModel-Funktion für die Anmeldung
                 authViewModel.signInWithEmailAndPassword(email, password)
             }) {
                 Text("Anmelden")
@@ -96,12 +128,19 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // --- UI-Feedback basierend auf dem Zustand ---
-        if (authUiState.isLoading) {
+        Button(onClick = {authViewModel.signOut()}) {
+            Text("Logout")
+        }
+
+        // --- ÄNDERUNG 2: UI-Feedback an neue Zustände anpassen ---
+
+        // Zeige einen Lade-Spinner, wenn eine Aktion ausgeführt wird ODER der globale Zustand noch lädt
+        if (loginActionUiState.isLoading || authUiState is AuthUiState.Loading) {
             CircularProgressIndicator()
         }
 
-        authUiState.error?.let { error ->
+        // Zeige einen Fehler an, wenn die Login/Registrierungs-Aktion fehlschlägt
+        loginActionUiState.error?.let { error ->
             Text(
                 text = error,
                 color = MaterialTheme.colorScheme.error,
@@ -109,15 +148,21 @@ fun LoginScreen(
             )
         }
 
-        if (authUiState.success) {
-            // Hier würdest du normalerweise zum nächsten Bildschirm navigieren.
-            // Für den Anfang zeigen wir nur eine Erfolgsmeldung.
+        // Zeige eine spezifische Nachricht an, wenn der Nutzer angemeldet ist, aber noch auf Freigabe wartet.
+        if (authUiState is AuthUiState.NeedsApproval) {
             Text(
-                text = "Erfolgreich angemeldet/registriert!",
-                color = MaterialTheme.colorScheme.primary,
+                text = "Dein Konto wurde erstellt und wartet auf die Freigabe durch einen Administrator.",
                 modifier = Modifier.padding(top = 8.dp)
             )
         }
+
+        // Der Erfolgsfall wird jetzt durch den globalen `authUiState` abgedeckt.
+        // Wenn `authUiState` zu `Authenticated` wechselt, würdest du normalerweise
+        // zu einem anderen Bildschirm navigieren. Die reine Erfolgsmeldung hier
+        // ist für die weitere Entwicklung nicht mehr nötig.
+        // `loginActionUiState.isSuccess` kann aber als Trigger für die Navigation dienen.
+
+        // if (loginActionUiState.isSuccess) { ... navigiere weg ... }
     }
 }
 
@@ -152,7 +197,8 @@ fun PasswortTextfeld(
             IconButton(onClick = { passwortSichtbar = !passwortSichtbar }) {
                 Icon(imageVector = image, contentDescription = description)
             }
-        }
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
     )
 }
 // Eine Vorschau, damit du das Design in Android Studio sehen kannst
