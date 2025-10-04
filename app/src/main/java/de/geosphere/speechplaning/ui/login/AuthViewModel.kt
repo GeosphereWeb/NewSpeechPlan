@@ -67,4 +67,8 @@ open class AuthViewModel(
     fun signOut() {
         authRepository.signOut()
     }
+
+    fun logout() {
+        authRepository.signOut()
+    }
 }

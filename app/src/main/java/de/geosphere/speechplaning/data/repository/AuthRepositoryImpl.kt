@@ -29,7 +29,11 @@ class AuthRepositoryImpl(
                     return@launch
                 }
 
-                user.reload().await()
+                // Erzwinge das Neuladen des Tokens. Dies aktualisiert auch das `currentUser`-Objekt. [1]
+                // Das Argument `true` erzwingt die Aktualisierung vom Server.
+                user.getIdToken(true).await()
+
+                // Jetzt, nachdem der interne Zustand aktualisiert wurde, kannst du mit den frischen Daten arbeiten.
                 // Die Logik zur Prüfung des `approved`-Status ist hier schon perfekt.
                 val appUser = userRepository.getOrCreateUser(user)
 

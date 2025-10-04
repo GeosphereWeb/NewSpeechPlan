@@ -128,7 +128,9 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(onClick = {authViewModel.signOut()}) {
+        Button(
+            enabled = authUiState is AuthUiState.Authenticated,
+            onClick = {authViewModel.signOut()}) {
             Text("Logout")
         }
 
