@@ -1,6 +1,7 @@
 package de.geosphere.speechplaning.di
 
 import androidx.lifecycle.LifecycleCoroutineScope
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import de.geosphere.speechplaning.data.EventMapper
 import de.geosphere.speechplaning.data.SpiritualStatusMapper
@@ -12,7 +13,9 @@ import de.geosphere.speechplaning.data.repository.SpeechRepository
 import de.geosphere.speechplaning.data.services.FirestoreService
 import de.geosphere.speechplaning.data.services.FirestoreServiceImpl
 import de.geosphere.speechplaning.mockup.BuildDummyDBConnection
+import de.geosphere.speechplaning.ui.login.AuthViewModel
 import org.koin.android.ext.koin.androidContext
+import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 @Suppress("ForbiddenComment")
@@ -21,6 +24,7 @@ val appModule =
         // Database
         single<FirebaseFirestore> { FirebaseFirestore.getInstance() }
         single<FirestoreService> { FirestoreServiceImpl(get()) }
+        single<FirebaseAuth> { FirebaseAuth.getInstance() }
 
         // Repositories
         single { DistrictRepository(get()) }
@@ -37,5 +41,5 @@ val appModule =
         // Use Cases Speech
 
         // viewModels
-
+        viewModel { AuthViewModel(get()) }
     }

@@ -1,13 +1,17 @@
 package de.geosphere.speechplaning.ui.main
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import de.geosphere.speechplaning.ui.login.LoginScreen
 import de.geosphere.speechplaning.ui.theme.SpeechPlaningTheme
 
 @Composable
@@ -20,17 +24,20 @@ fun MainScreenComponent() {
     val currentDestination = navBackStackEntry?.destination
 
     SpeechPlaningTheme {
-        Scaffold(
-            topBar = {
-                TopBarComponent(scrollBehavior)
-            },
-            content = { innerPadding ->
-                AppNavHostComponent(navController, innerPadding)
-            },
-
-            bottomBar = {
-                BottomBarComponent(currentDestination = currentDestination, navController = navController)
-            },
-        )
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            LoginScreen()
+            // Scaffold(
+            //     topBar = {
+            //         TopBarComponent(scrollBehavior)
+            //     },
+            //     content = { innerPadding ->
+            //         AppNavHostComponent(navController, innerPadding)
+            //     },
+            //
+            //     bottomBar = {
+            //         BottomBarComponent(currentDestination = currentDestination, navController = navController)
+            //     },
+            // )
+        }
     }
 }
