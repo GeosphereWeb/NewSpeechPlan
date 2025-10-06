@@ -1,6 +1,7 @@
 package de.geosphere.speechplaning.ui.main
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -15,7 +16,7 @@ import androidx.compose.ui.text.style.TextOverflow
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun TopBarComponent(scrollBehavior: TopAppBarScrollBehavior) {
+fun TopBarComponent(scrollBehavior: TopAppBarScrollBehavior, onLogout: () -> Unit) {
     CenterAlignedTopAppBar(
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -33,6 +34,12 @@ fun TopBarComponent(scrollBehavior: TopAppBarScrollBehavior) {
                 Icon(
                     imageVector = Icons.Filled.Menu,
                     contentDescription = "Localized description"
+                )
+            }
+            IconButton(onClick = onLogout) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                    contentDescription = "Abmelden"
                 )
             }
         },
