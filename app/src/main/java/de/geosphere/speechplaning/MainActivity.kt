@@ -7,8 +7,14 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import de.geosphere.speechplaning.mockup.BuildDummyDBConnection
+import de.geosphere.speechplaning.ui.login.AuthViewModel
+import de.geosphere.speechplaning.ui.login.LoginScreen
 import de.geosphere.speechplaning.ui.main.MainScreenComponent
+import org.koin.androidx.compose.koinViewModel
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.parameter.parametersOf
@@ -34,7 +40,40 @@ class MainActivity :
         // /////
 
         setContent {
-            MainScreenComponent()
+            // 1. NavController erstellen, der den Navigationszustand verwaltet.
+            val navController = rememberNavController()
+            val authViewModel: AuthViewModel = koinViewModel()
+            NavHost(navController = navController, startDestination = "login") {
+                composable("login") {
+                    LoginScreen(authViewModel = authViewModel, onLoginSuccess = {
+                        // 3. Bei erfolgreichem Login zum Hauptbildschirm navigieren.
+                        // popUpTo("login") { inclusive = true } entfernt den Login-Screen
+                        // aus dem Back-Stack, damit der Nutzer nicht mit der Zurück-Taste
+                        // dorthin zurückkehren kann.
+                        navController.navigate("main") {
+                            popUpTo("login") {
+                                inclusive = true
+                            }
+                        }
+                    })
+                }
+                // Definiert die Route für den Hauptbildschirm
+                composable("main") {
+                    // Hier wird dein Hauptbildschirm angezeigt.
+                    MainScreenComponent(
+                        onLogout = {
+                            // Navigiere zurück zum Login-Screen
+                            navController.navigate("login") {
+                                // Entferne den Main-Screen und alles darüber vom Back-Stack
+                                authViewModel.signOut()
+                                popUpTo("main") {
+                                    inclusive = true
+                                }
+                            }
+                        }
+                    )
+                }
+            }
         }
     }
 }

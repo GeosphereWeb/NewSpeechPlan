@@ -1,5 +1,4 @@
-import org.gradle.internal.impldep.org.junit.experimental.categories.Categories.CategoryFilter.exclude
-import org.gradle.testing.jacoco.tasks.JacocoReport
+
 import java.util.Locale
 
 plugins {
@@ -101,6 +100,7 @@ dependencies {
     // Add the dependency for the Realtime Database library
     // When using the BoM, you don't specify versions in Firebase library dependencies
     implementation(libs.firebase.database)
+    implementation("com.google.firebase:firebase-auth") // Email u. Passwort
 
     // // Koin
     // // dependencies with Koin
@@ -132,6 +132,8 @@ dependencies {
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    // MockK für Compose Previews verfügbar machen
+    debugImplementation(libs.mockk.android)
 
     detekt(libs.detekt.cli)
     detektPlugins(libs.detekt.formatting)
