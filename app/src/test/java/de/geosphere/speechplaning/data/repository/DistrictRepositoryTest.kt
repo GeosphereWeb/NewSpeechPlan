@@ -6,40 +6,28 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
 import de.geosphere.speechplaning.data.model.District
-import io.mockk.MockKAnnotations
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.mockk.every
-import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
-@ExperimentalCoroutinesApi
-class DistrictRepositoryTest {
+class DistrictRepositoryTest : BehaviorSpec({
 
-    @MockK
-    private lateinit var firestoreMock: FirebaseFirestore
+    lateinit var firestoreMock: FirebaseFirestore
+    lateinit var collectionReferenceMock: CollectionReference
+    lateinit var queryMock: Query
+    lateinit var querySnapshotTaskMock: Task<QuerySnapshot>
 
-    @MockK
-    private lateinit var collectionReferenceMock: CollectionReference
+    lateinit var districtRepository: DistrictRepository
 
-    @MockK
-    private lateinit var queryMock: Query
-
-    @MockK(relaxed = true)
-    private lateinit var querySnapshotTaskMock: Task<QuerySnapshot>
-
-    private lateinit var districtRepository: DistrictRepository
-
-    @BeforeEach
-    fun setUp() {
-        MockKAnnotations.init(this) // Initialize @MockK annotated mocks
+    beforeEach {
+        firestoreMock = mockk()
+        collectionReferenceMock = mockk()
+        queryMock = mockk()
+        querySnapshotTaskMock = mockk(relaxed = true)
 
         every { firestoreMock.collection(any()) } returns collectionReferenceMock
         every { collectionReferenceMock.whereEqualTo(any<String>(), any()) } returns queryMock
@@ -48,7 +36,7 @@ class DistrictRepositoryTest {
         districtRepository = DistrictRepository(firestoreMock)
     }
 
-    // Helper zum einfachen Mocken von Task-Ergebnissen für await()
+    // Helper to easily mock Task results for await()
     private fun <T> mockTaskResult(task: Task<T>, resultData: T?, exception: Exception? = null) {
         every { task.isComplete } returns true
         every { task.isCanceled } returns false
@@ -62,48 +50,52 @@ class DistrictRepositoryTest {
         }
     }
 
-    @Test
-    fun `extractIdFromEntity should return correct id`() {
-        val district = District(id = "testId", name = "Test District")
-        val extractedId = districtRepository.extractIdFromEntity(district)
-        Assertions.assertEquals("testId", extractedId)
-    }
-
-    @Test
-    fun `getActiveDistricts should query and return active districts`() = runTest {
-        val activeDistrict = District(id = "active1", circuitOverseerId = "1", name = "Max Mustermann", active = true)
-        val querySnapshotResultMock: QuerySnapshot = mockk()
-
-        mockTaskResult(querySnapshotTaskMock, querySnapshotResultMock)
-        every { querySnapshotResultMock.toObjects(District::class.java) } returns listOf(activeDistrict)
-
-        every { collectionReferenceMock.whereEqualTo("active", true) } returns queryMock
-        every { queryMock.get() } returns querySnapshotTaskMock
-
-        val result = districtRepository.getActiveDistricts()
-
-        assertEquals(1, result.size)
-        assertEquals(activeDistrict, result[0])
-        verify { collectionReferenceMock.whereEqualTo("active", true) }
-        verify { queryMock.get() }
-    }
-
-    @Test
-    fun `getActiveDistricts should throw runtime exception on firestore failure`() = runTest {
-        val simulatedException = RuntimeException("Simulated Firestore error")
-
-        // Mock the query chain to return a failing task
-        every { collectionReferenceMock.whereEqualTo("active", true) } returns queryMock
-        every { queryMock.get() } returns querySnapshotTaskMock
-        mockTaskResult(querySnapshotTaskMock, null, simulatedException)
-
-        val exception = assertThrows<RuntimeException> {
-            districtRepository.getActiveDistricts()
+    init {
+        "extractIdFromEntity should return correct id" {
+            val district = District(id = "testId", name = "Test District")
+            val extractedId = districtRepository.extractIdFromEntity(district)
+            extractedId shouldBe "testId"
         }
 
-        assertTrue(exception.message?.contains("Failed to get active district from districts") ?: false)
-        assertEquals(simulatedException, exception.cause)
-        verify { collectionReferenceMock.whereEqualTo("active", true) }
-        verify { queryMock.get() }
+        given("getActiveDistricts") {
+            `when`("query is successful") {
+                then("it should query and return active districts") {
+                    val activeDistrict = District(id = "active1", circuitOverseerId = "1", name = "Max Mustermann", active = true)
+                    val querySnapshotResultMock: QuerySnapshot = mockk()
+
+                    mockTaskResult(querySnapshotTaskMock, querySnapshotResultMock)
+                    every { querySnapshotResultMock.toObjects(District::class.java) } returns listOf(activeDistrict)
+
+                    every { collectionReferenceMock.whereEqualTo("active", true) } returns queryMock
+                    every { queryMock.get() } returns querySnapshotTaskMock
+
+                    val result = districtRepository.getActiveDistricts()
+
+                    result.size shouldBe 1
+                    result[0] shouldBe activeDistrict
+                    verify { collectionReferenceMock.whereEqualTo("active", true) }
+                    verify { queryMock.get() }
+                }
+            }
+
+            `when`("firestore fails") {
+                then("it should throw a runtime exception") {
+                    val simulatedException = RuntimeException("Simulated Firestore error")
+
+                    every { collectionReferenceMock.whereEqualTo("active", true) } returns queryMock
+                    every { queryMock.get() } returns querySnapshotTaskMock
+                    mockTaskResult(querySnapshotTaskMock, null, simulatedException)
+
+                    val exception = shouldThrow<RuntimeException> {
+                        districtRepository.getActiveDistricts()
+                    }
+
+                    exception.message shouldContain "Failed to get active district from districts"
+                    exception.cause shouldBe simulatedException
+                    verify { collectionReferenceMock.whereEqualTo("active", true) }
+                    verify { queryMock.get() }
+                }
+            }
+        }
     }
-}
+})

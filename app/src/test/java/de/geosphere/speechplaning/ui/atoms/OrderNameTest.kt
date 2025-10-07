@@ -1,30 +1,29 @@
 package de.geosphere.speechplaning.ui.atoms
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
+import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.shouldBe
 
 /**
  * Order name test.
  *
  * @constructor Create empty Order name test
  */
-class OrderNameTest {
+class OrderNameTest : ShouldSpec({
 
-    @Test
-    fun `enum constants are declared in the correct order`() {
-        val expectedOrder = listOf("FIRSTNAME_LASTNAME", "LASTNAME_FIRSTNAME")
-        val actualOrder = OrderName.entries.map { it.name }
-        assertEquals(expectedOrder, actualOrder)
-    }
+    init {
+        should("have enum constants declared in the correct order") {
+            val expectedOrder = listOf("FIRSTNAME_LASTNAME", "LASTNAME_FIRSTNAME")
+            val actualOrder = OrderName.entries.map { it.name }
+            actualOrder shouldBe expectedOrder
+        }
 
-    @Test
-    fun `enum contains the correct number of constants`() {
-        assertEquals(2, OrderName.entries.size)
-    }
+        should("contain the correct number of constants") {
+            OrderName.entries.size shouldBe 2
+        }
 
-    @Test
-    fun `valueOf returns the correct enum constant`() {
-        assertEquals(OrderName.FIRSTNAME_LASTNAME, OrderName.valueOf("FIRSTNAME_LASTNAME"))
-        assertEquals(OrderName.LASTNAME_FIRSTNAME, OrderName.valueOf("LASTNAME_FIRSTNAME"))
+        should("return the correct enum constant from valueOf") {
+            OrderName.valueOf("FIRSTNAME_LASTNAME") shouldBe OrderName.FIRSTNAME_LASTNAME
+            OrderName.valueOf("LASTNAME_FIRSTNAME") shouldBe OrderName.LASTNAME_FIRSTNAME
+        }
     }
-}
+})
