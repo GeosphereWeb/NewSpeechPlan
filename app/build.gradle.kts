@@ -120,6 +120,9 @@ dependencies {
     // testImplementation(libs.mockk.android) // Remove, not needed for pure unit tests
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.junit) // JUnit 4 für backwards compatibility
+    testImplementation("io.kotest:kotest-runner-junit5:6.0.3")
+    testImplementation("io.kotest:kotest-assertions-core:6.0.3")
+    testImplementation("io.kotest:kotest-property:6.0.3")
 
     testRuntimeOnly(libs.junit.jupiter.engine)
 
@@ -311,3 +314,4 @@ tasks.register<JacocoReport>("jacocoTestReport") {
         layout.buildDirectory.file("jacoco/testDebugUnitTest.exec") // Fallback
     )
 }
+

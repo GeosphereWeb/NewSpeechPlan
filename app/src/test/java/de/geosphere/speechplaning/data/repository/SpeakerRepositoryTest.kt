@@ -2,20 +2,18 @@ package de.geosphere.speechplaning.data.repository
 
 import de.geosphere.speechplaning.data.model.Speaker
 import de.geosphere.speechplaning.data.services.FirestoreService
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
-internal class SpeakerRepositoryTest {
+internal class SpeakerRepositoryTest : BehaviorSpec({
 
-    private lateinit var firestoreService: FirestoreService
-    private lateinit var speakerRepository: SpeakerRepository
+    lateinit var firestoreService: FirestoreService
+    lateinit var speakerRepository: SpeakerRepository
 
     private val districtId = "testDistrictId"
     private val congregationId = "testCongregationId"
@@ -30,246 +28,225 @@ internal class SpeakerRepositoryTest {
     private val speakersSubcollectionName = "speakers"
     private val expectedParentCollectionPath = "districts/$districtId/congregations"
 
-    @BeforeEach
-    fun setUp() {
+    beforeEach {
         firestoreService = mockk(relaxed = true)
         speakerRepository = SpeakerRepository(firestoreService)
     }
 
-    @Nested
-    inner class SaveSpeaker {
-        @Test
-        fun `saveSpeaker for new speaker should call firestoreService with correct paths and data`() = runTest {
-            val newSpeaker = testSpeaker.copy(id = "")
-            val expectedGeneratedId = "newGeneratedSpeakerId"
+    init {
+        given("SaveSpeaker") {
+            `when`("saving a new speaker") {
+                then("it should call firestoreService with correct paths and data") {
+                    val newSpeaker = testSpeaker.copy(id = "")
+                    val expectedGeneratedId = "newGeneratedSpeakerId"
 
-            coEvery {
-                firestoreService.addDocumentToSubcollection(
-                    parentCollection = expectedParentCollectionPath,
-                    parentId = congregationId,
-                    subcollection = speakersSubcollectionName,
-                    data = newSpeaker
-                )
-            } returns expectedGeneratedId
+                    coEvery {
+                        firestoreService.addDocumentToSubcollection(
+                            parentCollection = expectedParentCollectionPath,
+                            parentId = congregationId,
+                            subcollection = speakersSubcollectionName,
+                            data = newSpeaker
+                        )
+                    } returns expectedGeneratedId
 
-            val resultId = speakerRepository.saveSpeaker(districtId, congregationId, newSpeaker)
+                    val resultId = speakerRepository.saveSpeaker(districtId, congregationId, newSpeaker)
 
-            assertEquals(expectedGeneratedId, resultId)
-            coVerify {
-                firestoreService.addDocumentToSubcollection(
-                    parentCollection = expectedParentCollectionPath,
-                    parentId = congregationId,
-                    subcollection = speakersSubcollectionName,
-                    data = newSpeaker
-                )
+                    resultId shouldBe expectedGeneratedId
+                    coVerify {
+                        firestoreService.addDocumentToSubcollection(
+                            parentCollection = expectedParentCollectionPath,
+                            parentId = congregationId,
+                            subcollection = speakersSubcollectionName,
+                            data = newSpeaker
+                        )
+                    }
+                }
+
+                then("it should throw an exception if firestoreService add fails") {
+                    val newSpeaker = testSpeaker.copy(id = "")
+                    val errorMessage = "Firestore add error"
+                    coEvery {
+                        firestoreService.addDocumentToSubcollection(any(), any(), any(), any())
+                    } throws RuntimeException(errorMessage)
+
+                    val exception = shouldThrow<RuntimeException> {
+                        speakerRepository.saveSpeaker(districtId, congregationId, newSpeaker)
+                    }
+                    exception.message shouldBe "Failed to save entity '[new]' in subcollection '$speakersSubcollectionName' under parent '$congregationId' in '$expectedParentCollectionPath'"
+                    exception.cause?.message shouldBe errorMessage
+                }
+            }
+
+            `when`("saving an existing speaker") {
+                then("it should call firestoreService with correct paths and data") {
+                    coEvery {
+                        firestoreService.setDocumentInSubcollection(
+                            parentCollection = expectedParentCollectionPath,
+                            parentId = congregationId,
+                            subcollection = speakersSubcollectionName,
+                            documentId = testSpeaker.id,
+                            data = testSpeaker
+                        )
+                    } returns Unit
+
+                    val resultId = speakerRepository.saveSpeaker(districtId, congregationId, testSpeaker)
+
+                    resultId shouldBe testSpeaker.id
+                    coVerify {
+                        firestoreService.setDocumentInSubcollection(
+                            parentCollection = expectedParentCollectionPath,
+                            parentId = congregationId,
+                            subcollection = speakersSubcollectionName,
+                            documentId = testSpeaker.id,
+                            data = testSpeaker
+                        )
+                    }
+                }
+
+                then("it should throw an exception if firestoreService set fails") {
+                    val errorMessage = "Firestore set error"
+                    coEvery {
+                        firestoreService.setDocumentInSubcollection(any(), any(), any(), any(), any())
+                    } throws RuntimeException(errorMessage)
+
+                    val exception = shouldThrow<RuntimeException> {
+                        speakerRepository.saveSpeaker(districtId, congregationId, testSpeaker)
+                    }
+                    exception.message shouldContain "Failed to save entity '${testSpeaker.id}' in subcollection '$speakersSubcollectionName' under parent '$congregationId' in '$expectedParentCollectionPath'"
+                    exception.cause?.message shouldBe errorMessage
+                }
             }
         }
 
-        @Test
-        fun `saveSpeaker for existing speaker should call firestoreService with correct paths and data`() = runTest {
-            coEvery {
-                firestoreService.setDocumentInSubcollection(
-                    parentCollection = expectedParentCollectionPath,
-                    parentId = congregationId,
-                    subcollection = speakersSubcollectionName,
-                    documentId = testSpeaker.id,
-                    data = testSpeaker
-                )
-            } returns Unit
+        given("GetSpeakersForCongregation") {
+            `when`("called") {
+                then("it should call firestoreService with correct paths") {
+                    val expectedSpeakers = listOf(testSpeaker, testSpeaker.copy(id = "otherSpeakerId"))
 
-            val resultId = speakerRepository.saveSpeaker(districtId, congregationId, testSpeaker)
+                    coEvery {
+                        firestoreService.getDocumentsFromSubcollection(
+                            parentCollection = expectedParentCollectionPath,
+                            parentId = congregationId,
+                            subcollection = speakersSubcollectionName,
+                            objectClass = Speaker::class.java
+                        )
+                    } returns expectedSpeakers
 
-            assertEquals(testSpeaker.id, resultId)
-            coVerify {
-                firestoreService.setDocumentInSubcollection(
-                    parentCollection = expectedParentCollectionPath,
-                    parentId = congregationId,
-                    subcollection = speakersSubcollectionName,
-                    documentId = testSpeaker.id,
-                    data = testSpeaker
-                )
+                    val result = speakerRepository.getSpeakersForCongregation(districtId, congregationId)
+
+                    result shouldBe expectedSpeakers
+                    coVerify {
+                        firestoreService.getDocumentsFromSubcollection(
+                            parentCollection = expectedParentCollectionPath,
+                            parentId = congregationId,
+                            subcollection = speakersSubcollectionName,
+                            objectClass = Speaker::class.java
+                        )
+                    }
+                }
+
+                then("it should throw an exception if firestoreService fails") {
+                    val errorMessage = "Firestore get all error"
+                    coEvery {
+                        firestoreService.getDocumentsFromSubcollection(any(), any(), any(), eq(Speaker::class.java))
+                    } throws RuntimeException(errorMessage)
+
+                    val exception = shouldThrow<RuntimeException> {
+                        speakerRepository.getSpeakersForCongregation(districtId, congregationId)
+                    }
+                    exception.message shouldContain "Failed to get all entities from subcollection '$speakersSubcollectionName' under parent '$congregationId' in '$expectedParentCollectionPath'"
+                    exception.cause?.message shouldBe errorMessage
+                }
             }
         }
 
-        @Test
-        fun `saveSpeaker for new entity should throw exception if firestoreService add fails`() = runTest {
-            val newSpeaker = testSpeaker.copy(id = "")
-            val errorMessage = "Firestore add error"
-            coEvery {
-                firestoreService.addDocumentToSubcollection(any(), any(), any(), any())
-            } throws RuntimeException(errorMessage)
+        given("DeleteSpeaker") {
+            `when`("deleting a speaker") {
+                then("it should call firestoreService with correct paths") {
+                    coEvery {
+                        firestoreService.deleteDocumentFromSubcollection(
+                            parentCollection = expectedParentCollectionPath,
+                            parentId = congregationId,
+                            subcollection = speakersSubcollectionName,
+                            documentId = speakerId
+                        )
+                    } returns Unit
 
-            val exception = assertThrows<RuntimeException> {
-                speakerRepository.saveSpeaker(districtId, congregationId, newSpeaker)
-            }
-            assertEquals(
-                "Failed to save entity '[new]' in subcollection '$speakersSubcollectionName' " +
-                    "under parent '$congregationId' in '$expectedParentCollectionPath'",
-                exception.message
-            )
-            assertEquals(errorMessage, exception.cause?.message)
-        }
+                    speakerRepository.deleteSpeaker(districtId, congregationId, speakerId)
 
-        @Test
-        fun `saveSpeaker for existing entity should throw exception if firestoreService set fails`() = runTest {
-            val errorMessage = "Firestore set error"
-            coEvery {
-                firestoreService.setDocumentInSubcollection(any(), any(), any(), any(), any())
-            } throws RuntimeException(errorMessage)
+                    coVerify {
+                        firestoreService.deleteDocumentFromSubcollection(
+                            parentCollection = expectedParentCollectionPath,
+                            parentId = congregationId,
+                            subcollection = speakersSubcollectionName,
+                            documentId = speakerId
+                        )
+                    }
+                }
 
-            val exception = assertThrows<RuntimeException> {
-                speakerRepository.saveSpeaker(districtId, congregationId, testSpeaker)
-            }
-            assertEquals(
-                "Failed to save entity '${testSpeaker.id}' in subcollection '$speakersSubcollectionName' " +
-                    "under parent '$congregationId' in '$expectedParentCollectionPath'",
-                exception.message
-            )
-            assertEquals(errorMessage, exception.cause?.message)
-        }
-    }
+                then("it should throw an exception if firestoreService fails") {
+                    val errorMessage = "Firestore delete error"
+                    coEvery {
+                        firestoreService.deleteDocumentFromSubcollection(any(), any(), any(), any())
+                    } throws RuntimeException(errorMessage)
 
-    @Nested
-    inner class GetSpeakersForCongregation {
-        @Test
-        fun `getSpeakersForCongregation should call firestoreService with correct paths`() = runTest {
-            val expectedSpeakers = listOf(testSpeaker, testSpeaker.copy(id = "otherSpeakerId"))
+                    val exception = shouldThrow<RuntimeException> {
+                        speakerRepository.deleteSpeaker(districtId, congregationId, speakerId)
+                    }
+                    exception.message shouldContain "Failed to delete entity '$speakerId' from subcollection '$speakersSubcollectionName' under parent '$congregationId' in '$expectedParentCollectionPath'"
+                    exception.cause?.message shouldBe errorMessage
+                }
 
-            coEvery {
-                firestoreService.getDocumentsFromSubcollection(
-                    parentCollection = expectedParentCollectionPath,
-                    parentId = congregationId,
-                    subcollection = speakersSubcollectionName,
-                    objectClass = Speaker::class.java
-                )
-            } returns expectedSpeakers
-
-            val result = speakerRepository.getSpeakersForCongregation(districtId, congregationId)
-
-            assertEquals(expectedSpeakers, result)
-            coVerify {
-                firestoreService.getDocumentsFromSubcollection(
-                    parentCollection = expectedParentCollectionPath,
-                    parentId = congregationId,
-                    subcollection = speakersSubcollectionName,
-                    objectClass = Speaker::class.java
-                )
+                then("it should throw an IllegalArgumentException when speakerId is blank") {
+                    val exception = shouldThrow<IllegalArgumentException> {
+                        speakerRepository.deleteSpeaker(districtId, congregationId, "")
+                    }
+                    exception.message shouldBe "Document ID cannot be blank for deletion."
+                    coVerify(exactly = 0) { firestoreService.deleteDocumentFromSubcollection(any(), any(), any(), any()) }
+                }
             }
         }
 
-        @Test
-        fun `getSpeakersForCongregation should throw exception if firestoreService fails`() = runTest {
-            val errorMessage = "Firestore get all error"
-            coEvery {
-                firestoreService.getDocumentsFromSubcollection(any(), any(), any(), eq(Speaker::class.java))
-            } throws RuntimeException(errorMessage)
-
-            val exception = assertThrows<RuntimeException> {
-                speakerRepository.getSpeakersForCongregation(districtId, congregationId)
-            }
-            assertEquals(
-                "Failed to get all entities from subcollection '$speakersSubcollectionName' under parent " +
-                    "'$congregationId' in '$expectedParentCollectionPath'",
-                exception.message
-            )
-            assertEquals(errorMessage, exception.cause?.message)
-        }
-    }
-
-    @Nested
-    inner class DeleteSpeaker {
-        @Test
-        fun `deleteSpeaker should call firestoreService with correct paths`() = runTest {
-            coEvery {
-                firestoreService.deleteDocumentFromSubcollection(
-                    parentCollection = expectedParentCollectionPath,
-                    parentId = congregationId,
-                    subcollection = speakersSubcollectionName,
-                    documentId = speakerId
-                )
-            } returns Unit
-
-            speakerRepository.deleteSpeaker(districtId, congregationId, speakerId)
-
-            coVerify {
-                firestoreService.deleteDocumentFromSubcollection(
-                    parentCollection = expectedParentCollectionPath,
-                    parentId = congregationId,
-                    subcollection = speakersSubcollectionName,
-                    documentId = speakerId
-                )
+        given("ExtractIdFromEntityTest") {
+            `when`("extracting id from entity") {
+                then("it should return the entity id") {
+                    speakerRepository.extractIdFromEntity(testSpeaker) shouldBe testSpeaker.id
+                }
             }
         }
 
-        @Test
-        fun `deleteSpeaker should throw exception if firestoreService fails`() = runTest {
-            val errorMessage = "Firestore delete error"
-            coEvery {
-                firestoreService.deleteDocumentFromSubcollection(any(), any(), any(), any())
-            } throws RuntimeException(errorMessage)
+        given("HelperMethods") {
+            `when`("building parent collection path") {
+                then("it should return correct path with two parentIds") {
+                    val path = speakerRepository.buildParentCollectionPath(districtId, congregationId)
+                    path shouldBe "districts/$districtId/congregations"
+                }
 
-            val exception = assertThrows<RuntimeException> {
-                speakerRepository.deleteSpeaker(districtId, congregationId, speakerId)
+                then("it should throw an exception when parentIds count is not two") {
+                    shouldThrow<IllegalArgumentException> {
+                        speakerRepository.buildParentCollectionPath("singleId")
+                    }
+                    shouldThrow<IllegalArgumentException> {
+                        speakerRepository.buildParentCollectionPath("id1", "id2", "id3")
+                    }
+                }
             }
-            assertEquals(
-                "Failed to delete entity '$speakerId' from subcollection '$speakersSubcollectionName' " +
-                    "under parent '$congregationId' in '$expectedParentCollectionPath'",
-                exception.message
-            )
-            assertEquals(errorMessage, exception.cause?.message)
-        }
 
-        @Test
-        fun `deleteSpeaker should throw IllegalArgumentException when speakerId is blank`() {
-            assertThrows<IllegalArgumentException> {
-                runTest { speakerRepository.deleteSpeaker(districtId, congregationId, "") }
-            }.apply {
-                assertEquals("Document ID cannot be blank for deletion.", message)
-            }
-            coVerify(exactly = 0) { firestoreService.deleteDocumentFromSubcollection(any(), any(), any(), any()) }
-        }
-    }
+            `when`("getting parent document id") {
+                then("it should return congregationId when two parentIds are provided") {
+                    val result = speakerRepository.getParentDocumentId(districtId, congregationId)
+                    result shouldBe congregationId
+                }
 
-    @Nested
-    inner class ExtractIdFromEntityTest {
-        @Test
-        fun `extractIdFromEntity should return entity id`() {
-            assertEquals(testSpeaker.id, speakerRepository.extractIdFromEntity(testSpeaker))
-        }
-    }
-    
-    @Nested
-    inner class HelperMethods {
-        @Test
-        fun `buildParentCollectionPath returns correct path with two parentIds`() {
-            val path = speakerRepository.buildParentCollectionPath(districtId, congregationId)
-            assertEquals("districts/$districtId/congregations", path)
-        }
-
-        @Test
-        fun `buildParentCollectionPath throws exception when parentIds count is not two`() {
-            assertThrows<IllegalArgumentException> {
-                speakerRepository.buildParentCollectionPath("singleId")
-            }
-            assertThrows<IllegalArgumentException> {
-                speakerRepository.buildParentCollectionPath("id1", "id2", "id3")
-            }
-        }
-
-        @Test
-        fun `getParentDocumentId returns congregationId when two parentIds are provided`() {
-            val result = speakerRepository.getParentDocumentId(districtId, congregationId)
-            assertEquals(congregationId, result)
-        }
-
-        @Test
-        fun `getParentDocumentId throws exception when parentIds count is not two`() {
-            assertThrows<IllegalArgumentException> {
-                speakerRepository.getParentDocumentId("singleId")
-            }
-            assertThrows<IllegalArgumentException> {
-                speakerRepository.getParentDocumentId("id1", "id2", "id3")
+                then("it should throw an exception when parentIds count is not two") {
+                    shouldThrow<IllegalArgumentException> {
+                        speakerRepository.getParentDocumentId("singleId")
+                    }
+                    shouldThrow<IllegalArgumentException> {
+                        speakerRepository.getParentDocumentId("id1", "id2", "id3")
+                    }
+                }
             }
         }
     }
-}
+})
