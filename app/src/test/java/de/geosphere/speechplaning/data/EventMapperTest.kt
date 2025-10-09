@@ -1,6 +1,7 @@
 package de.geosphere.speechplaning.data
 
 import android.content.Context
+import android.content.res.Resources
 import de.geosphere.speechplaning.R
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.datatest.withData
@@ -10,21 +11,17 @@ import io.mockk.mockk
 
 class EventMapperTest : BehaviorSpec({
 
-    val mockContext: Context = mockk()
+    val observerString = "observer"
+    val observerVisitString = "observer-visit"
+    val conventionString = "convention"
+    val memorialString = "memorial"
+    val specialLectureString = "special-lecture"
+    val miscellaneousString = "miscellaneous"
+    val unknownString = "unknown"
 
-    lateinit var mapper: EventMapper
-
-    // Diese Strings simulieren die Rückgabewerte aus context.getString()
-    private val observerString = "observer"
-    private val observerVisitString = "observer-visit"
-    private val conventionString = "convention"
-    private val memorialString = "memorial"
-    private val specialLectureString = "special-lecture"
-    private val miscellaneousString = "miscellaneous"
-    private val unknownString = "unknown"
-
-    beforeEach {
-        // Definiere das Verhalten des gemockten Contexts
+    context("a fully configured mapper") {
+        val mockContext = mockk<Context>()
+        // Definiere das Verhalten des gemockten Contexts für alle Event-Typen
         every { mockContext.getString(R.string.event_circuit_assembly_with_circuit_overseer) } returns observerString
         every { mockContext.getString(R.string.event_circuit_overseer_congregation_visit) } returns observerVisitString
         every { mockContext.getString(R.string.event_convention) } returns conventionString
@@ -33,13 +30,11 @@ class EventMapperTest : BehaviorSpec({
         every { mockContext.getString(R.string.event_miscellaneous) } returns miscellaneousString
         every { mockContext.getString(R.string.event_unknown) } returns unknownString
 
-        // Initialisiere den Mapper, dessen lazy properties die Mocks verwenden werden
-        mapper = EventMapper(mockContext)
-    }
+        val mapper = EventMapper(mockContext)
 
-    init {
         context("mapToString returns correct localized string for each status") {
             withData(
+                nameFn = { (event, expected) -> "should map ${event.name} to '$expected'" },
                 Event.CIRCUIT_ASSEMBLY_WITH_CIRCUIT_OVERSEER to observerString,
                 Event.CIRCUIT_OVERSEER_CONGREGATION_VISIT to observerVisitString,
                 Event.CONVENTION to conventionString,
@@ -72,51 +67,48 @@ class EventMapperTest : BehaviorSpec({
                 }
             }
         }
+    }
 
-        given("mapToString with inconsistent map") {
-            `when`("a status is missing from the map") {
-                then("it should return UNKNOWN string") {
-                    // Arrange
-                    val field = mapper.javaClass.getDeclaredField("statusToStringMap\$delegate")
-                    field.isAccessible = true
-
-                    @Suppress("UNCHECKED_CAST")
-                    val delegate = field.get(mapper) as Lazy<Map<Event, String>>
-                    val originalMap = delegate.value
-
-                    val incompleteMap = originalMap.toMutableMap()
-                    incompleteMap.remove(Event.CONVENTION) // Entferne einen Eintrag
-
-                    val newLazy = lazy { incompleteMap as Map<Event, String> }
-                    field.set(mapper, newLazy)
-
-                    val expectedFallbackString = unknownString
-
-                    // Act & Assert
-                    mapper.mapToString(Event.CONVENTION) shouldBe expectedFallbackString
-                }
+    context("an inconsistently configured mapper") {
+        `when`("a status is missing from the context") {
+            val incompleteContext = mockk<Context> {
+                // Alle Strings mocken, außer 'CONVENTION'
+                every { getString(R.string.event_circuit_assembly_with_circuit_overseer) } returns observerString
+                every { getString(R.string.event_circuit_overseer_congregation_visit) } returns observerVisitString
+                // every { getString(R.string.event_convention) } returns conventionString // <- Ausgelassen
+                every { getString(R.string.event_memorial) } returns memorialString
+                every { getString(R.string.event_special_lecture) } returns specialLectureString
+                every { getString(R.string.event_miscellaneous) } returns miscellaneousString
+                every { getString(R.string.event_unknown) } returns unknownString
+                // Mock, damit getString eine Exception wirft, wenn ein unbekannter String angefordert wird
+                every { getString(R.string.event_convention) } throws Resources.NotFoundException()
             }
+            val mapper = EventMapper(incompleteContext)
 
-            `when`("UNKNOWN itself is missing from the map") {
-                then("it should return an empty string") {
-                    // Arrange
-                    val field = mapper.javaClass.getDeclaredField("statusToStringMap\$delegate")
-                    field.isAccessible = true
+            then("it should return the UNKNOWN string as fallback") {
+                mapper.mapToString(Event.CONVENTION) shouldBe unknownString
+            }
+        }
 
-                    @Suppress("UNCHECKED_CAST")
-                    val delegate = field.get(mapper) as Lazy<Map<Event, String>>
-                    val originalMap = delegate.value
+        `when`("UNKNOWN itself is missing from the map") {
+            val incompleteContext = mockk<Context> {
+                // Alle Strings mocken, außer 'CONVENTION' und 'UNKNOWN'
+                every { getString(R.string.event_circuit_assembly_with_circuit_overseer) } returns observerString
+                every { getString(R.string.event_circuit_overseer_congregation_visit) } returns observerVisitString
+                // every { getString(R.string.event_convention) } returns conventionString // <- Ausgelassen
+                every { getString(R.string.event_memorial) } returns memorialString
+                every { getString(R.string.event_special_lecture) } returns specialLectureString
+                every { getString(R.string.event_miscellaneous) } returns miscellaneousString
+                // every { getString(R.string.event_unknown) } returns unknownString // <- Ausgelassen
 
-                    val incompleteMap = originalMap.toMutableMap()
-                    incompleteMap.remove(Event.CONVENTION)
-                    incompleteMap.remove(Event.UNKNOWN)
+                // Mock, damit getString eine Exception wirft, wenn ein unbekannter String angefordert wird
+                every { getString(R.string.event_convention) } throws Resources.NotFoundException()
+                every { getString(R.string.event_unknown) } throws Resources.NotFoundException()
+            }
+            val mapper = EventMapper(incompleteContext)
 
-                    val newLazy = lazy { incompleteMap as Map<Event, String> }
-                    field.set(mapper, newLazy)
-
-                    // Act & Assert
-                    mapper.mapToString(Event.CONVENTION) shouldBe ""
-                }
+            then("it should return an empty string as final fallback") {
+                mapper.mapToString(Event.CONVENTION) shouldBe ""
             }
         }
     }

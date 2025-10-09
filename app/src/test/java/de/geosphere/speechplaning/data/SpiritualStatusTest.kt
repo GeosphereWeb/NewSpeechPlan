@@ -6,7 +6,6 @@ import io.kotest.matchers.shouldBe
 
 class SpiritualStatusTest : ShouldSpec({
 
-    init {
         should("return all constants in order from entries") {
             val expectedValues = listOf(
                 SpiritualStatus.UNKNOWN,
@@ -30,5 +29,4 @@ class SpiritualStatusTest : ShouldSpec({
                 SpiritualStatus.valueOf("NON_EXISTENT_VALUE")
             }
         }
-    }
 })

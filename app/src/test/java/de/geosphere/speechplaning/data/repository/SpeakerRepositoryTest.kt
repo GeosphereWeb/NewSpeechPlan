@@ -15,25 +15,24 @@ internal class SpeakerRepositoryTest : BehaviorSpec({
     lateinit var firestoreService: FirestoreService
     lateinit var speakerRepository: SpeakerRepository
 
-    private val districtId = "testDistrictId"
-    private val congregationId = "testCongregationId"
-    private val speakerId = "testSpeakerId"
-    private val testSpeaker = Speaker(
+     val districtId = "testDistrictId"
+     val congregationId = "testCongregationId"
+     val speakerId = "testSpeakerId"
+     val testSpeaker = Speaker(
         id = speakerId,
         nameFirst = "Max",
         nameLast = "Mustermann",
         // Weitere Felder hier initialisieren, falls für Tests relevant
     )
 
-    private val speakersSubcollectionName = "speakers"
-    private val expectedParentCollectionPath = "districts/$districtId/congregations"
+     val speakersSubcollectionName = "speakers"
+     val expectedParentCollectionPath = "districts/$districtId/congregations"
 
     beforeEach {
         firestoreService = mockk(relaxed = true)
         speakerRepository = SpeakerRepository(firestoreService)
     }
 
-    init {
         given("SaveSpeaker") {
             `when`("saving a new speaker") {
                 then("it should call firestoreService with correct paths and data") {
@@ -248,5 +247,4 @@ internal class SpeakerRepositoryTest : BehaviorSpec({
                 }
             }
         }
-    }
 })

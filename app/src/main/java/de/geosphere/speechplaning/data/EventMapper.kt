@@ -1,6 +1,7 @@
 package de.geosphere.speechplaning.data
 
 import android.content.Context
+import android.content.res.Resources
 import de.geosphere.speechplaning.R
 
 /**
@@ -9,7 +10,13 @@ import de.geosphere.speechplaning.R
  */
 class EventMapper(private val context: Context) {
 
-    private val statusToStringMap by lazy {
+    private val statusToStringMap: Map<Event, String> by lazy {
+        val unknownString = try {
+            context.getString(R.string.event_unknown)
+        } catch (e: Resources.NotFoundException) {
+            "" // Final fallback if UNKNOWN itself is not found
+        }
+
         Event.entries.associateWith { status ->
             val resourceId = when (status) {
                 Event.CIRCUIT_ASSEMBLY_WITH_CIRCUIT_OVERSEER -> R.string.event_circuit_assembly_with_circuit_overseer
@@ -20,7 +27,11 @@ class EventMapper(private val context: Context) {
                 Event.MISCELLANEOUS -> R.string.event_miscellaneous
                 Event.UNKNOWN -> R.string.event_unknown
             }
-            context.getString(resourceId)
+            try {
+                context.getString(resourceId)
+            } catch (e: Resources.NotFoundException) {
+                unknownString // Fallback for any missing string
+            }
         }
     }
 
@@ -35,7 +46,7 @@ class EventMapper(private val context: Context) {
      * @return The localized string representation.
      */
     fun mapToString(status: Event): String {
-        return statusToStringMap[status] ?: statusToStringMap[Event.UNKNOWN].orEmpty()
+        return statusToStringMap[status] ?: ""
     }
 
     /**
