@@ -14,11 +14,11 @@ class SpiritualStatusMapperTest : BehaviorSpec({
     lateinit var mapper: SpiritualStatusMapper
 
     // Diese Strings simulieren die Rückgabewerte aus context.getString()
-    private val elderString = "Ältester"
-    private val servantString = "Dienstamtgehilfe"
-    private val unknownString = "Unbekannt"
+     val elderString = "Ältester"
+     val servantString = "Dienstamtgehilfe"
+     val unknownString = "Unbekannt"
 
-    beforeEach {
+    beforeTest {
         // Definiere das Verhalten des gemockten Contexts
         every { mockContext.getString(R.string.spiritual_status_elder) } returns elderString
         every { mockContext.getString(R.string.spiritual_status_ministerial_servant) } returns servantString
@@ -28,7 +28,7 @@ class SpiritualStatusMapperTest : BehaviorSpec({
         mapper = SpiritualStatusMapper(mockContext)
     }
 
-    init {
+
         context("mapToString returns correct localized string for each status") {
             withData(
                 SpiritualStatus.ELDER to elderString,
@@ -96,5 +96,4 @@ class SpiritualStatusMapperTest : BehaviorSpec({
                 }
             }
         }
-    }
 })

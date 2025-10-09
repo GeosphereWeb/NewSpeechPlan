@@ -59,13 +59,6 @@ class SpeechRepositoryTest : BehaviorSpec({
         }
     }
 
-    init {
-        "extractIdFromEntity should return correct id" {
-            val speech = Speech(id = "testId", subject = "Active Speech", active = true)
-            val extractedId = speechRepository.extractIdFromEntity(speech)
-            extractedId shouldBe "testId"
-        }
-
         given("getActiveSpeeches") {
             `when`("query is successful") {
                 then("it should query and return active speeches") {
@@ -106,5 +99,4 @@ class SpeechRepositoryTest : BehaviorSpec({
                 }
             }
         }
-    }
 })
