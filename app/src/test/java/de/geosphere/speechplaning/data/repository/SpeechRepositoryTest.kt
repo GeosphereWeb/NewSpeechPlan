@@ -59,44 +59,54 @@ class SpeechRepositoryTest : BehaviorSpec({
         }
     }
 
-        given("getActiveSpeeches") {
-            `when`("query is successful") {
-                then("it should query and return active speeches") {
-                    val activeSpeech = Speech(id = "active1", subject = "Active Speech", active = true)
-                    val querySnapshotResultMock: QuerySnapshot = mockk()
-
-                    mockTaskResult(querySnapshotTaskMock, querySnapshotResultMock)
-                    every { querySnapshotResultMock.toObjects(Speech::class.java) } returns listOf(activeSpeech)
-
-                    every { collectionReferenceMock.whereEqualTo("active", true) } returns queryMock
-                    every { queryMock.get() } returns querySnapshotTaskMock
-
-                    val result = speechRepository.getActiveSpeeches()
-
-                    result.size shouldBe 1
-                    result[0] shouldBe activeSpeech
-                    verify { collectionReferenceMock.whereEqualTo("active", true) }
-                    verify { queryMock.get() }
-                }
-            }
-
-            `when`("firestore fails") {
-                then("it should throw a runtime exception") {
-                    val simulatedException = RuntimeException("Simulated Firestore error")
-
-                    every { collectionReferenceMock.whereEqualTo("active", true) } returns queryMock
-                    every { queryMock.get() } returns querySnapshotTaskMock
-                    mockTaskResult(querySnapshotTaskMock, null, simulatedException)
-
-                    val exception = shouldThrow<RuntimeException> {
-                        speechRepository.getActiveSpeeches()
-                    }
-
-                    exception.message shouldContain "Failed to get active speech from speeches"
-                    exception.cause shouldBe simulatedException
-                    verify { collectionReferenceMock.whereEqualTo("active", true) }
-                    verify { queryMock.get() }
-                }
+    given("extractIdFromEntity") {
+        `when`("a speech entity is provided") {
+            then("it should return the id of that entity") {
+                val speech = Speech(id = "test-id", subject = "A Subject")
+                val result = speechRepository.extractIdFromEntity(speech)
+                result shouldBe "test-id"
             }
         }
+    }
+
+    given("getActiveSpeeches") {
+        `when`("query is successful") {
+            then("it should query and return active speeches") {
+                val activeSpeech = Speech(id = "active1", subject = "Active Speech", active = true)
+                val querySnapshotResultMock: QuerySnapshot = mockk()
+
+                mockTaskResult(querySnapshotTaskMock, querySnapshotResultMock)
+                every { querySnapshotResultMock.toObjects(Speech::class.java) } returns listOf(activeSpeech)
+
+                every { collectionReferenceMock.whereEqualTo("active", true) } returns queryMock
+                every { queryMock.get() } returns querySnapshotTaskMock
+
+                val result = speechRepository.getActiveSpeeches()
+
+                result.size shouldBe 1
+                result[0] shouldBe activeSpeech
+                verify { collectionReferenceMock.whereEqualTo("active", true) }
+                verify { queryMock.get() }
+            }
+        }
+
+        `when`("firestore fails") {
+            then("it should throw a runtime exception") {
+                val simulatedException = RuntimeException("Simulated Firestore error")
+
+                every { collectionReferenceMock.whereEqualTo("active", true) } returns queryMock
+                every { queryMock.get() } returns querySnapshotTaskMock
+                mockTaskResult(querySnapshotTaskMock, null, simulatedException)
+
+                val exception = shouldThrow<RuntimeException> {
+                    speechRepository.getActiveSpeeches()
+                }
+
+                exception.message shouldContain "Failed to get active speech from speeches"
+                exception.cause shouldBe simulatedException
+                verify { collectionReferenceMock.whereEqualTo("active", true) }
+                verify { queryMock.get() }
+            }
+        }
+    }
 })

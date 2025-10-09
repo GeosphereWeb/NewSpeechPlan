@@ -15,11 +15,11 @@ internal class CongregationRepositoryTest : BehaviorSpec({
     lateinit var firestoreService: FirestoreService
     lateinit var congregationRepository: CongregationRepository
 
-     val districtId = "testDistrictId"
-     val congregationId = "testCongregationId"
-     val testCongregation = Congregation(id = congregationId, name = "Test Congregation")
-     val congregationsSubcollectionName = "congregations"
-     val districtsCollectionName = "districts"
+    val districtId = "testDistrictId"
+    val congregationId = "testCongregationId"
+    val testCongregation = Congregation(id = congregationId, name = "Test Congregation")
+    val congregationsSubcollectionName = "congregations"
+    val districtsCollectionName = "districts"
 
     beforeEach {
         firestoreService = mockk(relaxed = true)
@@ -65,7 +65,7 @@ internal class CongregationRepositoryTest : BehaviorSpec({
                     congregationRepository.saveCongregation(districtId, congregationToSave)
                 }
                 exception.message shouldBe "Failed to save entity '[new]' in subcollection " +
-                    "'$congregationsSubcollectionName' under parent '${districtId}' in '$districtsCollectionName'"
+                    "'$congregationsSubcollectionName' under parent '$districtId' in '$districtsCollectionName'"
                 exception.cause?.message shouldBe errorMessage
             }
         }
