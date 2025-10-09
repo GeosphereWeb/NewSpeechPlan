@@ -18,19 +18,19 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
     lateinit var firestoreService: FirestoreService
     lateinit var repository: CongregationEventRepository
 
-    private val testDistrictId = "testDistrictId001"
-    private val testCongregationId = "testCongId002"
-    private val testEventId = "testEventId003"
+     val testDistrictId = "testDistrictId001"
+     val testCongregationId = "testCongId002"
+     val testEventId = "testEventId003"
     lateinit var testEvent: CongregationEvent
     lateinit var newEventWithoutId: CongregationEvent
 
-    private val districtsCollectionName = "districts"
-    private val congregationsSubcollectionName = "congregations"
-    private val congregationEventsSubcollectionName = "congregationEvents"
+     val districtsCollectionName = "districts"
+     val congregationsSubcollectionName = "congregations"
+     val congregationEventsSubcollectionName = "congregationEvents"
 
-    private val expectedParentCollectionPathForEvent =
+     val expectedParentCollectionPathForEvent =
         "$districtsCollectionName/$testDistrictId/$congregationsSubcollectionName"
-    private val expectedParentDocumentIdForEvent = testCongregationId
+     val expectedParentDocumentIdForEvent = testCongregationId
 
     beforeEach {
         firestoreService = mockk(relaxed = true)
@@ -56,7 +56,6 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
         )
     }
 
-    init {
         given("SaveEvent") {
             `when`("saving a new event") {
                 then("it should call firestoreService add and return new id") {
@@ -370,5 +369,4 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
                 }
             }
         }
-    }
 })

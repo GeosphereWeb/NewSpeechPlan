@@ -101,6 +101,8 @@ dependencies {
     // When using the BoM, you don't specify versions in Firebase library dependencies
     implementation(libs.firebase.database)
     implementation("com.google.firebase:firebase-auth") // Email u. Passwort
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
+
 
     // // Koin
     // // dependencies with Koin

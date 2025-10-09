@@ -1,40 +1,49 @@
 package de.geosphere.speechplaning.data
 
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.datatest.withData
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 
-class EventTest : ShouldSpec({
+class EventTest : BehaviorSpec({
 
-    init {
-        should("return all constants in order from entries") {
-            val expectedValues = listOf(
-                Event.CIRCUIT_ASSEMBLY_WITH_CIRCUIT_OVERSEER,
-                Event.CIRCUIT_OVERSEER_CONGREGATION_VISIT,
-                Event.CONVENTION,
-                Event.MEMORIAL,
-                Event.SPECIAL_LECTURE,
-                Event.MISCELLANEOUS,
-                Event.UNKNOWN,
-            )
-            val actualValues = Event.entries
-            actualValues shouldBe expectedValues
-            actualValues.size shouldBe 7
+    given("the Event enum") {
+        `when`("accessing its entries") {
+            then("it should contain all defined events") {
+                val expectedValues = listOf(
+                    Event.CIRCUIT_ASSEMBLY_WITH_CIRCUIT_OVERSEER,
+                    Event.CIRCUIT_OVERSEER_CONGREGATION_VISIT,
+                    Event.CONVENTION,
+                    Event.MEMORIAL,
+                    Event.SPECIAL_LECTURE,
+                    Event.MISCELLANEOUS,
+                    Event.UNKNOWN,
+                )
+                Event.entries shouldContainExactlyInAnyOrder expectedValues
+            }
         }
 
-        should("return correct enum for valid strings from valueOf") {
-            Event.valueOf("CIRCUIT_ASSEMBLY_WITH_CIRCUIT_OVERSEER") shouldBe Event.CIRCUIT_ASSEMBLY_WITH_CIRCUIT_OVERSEER
-            Event.valueOf("CIRCUIT_OVERSEER_CONGREGATION_VISIT") shouldBe Event.CIRCUIT_OVERSEER_CONGREGATION_VISIT
-            Event.valueOf("CONVENTION") shouldBe Event.CONVENTION
-            Event.valueOf("MEMORIAL") shouldBe Event.MEMORIAL
-            Event.valueOf("SPECIAL_LECTURE") shouldBe Event.SPECIAL_LECTURE
-            Event.valueOf("MISCELLANEOUS") shouldBe Event.MISCELLANEOUS
-            Event.valueOf("UNKNOWN") shouldBe Event.UNKNOWN
+        `when`("using valueOf with valid strings") {
+            withData(
+                nameFn = { (stringValue, enumValue) -> "it should return ${enumValue.name} for string '$stringValue'" },
+                "CIRCUIT_ASSEMBLY_WITH_CIRCUIT_OVERSEER" to Event.CIRCUIT_ASSEMBLY_WITH_CIRCUIT_OVERSEER,
+                "CIRCUIT_OVERSEER_CONGREGATION_VISIT" to Event.CIRCUIT_OVERSEER_CONGREGATION_VISIT,
+                "CONVENTION" to Event.CONVENTION,
+                "MEMORIAL" to Event.MEMORIAL,
+                "SPECIAL_LECTURE" to Event.SPECIAL_LECTURE,
+                "MISCELLANEOUS" to Event.MISCELLANEOUS,
+                "UNKNOWN" to Event.UNKNOWN
+            ) { (stringValue, enumValue) ->
+                Event.valueOf(stringValue) shouldBe enumValue
+            }
         }
 
-        should("throw IllegalArgumentException for invalid string in valueOf") {
-            shouldThrow<IllegalArgumentException> {
-                Event.valueOf("NON_EXISTENT_VALUE")
+        `when`("using valueOf with an invalid string") {
+            then("it should throw an IllegalArgumentException") {
+                shouldThrow<IllegalArgumentException> {
+                    Event.valueOf("NON_EXISTENT_VALUE")
+                }
             }
         }
     }

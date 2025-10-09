@@ -64,7 +64,8 @@ internal class CongregationRepositoryTest : BehaviorSpec({
                 val exception = shouldThrow<RuntimeException> {
                     congregationRepository.saveCongregation(districtId, congregationToSave)
                 }
-                exception.message shouldBe "Failed to save entity '[new]' in subcollection '$congregationsSubcollectionName' under parent '${districtId}' in '$districtsCollectionName'"
+                exception.message shouldBe "Failed to save entity '[new]' in subcollection " +
+                    "'$congregationsSubcollectionName' under parent '${districtId}' in '$districtsCollectionName'"
                 exception.cause?.message shouldBe errorMessage
             }
         }
@@ -104,7 +105,8 @@ internal class CongregationRepositoryTest : BehaviorSpec({
                 val exception = shouldThrow<RuntimeException> {
                     congregationRepository.saveCongregation(districtId, testCongregation)
                 }
-                exception.message shouldBe "Failed to save entity '${testCongregation.id}' in subcollection '$congregationsSubcollectionName' under parent '$districtId' in '$districtsCollectionName'"
+                exception.message shouldBe "Failed to save entity '${testCongregation.id}' in subcollection " +
+                    "'$congregationsSubcollectionName' under parent '$districtId' in '$districtsCollectionName'"
                 exception.cause?.message shouldBe errorMessage
             }
         }
@@ -146,7 +148,8 @@ internal class CongregationRepositoryTest : BehaviorSpec({
                 val exception = shouldThrow<RuntimeException> {
                     congregationRepository.getCongregationsForDistrict(districtId)
                 }
-                exception.message shouldBe "Failed to get all entities from subcollection '$congregationsSubcollectionName' under parent '$districtId' in '$districtsCollectionName'"
+                exception.message shouldBe "Failed to get all entities from subcollection " +
+                    "'$congregationsSubcollectionName' under parent '$districtId' in '$districtsCollectionName'"
                 exception.cause?.message shouldBe errorMessage
             }
         }
@@ -185,7 +188,8 @@ internal class CongregationRepositoryTest : BehaviorSpec({
                 val exception = shouldThrow<RuntimeException> {
                     congregationRepository.deleteCongregation(districtId, congregationId)
                 }
-                exception.message shouldContain "Failed to delete entity '$congregationId' from subcollection '$congregationsSubcollectionName' under parent '$districtId' in '$districtsCollectionName'"
+                exception.message shouldContain "Failed to delete entity '$congregationId' from subcollection " +
+                    "'$congregationsSubcollectionName' under parent '$districtId' in '$districtsCollectionName'"
                 exception.cause?.message shouldBe errorMessage
             }
 
