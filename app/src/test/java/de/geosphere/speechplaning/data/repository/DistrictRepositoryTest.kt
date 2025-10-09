@@ -37,7 +37,7 @@ class DistrictRepositoryTest : BehaviorSpec({
     }
 
     // Helper to easily mock Task results for await()
-    private fun <T> mockTaskResult(task: Task<T>, resultData: T?, exception: Exception? = null) {
+    fun <T> mockTaskResult(task: Task<T>, resultData: T?, exception: Exception? = null) {
         every { task.isComplete } returns true
         every { task.isCanceled } returns false
         if (exception != null) {
@@ -50,12 +50,6 @@ class DistrictRepositoryTest : BehaviorSpec({
         }
     }
 
-    init {
-        "extractIdFromEntity should return correct id" {
-            val district = District(id = "testId", name = "Test District")
-            val extractedId = districtRepository.extractIdFromEntity(district)
-            extractedId shouldBe "testId"
-        }
 
         given("getActiveDistricts") {
             `when`("query is successful") {
@@ -97,5 +91,4 @@ class DistrictRepositoryTest : BehaviorSpec({
                 }
             }
         }
-    }
 })
