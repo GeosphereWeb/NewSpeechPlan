@@ -3,12 +3,14 @@ package de.geosphere.speechplaning.data
 import android.content.Context
 import android.content.res.Resources
 import de.geosphere.speechplaning.R
+import io.kotest.common.ExperimentalKotest
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.datatest.withData
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 
+@OptIn(ExperimentalKotest::class)
 class EventMapperTest : BehaviorSpec({
 
     val observerString = "observer"

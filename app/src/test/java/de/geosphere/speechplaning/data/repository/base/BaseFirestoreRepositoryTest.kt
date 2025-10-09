@@ -114,8 +114,8 @@ class BaseFirestoreRepositoryTest : BehaviorSpec({
             }
         }
 
-        `when`("Firestore fails during save") {
-            then("it should throw a RuntimeException") {
+        `when`("Firestore fails during save of an existing entity") {
+            then("it should throw a RuntimeException with the entity ID in the message") {
                 val entity = TestEntity(id = "some-id", name = "Failure")
                 val exception = Exception("Firestore is down")
 
@@ -128,6 +128,25 @@ class BaseFirestoreRepositoryTest : BehaviorSpec({
                     repository.save(entity)
                 }
                 testScope.advanceUntilIdle()
+                thrown.message shouldBe "Failed to save entity 'some-id' in test-collection"
+                thrown.cause shouldBe exception
+            }
+        }
+
+        `when`("Firestore fails during save of a new entity") {
+            then("it should throw a RuntimeException with '[new]' in the message") {
+                val newEntity = TestEntity(id = "", name = "New Failure")
+                val exception = Exception("Firestore is down")
+
+                val addTask = mockk<Task<DocumentReference>>()
+                coEvery { addTask.await() } throws exception
+                every { collectionReference.add(newEntity) } returns addTask
+
+                val thrown = shouldThrow<RuntimeException> {
+                    repository.save(newEntity)
+                }
+                testScope.advanceUntilIdle()
+                thrown.message shouldBe "Failed to save entity '[new]' in test-collection"
                 thrown.cause shouldBe exception
             }
         }

@@ -125,7 +125,8 @@ internal class BaseFirestoreSubcollectionRepositoryTest : BehaviorSpec({
                 val exception = shouldThrow<RuntimeException> {
                     spyTestRepository.save(newEntity, parentId1, parentId2)
                 }
-                exception.message shouldContain "Failed to save entity '[new]' in subcollection '$testSubcollectionName' under parent '$parentId2' in '$expectedParentPath'"
+                exception.message shouldContain "Failed to save entity '[new]' in subcollection " +
+                    "'$testSubcollectionName' under parent '$parentId2' in '$expectedParentPath'"
                 exception.cause?.message shouldBe exceptionMessage
             }
         }
@@ -144,7 +145,8 @@ internal class BaseFirestoreSubcollectionRepositoryTest : BehaviorSpec({
                 val exception = shouldThrow<RuntimeException> {
                     spyTestRepository.save(existingEntity, parentId1, parentId2)
                 }
-                exception.message shouldContain "Failed to save entity 'someId' in subcollection '$testSubcollectionName' under parent '$parentId2' in '$expectedParentPath'"
+                exception.message shouldContain "Failed to save entity 'someId' in subcollection " +
+                    "'$testSubcollectionName' under parent '$parentId2' in '$expectedParentPath'"
                 exception.cause?.message shouldBe exceptionMessage
             }
         }
@@ -181,7 +183,8 @@ internal class BaseFirestoreSubcollectionRepositoryTest : BehaviorSpec({
                 val exception = shouldThrow<RuntimeException> {
                     testRepository.getAll(parentId1, parentId2)
                 }
-                exception.message shouldContain "Failed to get all entities from subcollection '$testSubcollectionName' under parent '$parentId2' in '$expectedParentPath'"
+                exception.message shouldContain "Failed to get all entities from subcollection " +
+                    "'$testSubcollectionName' under parent '$parentId2' in '$expectedParentPath'"
                 exception.cause?.message shouldBe exceptionMessage
             }
         }
@@ -257,7 +260,8 @@ internal class BaseFirestoreSubcollectionRepositoryTest : BehaviorSpec({
                 val exception = shouldThrow<RuntimeException> {
                     testRepository.getById(entityId, parentId1, parentId2)
                 }
-                exception.message shouldContain "Failed to get entity '$entityId' from subcollection '$testSubcollectionName' under parent '$parentId2' in '$expectedParentPath'"
+                exception.message shouldContain "Failed to get entity '$entityId' from subcollection " +
+                    "'$testSubcollectionName' under parent '$parentId2' in '$expectedParentPath'"
                 exception.cause?.message shouldBe exceptionMessage
             }
         }
@@ -312,17 +316,18 @@ internal class BaseFirestoreSubcollectionRepositoryTest : BehaviorSpec({
                 val exception = shouldThrow<RuntimeException> {
                     testRepository.delete(entityId, parentId1, parentId2)
                 }
-                exception.message shouldContain "Failed to delete entity '$entityId' from subcollection '$testSubcollectionName' under parent '$parentId2' in '$expectedParentPath'"
+                exception.message shouldContain "Failed to delete entity '$entityId' from subcollection " +
+                    "'$testSubcollectionName' under parent '$parentId2' in '$expectedParentPath'"
                 exception.cause?.message shouldBe exceptionMessage
             }
         }
     }
-    
+
     context("isEntityIdBlank default implementation") {
         `when`("called with blank strings") {
             then("should return true") {
-                 spyTestRepository.isEntityIdBlank("").shouldBeTrue()
-                 spyTestRepository.isEntityIdBlank("   ").shouldBeTrue()
+                spyTestRepository.isEntityIdBlank("").shouldBeTrue()
+                spyTestRepository.isEntityIdBlank("   ").shouldBeTrue()
             }
         }
         `when`("called with non-blank string") {
