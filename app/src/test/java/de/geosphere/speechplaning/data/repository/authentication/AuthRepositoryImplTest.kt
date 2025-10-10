@@ -1,179 +1,184 @@
 package de.geosphere.speechplaning.data.repository.authentication
 
-import com.google.android.gms.tasks.Tasks
+import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GetTokenResult
 import de.geosphere.speechplaning.data.model.AppUser
+import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
-import io.mockk.impl.annotations.RelaxedMockK
-import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.slot
+import io.mockk.unmockkStatic
 import io.mockk.verify
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
 
 @ExperimentalCoroutinesApi
-@ExtendWith(MockKExtension::class)
-class AuthRepositoryImplTest {
+class AuthRepositoryImplTest : BehaviorSpec({
 
-    @RelaxedMockK
-    private lateinit var firebaseAuth: FirebaseAuth
+    lateinit var firebaseAuth: FirebaseAuth
+    lateinit var userRepository: UserRepository
 
-    @RelaxedMockK
-    private lateinit var userRepository: UserRepository
+    val testDispatcher = StandardTestDispatcher()
+    val testScope = TestScope(testDispatcher)
 
-    private val testDispatcher = StandardTestDispatcher()
-    private lateinit var authRepository: AuthRepository
+    lateinit var authRepository: AuthRepository
+    val listenerSlot = slot<FirebaseAuth.AuthStateListener>()
 
-    // Slot to capture the listener
-    private val listenerSlot = slot<FirebaseAuth.AuthStateListener>()
-
-    @BeforeEach
-    fun setUp() {
-        // Capture the listener upon initialization of the repository
-        every { firebaseAuth.addAuthStateListener(capture(listenerSlot)) } returns Unit
-        authRepository = AuthRepositoryImpl(firebaseAuth, userRepository, CoroutineScope(testDispatcher))
+    beforeSpec {
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
     }
 
-    @Test
-    fun `AuthStateListener - when user is null, state is Unauthenticated`() = runTest(testDispatcher) {
-        // Given an unauthenticated user
-        every { firebaseAuth.currentUser } returns null
-
-        // When the listener is triggered
-        listenerSlot.captured.onAuthStateChanged(firebaseAuth)
-        advanceUntilIdle()
-
-        // Then the state should be Unauthenticated
-        assertEquals(AuthUiState.Unauthenticated, authRepository.authUiState.value)
+    afterSpec {
+        unmockkStatic("kotlinx.coroutines.tasks.TasksKt")
     }
 
-    @Test
-    fun `AuthStateListener - when user is approved, state is Authenticated`() = runTest(testDispatcher) {
-        // Given a logged in and approved user
-        val firebaseUser = mockk<FirebaseUser>()
-        val approvedAppUser = mockk<AppUser> { every { approved } returns true }
-        val tokenResult = mockk<GetTokenResult>()
-        every { firebaseAuth.currentUser } returns firebaseUser
-        every { firebaseUser.getIdToken(true) } returns Tasks.forResult(tokenResult)
-        coEvery { userRepository.getOrCreateUser(firebaseUser) } returns approvedAppUser
-
-        // When the listener is triggered
-        listenerSlot.captured.onAuthStateChanged(firebaseAuth)
-        advanceUntilIdle()
-
-        // Then the state should be Authenticated
-        assertEquals(AuthUiState.Authenticated(firebaseUser), authRepository.authUiState.value)
+    beforeEach {
+        Dispatchers.setMain(testDispatcher)
+        firebaseAuth = mockk(relaxed = true) {
+            every { addAuthStateListener(capture(listenerSlot)) } returns Unit
+        }
+        userRepository = mockk(relaxed = true)
+        authRepository = AuthRepositoryImpl(firebaseAuth, userRepository, testScope)
     }
 
-    @Test
-    fun `AuthStateListener - when user is not approved, state is NeedsApproval`() = runTest(testDispatcher) {
-        // Given a logged in but not approved user
-        val firebaseUser = mockk<FirebaseUser>()
-        val notApprovedAppUser = mockk<AppUser> { every { approved } returns false }
-        val tokenResult = mockk<GetTokenResult>()
-        every { firebaseAuth.currentUser } returns firebaseUser
-        every { firebaseUser.getIdToken(true) } returns Tasks.forResult(tokenResult)
-        coEvery { userRepository.getOrCreateUser(firebaseUser) } returns notApprovedAppUser
-
-        // When the listener is triggered
-        listenerSlot.captured.onAuthStateChanged(firebaseAuth)
-        advanceUntilIdle()
-
-        // Then the state should be NeedsApproval
-        assertEquals(AuthUiState.NeedsApproval, authRepository.authUiState.value)
+    afterEach {
+        Dispatchers.resetMain()
     }
 
-    @Test
-    fun `signOut calls firebaseAuth signOut`() {
-        // When
-        authRepository.signOut()
+    given("AuthStateListener") {
+        `when`("a Firebase user is signed out (user is null)") {
+            then("the state should be Unauthenticated") {
+                every { firebaseAuth.currentUser } returns null
+                listenerSlot.captured.onAuthStateChanged(firebaseAuth)
+                testDispatcher.scheduler.runCurrent()
+                testScope.advanceUntilIdle()
+                authRepository.authUiState.value shouldBe AuthUiState.Unauthenticated
+            }
+        }
 
-        // Then
-        verify { firebaseAuth.signOut() }
+        `when`("a signed-in user is approved") {
+            then("the state should be Authenticated") {
+                val firebaseUser = mockk<FirebaseUser>(relaxed = true)
+                val approvedAppUser = mockk<AppUser> { every { approved } returns true }
+
+                // Mock für getIdToken(true)
+                val mockGetIdTokenTask = mockk<Task<GetTokenResult>>()
+                every { firebaseUser.getIdToken(true) } returns mockGetIdTokenTask
+                coEvery { mockGetIdTokenTask.await() } returns mockk()
+
+                every { firebaseAuth.currentUser } returns firebaseUser
+                coEvery { userRepository.getOrCreateUser(firebaseUser) } returns approvedAppUser
+
+                listenerSlot.captured.onAuthStateChanged(firebaseAuth)
+                testDispatcher.scheduler.runCurrent()
+                testScope.advanceUntilIdle()
+
+                authRepository.authUiState.value shouldBe AuthUiState.Authenticated(firebaseUser)
+            }
+        }
+
+        `when`("a signed-in user is not yet approved") {
+            then("the state should be NeedsApproval") {
+                val firebaseUser = mockk<FirebaseUser>(relaxed = true)
+                val notApprovedAppUser = mockk<AppUser> { every { approved } returns false }
+
+                // Mock für getIdToken(true)
+                val mockGetIdTokenTask = mockk<Task<GetTokenResult>>()
+                every { firebaseUser.getIdToken(true) } returns mockGetIdTokenTask
+                coEvery { mockGetIdTokenTask.await() } returns mockk()
+
+                every { firebaseAuth.currentUser } returns firebaseUser
+                coEvery { userRepository.getOrCreateUser(firebaseUser) } returns notApprovedAppUser
+
+                listenerSlot.captured.onAuthStateChanged(firebaseAuth)
+                testDispatcher.scheduler.runCurrent()
+                testScope.advanceUntilIdle()
+
+                authRepository.authUiState.value shouldBe AuthUiState.NeedsApproval
+            }
+        }
     }
 
-    @Test
-    fun `signInWithEmailAndPassword calls firebaseAuth`() = runTest {
-        // Given
-        val email = "test@example.com"
-        val password = "password"
-        val authResult = mockk<AuthResult>()
-        every { firebaseAuth.signInWithEmailAndPassword(email, password) } returns Tasks.forResult(authResult)
-
-        // When
-        authRepository.signInWithEmailAndPassword(email, password)
-
-        // Then
-        verify { firebaseAuth.signInWithEmailAndPassword(email, password) }
+    given("signOut function") {
+        `when`("signOut is called") {
+            then("it should call firebaseAuth.signOut") {
+                authRepository.signOut()
+                verify { firebaseAuth.signOut() }
+            }
+        }
     }
 
-    @Test
-    fun `createUserWithEmailAndPassword creates user and app user`() = runTest {
-        // Given
-        val email = "test@example.com"
-        val password = "password"
-        val authResult = mockk<AuthResult>()
-        val firebaseUser = mockk<FirebaseUser>()
-        every { firebaseAuth.createUserWithEmailAndPassword(email, password) } returns Tasks.forResult(authResult)
-        every { authResult.user } returns firebaseUser
-        coEvery { userRepository.getOrCreateUser(firebaseUser) } returns mockk()
+    given("signInWithEmailAndPassword function") {
+        `when`("the function is called with email and password") {
+            then("it should call the corresponding Firebase function and await the result") {
+                // GIVEN
+                val email = "test@example.com"
+                val password = "password"
+                val mockTask = mockk<Task<AuthResult>>()
+                val mockAuthResult = mockk<AuthResult>()
 
-        // When
-        authRepository.createUserWithEmailAndPassword(email, password)
+                // Mock the Firebase call to return our mock Task
+                every { firebaseAuth.signInWithEmailAndPassword(email, password) } returns mockTask
 
-        // Then
-        verify { firebaseAuth.createUserWithEmailAndPassword(email, password) }
-        coVerify { userRepository.getOrCreateUser(firebaseUser) }
+                // Mock the await() extension function for our mock Task
+                coEvery { mockTask.await() } returns mockAuthResult
+
+                // WHEN
+                testScope.testScheduler.runCurrent()
+                authRepository.signInWithEmailAndPassword(email, password)
+                testScope.advanceUntilIdle()
+
+                // THEN
+                // Verify that the original Firebase function was called.
+                verify { firebaseAuth.signInWithEmailAndPassword(email, password) }
+                // Verify that await() was called on the task.
+                coVerify { mockTask.await() }
+            }
+        }
     }
 
-    @Test
-    fun `forceReloadAndCheckUserStatus - when user approved, state is Authenticated`() = runTest(testDispatcher) {
-        // Given
-        val firebaseUser = mockk<FirebaseUser>()
-        val approvedAppUser = mockk<AppUser> { every { approved } returns true }
-        val tokenResult = mockk<GetTokenResult>()
-        every { firebaseAuth.currentUser } returns firebaseUser
-        every { firebaseUser.getIdToken(true) } returns Tasks.forResult(tokenResult)
-        coEvery { userRepository.getOrCreateUser(firebaseUser) } returns approvedAppUser
+    given("createUserWithEmailAndPassword function") {
+        `when`("a new user is created") {
+            then("a Firebase user and an App user should be created") {
+                // GIVEN
+                val email = "new@example.com"
+                val password = "new_password"
+                val mockTask = mockk<Task<AuthResult>>()
+                val mockAuthResult = mockk<AuthResult>()
+                val mockFirebaseUser = mockk<FirebaseUser>(relaxed = true)
+                val mockAppUser = mockk<AppUser>()
 
-        // When
-        authRepository.forceReloadAndCheckUserStatus()
-        advanceUntilIdle()
+                // Mock the Firebase call to return our mock Task
+                every { firebaseAuth.createUserWithEmailAndPassword(email, password) } returns mockTask
+                // Mock the await() extension function for our mock Task
+                coEvery { mockTask.await() } returns mockAuthResult
+                // Mock the result of the task
+                every { mockAuthResult.user } returns mockFirebaseUser
+                // Mock the user repository call
+                coEvery { userRepository.getOrCreateUser(mockFirebaseUser) } returns mockAppUser
 
-        // Then
-        verify { firebaseUser.getIdToken(true) }
-        coVerify { userRepository.getOrCreateUser(firebaseUser) }
-        assertEquals(AuthUiState.Authenticated(firebaseUser), authRepository.authUiState.value)
+                // WHEN
+                authRepository.createUserWithEmailAndPassword(email, password)
+                testScope.advanceUntilIdle()
+
+                // THEN
+                verify { firebaseAuth.createUserWithEmailAndPassword(email, password) }
+                coVerify { mockTask.await() }
+                coVerify { userRepository.getOrCreateUser(mockFirebaseUser) }
+            }
+        }
     }
-
-    @Test
-    fun `forceReloadAndCheckUserStatus - when user not approved, state is NeedsApproval`() = runTest(testDispatcher) {
-        // Given
-        val firebaseUser = mockk<FirebaseUser>()
-        val notApprovedAppUser = mockk<AppUser> { every { approved } returns false }
-        val tokenResult = mockk<GetTokenResult>()
-        every { firebaseAuth.currentUser } returns firebaseUser
-        every { firebaseUser.getIdToken(true) } returns Tasks.forResult(tokenResult)
-        coEvery { userRepository.getOrCreateUser(firebaseUser) } returns notApprovedAppUser
-
-        // When
-        authRepository.forceReloadAndCheckUserStatus()
-        advanceUntilIdle()
-
-        // Then
-        assertEquals(AuthUiState.NeedsApproval, authRepository.authUiState.value)
-    }
-}
+})

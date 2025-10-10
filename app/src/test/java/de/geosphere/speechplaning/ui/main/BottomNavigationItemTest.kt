@@ -5,14 +5,12 @@ import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.FolderShared
 import de.geosphere.speechplaning.ui.navigation.Screen
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Test
+import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.shouldBe
 
-class BottomNavigationItemTest {
+class BottomNavigationItemTest : ShouldSpec({
 
-    @Test
-    fun `test BottomNavigationItem creation and properties`() {
+    should("have correct properties on creation") {
         val testItem = BottomNavigationItem(
             label = "Test",
             selectedIcon = Icons.Default.CalendarMonth,
@@ -22,47 +20,44 @@ class BottomNavigationItemTest {
             badgeCount = 5
         )
 
-        assertEquals("Test", testItem.label)
-        assertEquals(Icons.Default.CalendarMonth, testItem.selectedIcon)
-        assertEquals(Icons.Default.CalendarMonth, testItem.unselectedIcon)
-        assertEquals(true, testItem.hasNews)
-        assertEquals(Screen.PlaningRoute, testItem.route)
-        assertEquals(5, testItem.badgeCount)
+        testItem.label shouldBe "Test"
+        testItem.selectedIcon shouldBe Icons.Default.CalendarMonth
+        testItem.unselectedIcon shouldBe Icons.Default.CalendarMonth
+        testItem.hasNews shouldBe true
+        testItem.route shouldBe Screen.PlaningRoute
+        testItem.badgeCount shouldBe 5
     }
 
-    @Test
-    fun `test companion object tabs list`() {
+    should("have correct tabs in companion object") {
         val tabs = BottomNavigationItem.tabs
-        assertEquals(3, tabs.size)
+        tabs.size shouldBe 3
 
         // Test Plan tab
         val planTab = tabs[0]
-        assertEquals("Plan", planTab.label)
-        assertEquals(Icons.Filled.CalendarMonth, planTab.selectedIcon)
-        assertEquals(Screen.PlaningRoute, planTab.route)
-        assertEquals(true, planTab.hasNews)
-        assertNull(planTab.badgeCount)
-
+        planTab.label shouldBe "Plan"
+        planTab.selectedIcon shouldBe Icons.Filled.CalendarMonth
+        planTab.route shouldBe Screen.PlaningRoute
+        planTab.hasNews shouldBe true
+        planTab.badgeCount shouldBe null
 
         // Test Speakers tab
         val speakersTab = tabs[1]
-        assertEquals("Speakers", speakersTab.label)
-        assertEquals(Icons.Filled.FolderShared, speakersTab.selectedIcon)
-        assertEquals(Screen.SpeakerRoute, speakersTab.route)
-        assertEquals(false, speakersTab.hasNews)
-        assertNull(speakersTab.badgeCount)
+        speakersTab.label shouldBe "Speakers"
+        speakersTab.selectedIcon shouldBe Icons.Filled.FolderShared
+        speakersTab.route shouldBe Screen.SpeakerRoute
+        speakersTab.hasNews shouldBe false
+        speakersTab.badgeCount shouldBe null
 
         // Test Speeches tab
         val speechesTab = tabs[2]
-        assertEquals("Speeches", speechesTab.label)
-        assertEquals(Icons.AutoMirrored.Filled.ListAlt, speechesTab.selectedIcon)
-        assertEquals(Screen.SpeechesRoute, speechesTab.route)
-        assertEquals(false, speechesTab.hasNews)
-        assertEquals(45, speechesTab.badgeCount)
+        speechesTab.label shouldBe "Speeches"
+        speechesTab.selectedIcon shouldBe Icons.AutoMirrored.Filled.ListAlt
+        speechesTab.route shouldBe Screen.SpeechesRoute
+        speechesTab.hasNews shouldBe false
+        speechesTab.badgeCount shouldBe 45
     }
 
-    @Test
-    fun `test data class copy method`() {
+    should("copy data class with new value") {
         val originalItem = BottomNavigationItem(
             label = "Original",
             selectedIcon = Icons.Default.CalendarMonth,
@@ -72,8 +67,8 @@ class BottomNavigationItemTest {
         )
         val copiedItem = originalItem.copy(label = "Copied")
 
-        assertEquals("Copied", copiedItem.label)
-        assertEquals(originalItem.selectedIcon, copiedItem.selectedIcon)
-        assertEquals(originalItem.route, copiedItem.route)
+        copiedItem.label shouldBe "Copied"
+        copiedItem.selectedIcon shouldBe originalItem.selectedIcon
+        copiedItem.route shouldBe originalItem.route
     }
-}
+})

@@ -1,4 +1,5 @@
 
+
 import java.util.Locale
 
 plugins {
@@ -101,6 +102,7 @@ dependencies {
     // When using the BoM, you don't specify versions in Firebase library dependencies
     implementation(libs.firebase.database)
     implementation("com.google.firebase:firebase-auth") // Email u. Passwort
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
 
     // // Koin
     // // dependencies with Koin
@@ -112,16 +114,15 @@ dependencies {
 
     // Unit Tests
     testImplementation(kotlin("test"))
-    testImplementation(libs.junit.jupiter.api)
-    testImplementation(libs.junit.jupiter.params)
     testImplementation(libs.mockk) {
         exclude(group = "io.mockk", module = "mockk-android")
     }
     // testImplementation(libs.mockk.android) // Remove, not needed for pure unit tests
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.junit) // JUnit 4 für backwards compatibility
-
-    testRuntimeOnly(libs.junit.jupiter.engine)
+    testImplementation("io.kotest:kotest-runner-junit5:6.0.3")
+    testImplementation("io.kotest:kotest-assertions-core:6.0.3")
+    testImplementation("io.kotest:kotest-property:6.0.3")
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -306,8 +307,22 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     sourceDirectories.setFrom(sourceDirs)
 
     // --- Korrektur 2: executionData ---
-    executionData.from(
-        layout.buildDirectory.file("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec"),
-        layout.buildDirectory.file("jacoco/testDebugUnitTest.exec") // Fallback
+    // Der Pfad zu den JaCoCo-Ausführungsdaten. Nach dem Wechsel zu Kotest/JUnit5 wird
+    // die .exec-Datei möglicherweise nur noch am Standard-Gradle-JaCoCo-Plugin-Speicherort erstellt.
+    // Wir verwenden nur noch diesen Pfad, um sicherzustellen, dass der Bericht gefunden wird.
+    executionData.from(layout.buildDirectory.file("jacoco/testDebugUnitTest.exec"))
+}
+
+detekt {
+    autoCorrect = true
+    source.from(
+        files(
+            "src/main/java",
+            "src/main/kotlin",
+            "src/test/java",
+            "src/test/kotlin",
+            "src/androidTest/java",
+            "src/androidTest/kotlin"
+        )
     )
 }
