@@ -1,3 +1,4 @@
+
 package de.geosphere.speechplaning.data.repository.base
 
 import com.google.android.gms.tasks.Task
@@ -5,439 +6,234 @@ import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
-import io.mockk.MockKAnnotations
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.matchers.shouldBe
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import io.mockk.verify
-import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertNotNull
-import org.junit.jupiter.api.assertNull
-import org.junit.jupiter.api.assertThrows
-import kotlin.test.assertEquals
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
 
-// Test-Entität für die Tests
-data class TestEntity(
-    val id: String = "",
-    val name: String = "",
-    val value: Int = 0,
-    val active: Boolean = false
-)
+internal data class TestEntity(val id: String = "", val name: String = "")
 
-// Konkrete Implementierung der abstrakten Klasse für Tests
-class TestFirestoreRepository(
-    firestore: FirebaseFirestore,
-    collectionPath: String = "test-collection"
-) : BaseFirestoreRepository<TestEntity>(firestore, collectionPath, TestEntity::class.java) {
-
+@OptIn(ExperimentalCoroutinesApi::class)
+internal class TestFirestoreRepository(firestore: FirebaseFirestore) : BaseFirestoreRepository<TestEntity>(
+    firestore = firestore,
+    collectionPath = "test-collection",
+    clazz = TestEntity::class.java
+) {
     override fun extractIdFromEntity(entity: TestEntity): String = entity.id
 }
 
-class BaseFirestoreRepositoryTest {
+@ExperimentalCoroutinesApi
+class BaseFirestoreRepositoryTest : BehaviorSpec({
 
-    private val firestoreMock: FirebaseFirestore = mockk()
-    private val collectionReferenceMock: CollectionReference = mockk()
-    private val documentReferenceMock: DocumentReference = mockk()
-    private val queryMock: Query = mockk()
+    val testDispatcher = StandardTestDispatcher()
+    val testScope = TestScope(testDispatcher)
 
-    // Tasks Mocks - Using relaxed = true to avoid mocking all Task methods
-    private val voidTaskMock: Task<Void> = mockk(relaxed = true)
-    private val documentReferenceTaskMock: Task<DocumentReference> = mockk(relaxed = true)
-    private val querySnapshotTaskMock: Task<QuerySnapshot> = mockk(relaxed = true)
-    private val documentSnapshotTaskMock: Task<DocumentSnapshot> = mockk(relaxed = true)
-    private lateinit var testFirestoreRepository: TestFirestoreRepository
+    lateinit var firestore: FirebaseFirestore
+    lateinit var collectionReference: CollectionReference
+    lateinit var documentReference: DocumentReference
+    lateinit var querySnapshot: QuerySnapshot
+    lateinit var documentSnapshot: DocumentSnapshot
 
-    @BeforeEach
-    fun setUp() {
-        MockKAnnotations.init(this) // Initialize @MockK annotated mocks
+    lateinit var repository: TestFirestoreRepository
 
-        every { firestoreMock.collection(any()) } returns collectionReferenceMock
-        every { collectionReferenceMock.document(any()) } returns documentReferenceMock
-        every { collectionReferenceMock.add(any()) } returns documentReferenceTaskMock
-        every { documentReferenceMock.set(any()) } returns voidTaskMock
-        every { documentReferenceMock.get() } returns documentSnapshotTaskMock
-        every { documentReferenceMock.delete() } returns voidTaskMock
-        every { collectionReferenceMock.get() } returns querySnapshotTaskMock
-        every { collectionReferenceMock.whereEqualTo(any<String>(), any()) } returns queryMock
-        every { queryMock.get() } returns querySnapshotTaskMock
-
-        testFirestoreRepository = TestFirestoreRepository(firestoreMock)
+    beforeSpec {
+        mockkStatic("kotlinx.coroutines.tasks.TasksKt")
     }
 
-    // Helper zum einfachen Mocken von Task-Ergebnissen für await()
-    private fun <T> mockTaskResult(task: Task<T>, resultData: T?, exception: Exception? = null) {
-        every { task.isComplete } returns true
-        every { task.isCanceled } returns false
-        if (exception != null) {
-            every { task.isSuccessful } returns false
-            every { task.exception } returns exception
-        } else {
-            every { task.isSuccessful } returns true
-            every { task.exception } returns null
-            every { task.result } returns resultData
+    afterSpec {
+        unmockkStatic("kotlinx.coroutines.tasks.TasksKt")
+    }
+
+    beforeEach {
+        Dispatchers.setMain(testDispatcher)
+
+        firestore = mockk()
+        collectionReference = mockk()
+        documentReference = mockk()
+        querySnapshot = mockk()
+        documentSnapshot = mockk()
+
+        every { firestore.collection("test-collection") } returns collectionReference
+
+        repository = TestFirestoreRepository(firestore)
+    }
+
+    afterEach {
+        Dispatchers.resetMain()
+    }
+
+    given("save") {
+        `when`("saving a new entity (with blank ID)") {
+            then("it should call 'add' and return the new ID") {
+                val newEntity = TestEntity(id = "", name = "New")
+                val generatedId = "firestore-generated-id"
+
+                val addTask = mockk<Task<DocumentReference>>()
+                coEvery { addTask.await() } returns documentReference
+                every { collectionReference.add(newEntity) } returns addTask
+                every { documentReference.id } returns generatedId
+
+                val resultId = repository.save(newEntity)
+                testScope.advanceUntilIdle()
+
+                resultId shouldBe generatedId
+                verify { collectionReference.add(newEntity) }
+                verify(exactly = 0) { collectionReference.document(any()) }
+            }
+        }
+
+        `when`("saving an existing entity (with given ID)") {
+            then("it should call 'set' and return the existing ID") {
+                val existingEntity = TestEntity(id = "existing-id", name = "Existing")
+
+                val setTask = mockk<Task<Void>>()
+                coEvery { setTask.await() } returns mockk()
+                every { collectionReference.document(existingEntity.id) } returns documentReference
+                every { documentReference.set(existingEntity) } returns setTask
+
+                val resultId = repository.save(existingEntity)
+                testScope.advanceUntilIdle()
+
+                resultId shouldBe existingEntity.id
+                verify { documentReference.set(existingEntity) }
+                verify(exactly = 0) { collectionReference.add(any()) }
+            }
+        }
+
+        `when`("Firestore fails during save of an existing entity") {
+            then("it should throw a RuntimeException with the entity ID in the message") {
+                val entity = TestEntity(id = "some-id", name = "Failure")
+                val exception = Exception("Firestore is down")
+
+                val setTask = mockk<Task<Void>>()
+                coEvery { setTask.await() } throws exception
+                every { collectionReference.document(entity.id) } returns documentReference
+                every { documentReference.set(entity) } returns setTask
+
+                val thrown = shouldThrow<RuntimeException> {
+                    repository.save(entity)
+                }
+                testScope.advanceUntilIdle()
+                thrown.message shouldBe "Failed to save entity 'some-id' in test-collection"
+                thrown.cause shouldBe exception
+            }
+        }
+
+        `when`("Firestore fails during save of a new entity") {
+            then("it should throw a RuntimeException with '[new]' in the message") {
+                val newEntity = TestEntity(id = "", name = "New Failure")
+                val exception = Exception("Firestore is down")
+
+                val addTask = mockk<Task<DocumentReference>>()
+                coEvery { addTask.await() } throws exception
+                every { collectionReference.add(newEntity) } returns addTask
+
+                val thrown = shouldThrow<RuntimeException> {
+                    repository.save(newEntity)
+                }
+                testScope.advanceUntilIdle()
+                thrown.message shouldBe "Failed to save entity '[new]' in test-collection"
+                thrown.cause shouldBe exception
+            }
         }
     }
 
-    @Test
-    fun `extractIdFromEntity should return correct id`() {
-        val district = TestEntity(id = "testId", name = "Test District")
-        val extractedId = testFirestoreRepository.extractIdFromEntity(district)
-        assertEquals("testId", extractedId)
-    }
+    given("getById") {
+        `when`("the document exists") {
+            then("it should return the entity") {
+                val entityId = "existing-id"
+                val expectedEntity = TestEntity(id = entityId, name = "Found")
 
-    @Test
-    fun `save new testEntity should add to firestore and return new id`() = runTest {
-        val newTestEntity = TestEntity(id = "", name = "Max Mustermann", active = true)
-        val generatedId = "generatedFirebaseId"
-        val addedDocRefMock: DocumentReference = mockk() // separater Mock für das Ergebnis von add()
+                val getTask = mockk<Task<DocumentSnapshot>>()
+                coEvery { getTask.await() } returns documentSnapshot
+                every { documentSnapshot.toObject(TestEntity::class.java) } returns expectedEntity
+                every { collectionReference.document(entityId) } returns documentReference
+                every { documentReference.get() } returns getTask
 
-        mockTaskResult(documentReferenceTaskMock, addedDocRefMock)
-        every { addedDocRefMock.id } returns generatedId
-
-        val resultId = testFirestoreRepository.save(newTestEntity)
-
-        verify { collectionReferenceMock.add(newTestEntity) }
-        assertEquals(generatedId, resultId)
-    }
-
-    /**
-     * ### Erklärung des neuen Tests:
-     *
-     * 1.  **Arrange:**
-     *     *   Wir erstellen eine `existingEntity` mit einer nicht-leeren ID (`"existingId"`).
-     *     *   Wir simulieren eine `RuntimeException`, die beim `.set()`-Aufruf auftreten soll.
-     *     *   Wir mocken die Aufrufkette: `document("existingId")` -> `set(existingEntity)` -> `voidTaskMock`.
-     *     *   Mit `mockTaskResult(voidTaskMock, null, simulatedException)` sorgen wir dafür, dass der `await()`
-     *     *    -Aufruf auf den `.set()`-Task fehlschlägt.
-     *
-     * 2.  **Act & Assert:**
-     *     *   Wir rufen `testFirestoreRepository.save(existingEntity)` innerhalb von `assertThrows` auf.
-     *     *   Wir fangen die `RuntimeException` auf und prüfen die Nachricht. Diesmal muss die Nachricht die
-     *     *   `existingId` enthalten und nicht `"[new]"`, wodurch der **else-Branch** getestet wird.
-     *     *   Wir prüfen auch hier die `cause`.
-     *
-     * 3.  **Verify:**
-     *     *   Wir stellen sicher, dass der Pfad für das Update (`document()` und `set()`) und nicht der für das
-     *     *    Hinzufügen (`add()`) aufgerufen wurde.
-     *
-     *
-     */
-    @Test
-    fun `save existing testEntity should throw runtime exception on firestore failure`() = runTest {
-        // Arrange: Bereite eine existierende Entität und einen Fehlerfall vor
-        val existingEntity = TestEntity(id = "existingId", name = "Existing", active = true)
-        val simulatedException = RuntimeException("Simulated Firestore set failure")
-
-        // Mocke die Kette für einen fehlschlagenden 'set'-Aufruf (Update)
-        every { collectionReferenceMock.document(existingEntity.id) } returns documentReferenceMock
-        every { documentReferenceMock.set(existingEntity) } returns voidTaskMock
-        mockTaskResult(voidTaskMock, null, simulatedException) // Simuliere, dass der Task fehlschlägt
-
-        // Act & Assert: Führe die save-Methode aus und erwarte eine Exception
-        val exception = assertThrows<RuntimeException> {
-            testFirestoreRepository.save(existingEntity)
+                val result = repository.getById(entityId)
+                testScope.advanceUntilIdle()
+                result shouldBe expectedEntity
+            }
         }
 
-        // Überprüfe, ob die Exception die korrekte Nachricht (mit der ID) und Ursache hat
-        val expectedMessage = "Failed to save entity '${existingEntity.id}' in test-collection"
-        assertTrue(
-            exception.message?.contains(expectedMessage) ?: false,
-            "Exception message was not as expected."
-        )
-        assertEquals(
-            simulatedException,
-            exception.cause,
-            "The cause of the exception was not the simulated one."
-        )
+        `when`("the document does not exist") {
+            then("it should return null") {
+                val entityId = "non-existing-id"
 
-        // Verify: Stelle sicher, dass die korrekten Methoden aufgerufen wurden
-        verify(exactly = 1) { collectionReferenceMock.document(existingEntity.id) }
-        verify(exactly = 1) { documentReferenceMock.set(existingEntity) }
-    }
+                val getTask = mockk<Task<DocumentSnapshot>>()
+                coEvery { getTask.await() } returns documentSnapshot
+                every { documentSnapshot.toObject(TestEntity::class.java) } returns null
+                every { collectionReference.document(entityId) } returns documentReference
+                every { documentReference.get() } returns getTask
 
-    @Test
-    fun `save new testEntity should throw runtime exception on firestore failure`() = runTest {
-        val newEntity = TestEntity(id = "", name = "Max Mustermann", active = true)
-        val simpleException = RuntimeException("Simulated Firestore error")
-
-        // Task schlägt fehl
-        mockTaskResult(documentReferenceTaskMock, null, simpleException)
-        // Sicherstellen, dass add mit newSpeech den fehlschlagenden Task zurückgibt
-        every { collectionReferenceMock.add(newEntity) } returns documentReferenceTaskMock
-
-        val exception = assertThrows<RuntimeException> {
-            testFirestoreRepository.save(newEntity)
+                val result = repository.getById(entityId)
+                testScope.advanceUntilIdle()
+                result shouldBe null
+            }
         }
 
-        assertTrue(exception.message?.contains("Failed to save entity '[new]' in test-collection") ?: false)
-        assertEquals(simpleException, exception.cause)
+        `when`("the ID is blank") {
+            then("it should return null without calling Firestore") {
+                repository.getById(" ")
+                testScope.advanceUntilIdle()
+                verify(exactly = 0) { collectionReference.document(any()) }
+            }
+        }
     }
 
-    @Test
-    fun `save existing testEntity should set document in firestore and return existing id`() = runTest {
-        val existingDistrict = TestEntity(
-            id = "existingId",
-            name = "Max Mustermann",
-            active = true
-        )
-        mockTaskResult(voidTaskMock, null) // Für Task<Void> ist das Ergebnis null
+    given("getAll") {
+        `when`("the collection has documents") {
+            then("it should return a list of entities") {
+                val expectedList = listOf(TestEntity("id1", "One"), TestEntity("id2", "Two"))
 
-        val resultId = testFirestoreRepository.save(existingDistrict)
+                val getTask = mockk<Task<QuerySnapshot>>()
+                coEvery { getTask.await() } returns querySnapshot
+                every { querySnapshot.toObjects(TestEntity::class.java) } returns expectedList
+                every { collectionReference.get() } returns getTask
 
-        verify { collectionReferenceMock.document("existingId") }
-        verify { documentReferenceMock.set(existingDistrict) }
-        assertEquals("existingId", resultId)
+                val result = repository.getAll()
+                testScope.advanceUntilIdle()
+                result shouldBe expectedList
+            }
+        }
     }
 
-    @Test
-    fun `getById with valid id should return testEntity object`() = runTest {
-        val testEntityId = "entity123"
-        val expectedDistrict = TestEntity(
-            id = testEntityId,
-            name = "Max Mustermann",
-            active = true
-        )
-        val snapshotResultMock: DocumentSnapshot = mockk()
+    given("delete") {
+        `when`("deleting with a valid ID") {
+            then("it should call delete on the document") {
+                val entityId = "id-to-delete"
 
-        mockTaskResult(documentSnapshotTaskMock, snapshotResultMock)
-        every { snapshotResultMock.exists() } returns true
-        every { snapshotResultMock.toObject(TestEntity::class.java) } returns expectedDistrict
-        // Sicherstellen, dass der richtige docRef für get verwendet wird:
-        every { collectionReferenceMock.document(testEntityId) } returns documentReferenceMock
-        every { documentReferenceMock.get() } returns documentSnapshotTaskMock
+                val deleteTask = mockk<Task<Void>>()
+                coEvery { deleteTask.await() } returns mockk()
+                every { collectionReference.document(entityId) } returns documentReference
+                every { documentReference.delete() } returns deleteTask
 
-        val result = testFirestoreRepository.getById(testEntityId)
-
-        assertNotNull(result)
-        assertEquals(expectedDistrict, result)
-        verify { collectionReferenceMock.document(testEntityId) }
-    }
-
-    @Test
-    fun `getById() with invalid id should return null`() = runTest {
-        val testEntityId = "nonExistingId"
-        val snapshotResultMock: DocumentSnapshot = mockk()
-
-        mockTaskResult(documentSnapshotTaskMock, snapshotResultMock)
-        every { snapshotResultMock.exists() } returns false
-        every { snapshotResultMock.toObject(TestEntity::class.java) } returns null
-        every { collectionReferenceMock.document(testEntityId) } returns documentReferenceMock
-        every { documentReferenceMock.get() } returns documentSnapshotTaskMock
-
-        val result = testFirestoreRepository.getById(testEntityId)
-
-        assertNull(result)
-        verify { collectionReferenceMock.document(testEntityId) }
-    }
-
-    @Test
-    fun `getById() should throw runtime exception on firestore failure`() = runTest {
-        // Arrange
-        val entityId = "entity123"
-        val simulatedException = RuntimeException("Simulated Firestore error")
-
-        // Mocke die Kette für einen fehlschlagenden getById-Aufruf
-        every { collectionReferenceMock.document(entityId) } returns documentReferenceMock
-        every { documentReferenceMock.get() } returns documentSnapshotTaskMock
-        mockTaskResult(documentSnapshotTaskMock, null, simulatedException)
-
-        // Act & Assert
-        val exception = assertThrows<RuntimeException> {
-            testFirestoreRepository.getById(entityId)
+                repository.delete(entityId)
+                testScope.advanceUntilIdle()
+                verify { documentReference.delete() }
+            }
         }
 
-        // Überprüfe die Exception
-        val expectedMessage = "Failed to get entity '$entityId' from test-collection"
-        Assertions.assertTrue(
-            exception.message?.contains(expectedMessage) ?: false,
-            "Exception message was not as expected."
-        )
-        assertEquals(
-            simulatedException,
-            exception.cause,
-            "Exception cause was not the simulated one."
-        )
-
-        // Verify
-        verify(exactly = 1) { collectionReferenceMock.document(entityId) }
-        verify(exactly = 1) { documentReferenceMock.get() }
-    }
-
-    /**
-     *
-     * ### Erklärung des neuen Tests:
-     *
-     * 1.  **Arrange:** Wir definieren eine `blankId`. Ein leerer String `""` würde genauso gut funktionieren.
-     * 2.  **Act:** Wir rufen `testFirestoreRepository.getById()` mit dieser `blankId` auf.
-     * 3.  **Assert:** Wir überprüfen mit `assertNull()`, ob das Ergebnis wie erwartet `null` ist. Dies deckt
-     *      *   den `true`-Pfad der `if (id.isBlank())`-Bedingung ab.
-     * 4.  **Verify:** Dieser Schritt ist entscheidend für die Qualität des Tests. Mit `verify(exactly = 0)`
-     *      *   stellen wir sicher, dass **keine** Interaktion mit Firestore stattfindet. Das beweist, dass deine
-     *      *   "Guard Clause" (die `if`-Abfrage) funktioniert und unnötige Datenbankaufrufe verhindert.
-     *
-     */
-    @Test
-    fun `getById with blank id should return null immediately`() = runTest {
-        // Arrange
-        val blankId = "   " // Eine leere oder nur aus Leerzeichen bestehende ID
-
-        // Act
-        // Rufe getById mit der leeren ID auf
-        val result = testFirestoreRepository.getById(blankId)
-
-        // Assert
-        // Das Ergebnis muss null sein, wie in der if-Bedingung definiert.
-        assertNull(result, "Sollte sofort null zurückgeben, wenn die ID leer ist.")
-
-        // Verify
-        // Sehr wichtig: Stelle sicher, dass *kein* Firestore-Aufruf stattfindet.
-        // Das beweist, dass der Code sofort aus der Funktion zurückkehrt.
-        verify(exactly = 0) { collectionReferenceMock.document(any()) }
-        verify(exactly = 0) { documentReferenceMock.get() }
-    }
-
-    @Test
-    fun `getAll() should return list of testEntities`() = runTest {
-        val entity1 = TestEntity(id = "id1", name = "Max Mustermann", active = true)
-        val entity2 = TestEntity(id = "id2", name = "Frau Mustermann", active = true)
-        val querySnapshotResultMock: QuerySnapshot = mockk()
-
-        mockTaskResult(querySnapshotTaskMock, querySnapshotResultMock)
-        // every { querySnapshotResultMock.documents } returns documents // toObjects ist meist einfacher
-        every { querySnapshotResultMock.toObjects(TestEntity::class.java) } returns listOf(entity1, entity2)
-        // Sicherstellen, dass get() auf der Collection Mock das querySnapshotTaskMock zurückgibt
-        every { collectionReferenceMock.get() } returns querySnapshotTaskMock
-
-        val result = testFirestoreRepository.getAll()
-
-        assertEquals(2, result.size)
-        assertTrue(result.containsAll(listOf(entity1, entity2)))
-        verify { collectionReferenceMock.get() }
-    }
-
-    /**
-     * ### Erklärung der Schritte:
-     *
-     * 1.  **Arrange (Vorbereiten):**
-     *     *   Wir erstellen eine `simulatedException`. Diese wird die "Ursache" (`cause`) für den Fehler sein,
-     *     *     den dein Repository werfen soll.
-     *     *   Wir rufen `mockTaskResult(querySnapshotTaskMock, null, simulatedException)` auf. Dies ist der wichtigste
-     *     *     Teil. Du sagst MockK, dass der `Task`, der von `.get()` zurückgegeben wird, als "nicht erfolgreich"
-     *     *     gilt und unsere `simulatedException` als Fehler hat. Dadurch wird der `await()`-Aufruf in deiner `
-     *     *     getAll()`-Methode scheitern und eine Exception werfen.
-     *
-     * 2.  **Act & Assert (Ausführen & Überprüfen):**
-     *     *   Wir verwenden `assertThrows<RuntimeException> { ... }`, um die `getAll()`-Methode aufzurufen. Diese
-     *     *     Funktion fängt die erwartete `RuntimeException` für uns ab.
-     *     *   Wir überprüfen, ob die `message` der gefangenen Exception dem Text entspricht, den du in
-     *     *     `BaseFirestoreRepository.kt` definiert hast.
-     *     *   Wir stellen mit `assertEquals(simulatedException, exception.cause)` sicher, dass die *Ursache* der
-     *     *     `RuntimeException` genau die Exception ist, die wir im `Arrange`-Teil simuliert haben. Dies ist ein
-     *     *     sehr wichtiger Test, um die korrekte Fehlerweitergabe zu validieren.
-     *
-     * 3.  **Verify (Verifizieren):**
-     *     *   Wir prüfen am Ende, ob die Methode `collectionReferenceMock.get()` auch wirklich aufgerufen wurde.
-     *
-     */
-    @Test
-    fun `getAll() should throw runtime exception on firestore failure`() = runTest {
-        // Arrange: Bereite den Fehlerfall vor
-        val simulatedException = RuntimeException("Simulated Firestore error")
-
-        // Stelle sicher, dass der get()-Aufruf den Task zurückgibt, den wir manipulieren wollen.
-        // Diese Zeile ist technisch durch setUp() abgedeckt, macht den Test aber lesbarer.
-        every { collectionReferenceMock.get() } returns querySnapshotTaskMock
-
-        // Weise den Task an, mit unserer simulierten Exception fehlzuschlagen.
-        // Das ist der entscheidende Schritt, um den catch-Block auszulösen.
-        mockTaskResult(querySnapshotTaskMock, null, simulatedException)
-
-        // Act & Assert: Führe die Methode aus und fange die erwartete Exception.
-        val exception = assertThrows<RuntimeException> {
-            testFirestoreRepository.getAll()
+        `when`("deleting with a blank ID") {
+            then("it should throw an IllegalArgumentException") {
+                shouldThrow<IllegalArgumentException> {
+                    repository.delete("   ")
+                }
+            }
         }
-
-        // Überprüfe die Details der gefangenen Exception
-        val expectedMessage = "Failed to get all entities from test-collection"
-        assertTrue(
-            exception.message?.contains(expectedMessage) ?: false,
-            "Exception message should contain '$expectedMessage'"
-        )
-        assertEquals(
-            simulatedException,
-            exception.cause,
-            "The cause of the thrown exception should be the simulated Firestore exception."
-        )
-
-        // Verify: Stelle sicher, dass die `get` Methode auf dem Mock aufgerufen wurde.
-        verify(exactly = 1) { collectionReferenceMock.get() }
     }
-
-    @Test
-    fun `delete should call delete on document`() = runTest {
-        val entityId = "entityToDelete"
-        mockTaskResult(voidTaskMock, null)
-        every { collectionReferenceMock.document(entityId) } returns documentReferenceMock
-        every { documentReferenceMock.delete() } returns voidTaskMock
-
-        testFirestoreRepository.delete(entityId)
-
-        verify { collectionReferenceMock.document(entityId) }
-        verify { documentReferenceMock.delete() }
-    }
-
-    @Test
-    fun `delete should throw runtime exception on firestore failure`() = runTest {
-        // Arrange
-        val entityIdToDelete = "entityToDelete" // Die ID, die wir zu löschen versuchen.
-        val simulatedException = RuntimeException("Simulated Firestore error")
-
-        // Mocke die Kette für einen fehlschlagenden delete-Aufruf
-        every { collectionReferenceMock.document(entityIdToDelete) } returns documentReferenceMock
-        every { documentReferenceMock.delete() } returns voidTaskMock
-        mockTaskResult(voidTaskMock, null, simulatedException) // Simuliere, dass der Task fehlschlägt
-
-        // Act & Assert
-        val exception = assertThrows<RuntimeException> {
-            // Rufe die 'delete'-Methode mit der korrekten ID auf
-            testFirestoreRepository.delete(entityIdToDelete)
-        }
-
-        val expectedMessage = "Failed to delete entity '$entityIdToDelete' from test-collection"
-        assertTrue(exception.message?.contains(expectedMessage) ?: false)
-        assertEquals(
-            simulatedException,
-            exception.cause,
-            "Die Ursache der Exception (cause) ist nicht die simulierte Exception."
-        )
-
-        verify(exactly = 1) { collectionReferenceMock.document(entityIdToDelete) }
-        verify(exactly = 1) { documentReferenceMock.delete() }
-    }
-
-    @Test
-    fun `delete with blank id should throw IllegalArgumentException`() = runTest {
-        // Arrange
-        val blankId = "   " // Eine ID, die nur aus Leerzeichen besteht.
-
-        // Act & Assert
-        // Erwarte eine IllegalArgumentException, wenn die delete-Methode aufgerufen wird.
-        val exception = assertThrows<IllegalArgumentException> {
-            testFirestoreRepository.delete(blankId)
-        }
-
-        // Überprüfe die Nachricht der geworfenen Exception.
-        assertEquals("Document ID cannot be blank for deletion.", exception.message)
-
-        // Verify
-        // Stelle sicher, dass keine Firestore-Operationen (document() oder delete())
-        // aufgerufen wurden, da der Code vorher abbrechen sollte.
-        verify(exactly = 0) { collectionReferenceMock.document(any()) }
-        verify(exactly = 0) { documentReferenceMock.delete() }
-    }
-}
+})

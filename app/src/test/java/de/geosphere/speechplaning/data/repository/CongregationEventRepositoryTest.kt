@@ -3,39 +3,36 @@ package de.geosphere.speechplaning.data.repository
 import de.geosphere.speechplaning.data.Event
 import de.geosphere.speechplaning.data.model.CongregationEvent
 import de.geosphere.speechplaning.data.services.FirestoreService
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 
-internal class CongregationEventRepositoryTest {
+internal class CongregationEventRepositoryTest : BehaviorSpec({
 
-    private lateinit var firestoreService: FirestoreService
-    private lateinit var repository: CongregationEventRepository
+    lateinit var firestoreService: FirestoreService
+    lateinit var repository: CongregationEventRepository
 
-    private val testDistrictId = "testDistrictId001"
-    private val testCongregationId = "testCongId002"
-    private val testEventId = "testEventId003"
-    private lateinit var testEvent: CongregationEvent
-    private lateinit var newEventWithoutId: CongregationEvent
+    val testDistrictId = "testDistrictId001"
+    val testCongregationId = "testCongId002"
+    val testEventId = "testEventId003"
+    lateinit var testEvent: CongregationEvent
+    lateinit var newEventWithoutId: CongregationEvent
 
-    private val districtsCollectionName = "districts"
-    private val congregationsSubcollectionName = "congregations"
-    private val congregationEventsSubcollectionName = "congregationEvents"
+    val districtsCollectionName = "districts"
+    val congregationsSubcollectionName = "congregations"
+    val congregationEventsSubcollectionName = "congregationEvents"
 
-    private val expectedParentCollectionPathForEvent =
+    val expectedParentCollectionPathForEvent =
         "$districtsCollectionName/$testDistrictId/$congregationsSubcollectionName"
-    private val expectedParentDocumentIdForEvent = testCongregationId
+    val expectedParentDocumentIdForEvent = testCongregationId
 
-    @BeforeEach
-    fun setUp() {
+    beforeEach {
         firestoreService = mockk(relaxed = true)
         repository = CongregationEventRepository(firestoreService)
 
@@ -59,335 +56,329 @@ internal class CongregationEventRepositoryTest {
         )
     }
 
-    @Nested
-    inner class SaveEvent {
-        @Test
-        fun `saveEvent for new event should call firestoreService add and return new id`() = runTest {
-            val generatedId = "newGeneratedEventId"
-            coEvery {
-                firestoreService.addDocumentToSubcollection(
-                    parentCollection = expectedParentCollectionPathForEvent,
-                    parentId = expectedParentDocumentIdForEvent,
-                    subcollection = congregationEventsSubcollectionName,
-                    data = newEventWithoutId
-                )
-            } returns generatedId
+    given("SaveEvent") {
+        `when`("saving a new event") {
+            then("it should call firestoreService add and return new id") {
+                val generatedId = "newGeneratedEventId"
+                coEvery {
+                    firestoreService.addDocumentToSubcollection(
+                        parentCollection = expectedParentCollectionPathForEvent,
+                        parentId = expectedParentDocumentIdForEvent,
+                        subcollection = congregationEventsSubcollectionName,
+                        data = newEventWithoutId
+                    )
+                } returns generatedId
 
-            val resultId = repository.saveEvent(testDistrictId, testCongregationId, newEventWithoutId)
+                val resultId = repository.saveEvent(testDistrictId, testCongregationId, newEventWithoutId)
 
-            assertEquals(generatedId, resultId)
-            coVerify {
-                firestoreService.addDocumentToSubcollection(
-                    expectedParentCollectionPathForEvent,
-                    expectedParentDocumentIdForEvent,
-                    congregationEventsSubcollectionName,
-                    newEventWithoutId
-                )
+                resultId shouldBe generatedId
+                coVerify {
+                    firestoreService.addDocumentToSubcollection(
+                        expectedParentCollectionPathForEvent,
+                        expectedParentDocumentIdForEvent,
+                        congregationEventsSubcollectionName,
+                        newEventWithoutId
+                    )
+                }
+            }
+
+            then("it should throw an exception if firestoreService add fails") {
+                val errorMessage = "Firestore add operation failed"
+                coEvery {
+                    firestoreService.addDocumentToSubcollection(any(), any(), any(), any())
+                } throws RuntimeException(errorMessage)
+
+                val exception = shouldThrow<RuntimeException> {
+                    repository.saveEvent(testDistrictId, testCongregationId, newEventWithoutId)
+                }
+                exception.message shouldBe "Failed to save entity '[new]' in subcollection " +
+                    "'$congregationEventsSubcollectionName' under parent '$expectedParentDocumentIdForEvent' " +
+                    "in '$expectedParentCollectionPathForEvent'"
+                exception.cause?.message shouldBe errorMessage
             }
         }
 
-        @Test
-        fun `saveEvent for existing event should call firestoreService set and return existing id`() = runTest {
-            coEvery {
-                firestoreService.setDocumentInSubcollection(
-                    parentCollection = expectedParentCollectionPathForEvent,
-                    parentId = expectedParentDocumentIdForEvent,
-                    subcollection = congregationEventsSubcollectionName,
-                    documentId = testEvent.id,
-                    data = testEvent
-                )
-            } returns Unit // setDocumentInSubcollection gibt Unit zurück
+        `when`("saving an existing event") {
+            then("it should call firestoreService set and return existing id") {
+                coEvery {
+                    firestoreService.setDocumentInSubcollection(
+                        parentCollection = expectedParentCollectionPathForEvent,
+                        parentId = expectedParentDocumentIdForEvent,
+                        subcollection = congregationEventsSubcollectionName,
+                        documentId = testEvent.id,
+                        data = testEvent
+                    )
+                } returns Unit // setDocumentInSubcollection gibt Unit zurück
 
-            val resultId = repository.saveEvent(testDistrictId, testCongregationId, testEvent)
+                val resultId = repository.saveEvent(testDistrictId, testCongregationId, testEvent)
 
-            assertEquals(testEvent.id, resultId)
-            coVerify {
-                firestoreService.setDocumentInSubcollection(
-                    expectedParentCollectionPathForEvent,
-                    expectedParentDocumentIdForEvent,
-                    congregationEventsSubcollectionName,
-                    testEvent.id,
-                    testEvent
-                )
+                resultId shouldBe testEvent.id
+                coVerify {
+                    firestoreService.setDocumentInSubcollection(
+                        expectedParentCollectionPathForEvent,
+                        expectedParentDocumentIdForEvent,
+                        congregationEventsSubcollectionName,
+                        testEvent.id,
+                        testEvent
+                    )
+                }
             }
-        }
 
-        @Test
-        fun `saveEvent for new event should throw exception if firestoreService add fails`() = runTest {
-            val errorMessage = "Firestore add operation failed"
-            coEvery {
-                firestoreService.addDocumentToSubcollection(any(), any(), any(), any())
-            } throws RuntimeException(errorMessage)
+            then("it should throw an exception if firestoreService set fails") {
+                val errorMessage = "Firestore set operation failed"
+                coEvery {
+                    firestoreService.setDocumentInSubcollection(any(), any(), any(), any(), any())
+                } throws RuntimeException(errorMessage)
 
-            val exception = assertThrows<RuntimeException> {
-                repository.saveEvent(testDistrictId, testCongregationId, newEventWithoutId)
+                val exception = shouldThrow<RuntimeException> {
+                    repository.saveEvent(testDistrictId, testCongregationId, testEvent)
+                }
+                exception.message shouldContain "Failed to save entity '${testEvent.id}' in subcollection " +
+                    "'$congregationEventsSubcollectionName' under parent '$expectedParentDocumentIdForEvent' in " +
+                    "'$expectedParentCollectionPathForEvent'"
+                exception.cause?.message shouldBe errorMessage
             }
-            assertEquals(
-                "Failed to save entity '[new]' in subcollection '$congregationEventsSubcollectionName' under " +
-                    "parent '${expectedParentDocumentIdForEvent}' in '$expectedParentCollectionPathForEvent'",
-                exception.message
-            )
-            assertEquals(errorMessage, exception.cause?.message)
-        }
-
-        @Test
-        fun `saveEvent for existing event should throw exception if firestoreService set fails`() = runTest {
-            val errorMessage = "Firestore set operation failed"
-            coEvery {
-                firestoreService.setDocumentInSubcollection(any(), any(), any(), any(), any())
-            } throws RuntimeException(errorMessage)
-
-            val exception = assertThrows<RuntimeException> {
-                repository.saveEvent(testDistrictId, testCongregationId, testEvent)
-            }
-            assertEquals(
-                "Failed to save entity '${testEvent.id}' in subcollection '$congregationEventsSubcollectionName' " +
-                    "under parent '${expectedParentDocumentIdForEvent}' in '$expectedParentCollectionPathForEvent'",
-                exception.message
-            )
-            assertEquals(errorMessage, exception.cause?.message)
         }
     }
 
-    @Nested
-    inner class GetEventById {
-        @Test
-        fun `getEventById should return event when event is found`() = runTest {
-            coEvery {
-                firestoreService.getDocumentFromSubcollection(
-                    parentCollectionPath = expectedParentCollectionPathForEvent,
-                    parentDocumentId = expectedParentDocumentIdForEvent,
-                    subcollectionName = congregationEventsSubcollectionName,
-                    documentId = testEventId,
-                    objectClass = CongregationEvent::class.java
-                )
-            } returns testEvent
+    given("GetEventById") {
+        `when`("event is found") {
+            then("it should return the event") {
+                coEvery {
+                    firestoreService.getDocumentFromSubcollection(
+                        parentCollectionPath = expectedParentCollectionPathForEvent,
+                        parentDocumentId = expectedParentDocumentIdForEvent,
+                        subcollectionName = congregationEventsSubcollectionName,
+                        documentId = testEventId,
+                        objectClass = CongregationEvent::class.java
+                    )
+                } returns testEvent
 
-            val result = repository.getEventById(testDistrictId, testCongregationId, testEventId)
+                val result = repository.getEventById(testDistrictId, testCongregationId, testEventId)
 
-            assertEquals(testEvent, result)
-            coVerify {
-                firestoreService.getDocumentFromSubcollection(
-                    expectedParentCollectionPathForEvent,
-                    expectedParentDocumentIdForEvent,
-                    congregationEventsSubcollectionName,
-                    testEventId,
-                    CongregationEvent::class.java
-                )
+                result shouldBe testEvent
+                coVerify {
+                    firestoreService.getDocumentFromSubcollection(
+                        expectedParentCollectionPathForEvent,
+                        expectedParentDocumentIdForEvent,
+                        congregationEventsSubcollectionName,
+                        testEventId,
+                        CongregationEvent::class.java
+                    )
+                }
             }
         }
 
-        @Test
-        fun `getEventById should return null when eventId is blank`() = runTest {
-            val result = repository.getEventById(testDistrictId, testCongregationId, "")
-            assertNull(result)
-            coVerify(exactly = 0) {
-                firestoreService.getDocumentFromSubcollection(
-                    any(),
-                    any(),
-                    any(),
-                    any(),
-                    eq(CongregationEvent::class.java)
-                )
+        `when`("eventId is blank") {
+            then("it should return null") {
+                val result = repository.getEventById(testDistrictId, testCongregationId, "")
+                result.shouldBeNull()
+                coVerify(exactly = 0) {
+                    firestoreService.getDocumentFromSubcollection(
+                        any(),
+                        any(),
+                        any(),
+                        any(),
+                        eq(CongregationEvent::class.java)
+                    )
+                }
             }
         }
 
-        @Test
-        fun `getEventById should return null when firestoreService returns null`() = runTest {
-            coEvery {
-                firestoreService.getDocumentFromSubcollection(
-                    parentCollectionPath = expectedParentCollectionPathForEvent,
-                    parentDocumentId = expectedParentDocumentIdForEvent,
-                    subcollectionName = congregationEventsSubcollectionName,
-                    documentId = testEventId,
-                    objectClass = CongregationEvent::class.java
-                )
-            } returns null
+        `when`("firestoreService returns null") {
+            then("it should return null") {
+                coEvery {
+                    firestoreService.getDocumentFromSubcollection(
+                        parentCollectionPath = expectedParentCollectionPathForEvent,
+                        parentDocumentId = expectedParentDocumentIdForEvent,
+                        subcollectionName = congregationEventsSubcollectionName,
+                        documentId = testEventId,
+                        objectClass = CongregationEvent::class.java
+                    )
+                } returns null
 
-            val result = repository.getEventById(testDistrictId, testCongregationId, testEventId)
+                val result = repository.getEventById(testDistrictId, testCongregationId, testEventId)
 
-            assertNull(result)
+                result.shouldBeNull()
+            }
         }
 
-        @Test
-        fun `getEventById should throw exception when firestoreService fails`() = runTest {
-            val errorMessage = "Firestore get operation failed"
-            coEvery {
-                firestoreService.getDocumentFromSubcollection(
-                    any(),
-                    any(),
-                    any(),
-                    eq(testEventId),
-                    eq(CongregationEvent::class.java)
-                )
-            } throws RuntimeException(errorMessage)
+        `when`("firestoreService fails") {
+            then("it should throw an exception") {
+                val errorMessage = "Firestore get operation failed"
+                coEvery {
+                    firestoreService.getDocumentFromSubcollection(
+                        any(), any(), any(), eq(testEventId), eq(CongregationEvent::class.java)
+                    )
+                } throws RuntimeException(errorMessage)
 
-            val exception = assertThrows<RuntimeException> {
-                repository.getEventById(testDistrictId, testCongregationId, testEventId)
+                val exception = shouldThrow<RuntimeException> {
+                    repository.getEventById(testDistrictId, testCongregationId, testEventId)
+                }
+                exception.message shouldContain "Failed to get entity '$testEventId' from subcollection " +
+                    "'$congregationEventsSubcollectionName' under parent '$expectedParentDocumentIdForEvent' " +
+                    "in '$expectedParentCollectionPathForEvent'"
+                exception.cause?.message shouldBe errorMessage
             }
-            assertEquals(
-                "Failed to get entity '$testEventId' from subcollection '$congregationEventsSubcollectionName' " +
-                    "under parent '${expectedParentDocumentIdForEvent}' in '$expectedParentCollectionPathForEvent'",
-                exception.message
-            )
-            assertEquals(errorMessage, exception.cause?.message)
         }
     }
 
-    @Nested
-    inner class GetAllEventsForCongregation {
-        @Test
-        fun `getAllEventsForCongregation should call firestoreService and return events list`() = runTest {
-            val expectedEvents = listOf(testEvent, newEventWithoutId.copy(id = "anotherEventId"))
-            coEvery {
-                firestoreService.getDocumentsFromSubcollection(
-                    parentCollection = expectedParentCollectionPathForEvent,
-                    parentId = expectedParentDocumentIdForEvent,
-                    subcollection = congregationEventsSubcollectionName,
-                    objectClass = CongregationEvent::class.java
-                )
-            } returns expectedEvents
+    given("GetAllEventsForCongregation") {
+        `when`("called") {
+            then("it should call firestoreService and return events list") {
+                val expectedEvents = listOf(testEvent, newEventWithoutId.copy(id = "anotherEventId"))
+                coEvery {
+                    firestoreService.getDocumentsFromSubcollection(
+                        parentCollection = expectedParentCollectionPathForEvent,
+                        parentId = expectedParentDocumentIdForEvent,
+                        subcollection = congregationEventsSubcollectionName,
+                        objectClass = CongregationEvent::class.java
+                    )
+                } returns expectedEvents
 
-            val result = repository.getAllEventsForCongregation(testDistrictId, testCongregationId)
+                val result = repository.getAllEventsForCongregation(testDistrictId, testCongregationId)
 
-            assertEquals(expectedEvents, result)
-            coVerify {
-                firestoreService.getDocumentsFromSubcollection(
-                    expectedParentCollectionPathForEvent,
-                    expectedParentDocumentIdForEvent,
-                    congregationEventsSubcollectionName,
-                    CongregationEvent::class.java
-                )
+                result shouldBe expectedEvents
+                coVerify {
+                    firestoreService.getDocumentsFromSubcollection(
+                        expectedParentCollectionPathForEvent,
+                        expectedParentDocumentIdForEvent,
+                        congregationEventsSubcollectionName,
+                        CongregationEvent::class.java
+                    )
+                }
             }
-        }
 
-        @Test
-        fun `getAllEventsForCongregation should return empty list if firestoreService returns empty list`() = runTest {
-            coEvery {
-                firestoreService.getDocumentsFromSubcollection(any(), any(), any(), eq(CongregationEvent::class.java))
-            } returns emptyList()
+            then("it should return an empty list if firestoreService returns an empty list") {
+                coEvery {
+                    firestoreService.getDocumentsFromSubcollection(
+                        any(), any(), any(), eq(CongregationEvent::class.java)
+                    )
+                } returns emptyList()
 
-            val result = repository.getAllEventsForCongregation(testDistrictId, testCongregationId)
+                val result = repository.getAllEventsForCongregation(testDistrictId, testCongregationId)
 
-            assertEquals(0, result.size)
-        }
-
-        @Test
-        fun `getAllEventsForCongregation should throw exception if firestoreService fails`() = runTest {
-            val errorMessage = "Firestore get all operation failed"
-            coEvery {
-                firestoreService.getDocumentsFromSubcollection(any(), any(), any(), eq(CongregationEvent::class.java))
-            } throws RuntimeException(errorMessage)
-
-            val exception = assertThrows<RuntimeException> {
-                repository.getAllEventsForCongregation(testDistrictId, testCongregationId)
+                result.size shouldBe 0
             }
-            assertEquals(
-                "Failed to get all entities from subcollection '$congregationEventsSubcollectionName' under " +
-                    "parent '${expectedParentDocumentIdForEvent}' in '$expectedParentCollectionPathForEvent'",
-                exception.message
-            )
-            assertEquals(errorMessage, exception.cause?.message)
+
+            then("it should throw an exception if firestoreService fails") {
+                val errorMessage = "Firestore get all operation failed"
+                coEvery {
+                    firestoreService.getDocumentsFromSubcollection(
+                        any(), any(), any(), eq(CongregationEvent::class.java)
+                    )
+                } throws RuntimeException(errorMessage)
+
+                val exception = shouldThrow<RuntimeException> {
+                    repository.getAllEventsForCongregation(testDistrictId, testCongregationId)
+                }
+                exception.message shouldContain "Failed to get all entities from subcollection " +
+                    "'$congregationEventsSubcollectionName' under parent '$expectedParentDocumentIdForEvent' " +
+                    "in '$expectedParentCollectionPathForEvent'"
+                exception.cause?.message shouldBe errorMessage
+            }
         }
     }
 
-    @Nested
-    inner class DeleteEvent {
-        @Test
-        fun `deleteEvent should call firestoreService with correct paths`() = runTest {
-            coEvery {
-                firestoreService.deleteDocumentFromSubcollection(
-                    parentCollection = expectedParentCollectionPathForEvent,
-                    parentId = expectedParentDocumentIdForEvent,
-                    subcollection = congregationEventsSubcollectionName,
-                    documentId = testEventId
-                )
-            } returns Unit
+    given("DeleteEvent") {
+        `when`("deleting an event") {
+            then("it should call firestoreService with correct paths") {
+                coEvery {
+                    firestoreService.deleteDocumentFromSubcollection(
+                        parentCollection = expectedParentCollectionPathForEvent,
+                        parentId = expectedParentDocumentIdForEvent,
+                        subcollection = congregationEventsSubcollectionName,
+                        documentId = testEventId
+                    )
+                } returns Unit
 
-            repository.deleteEvent(testDistrictId, testCongregationId, testEventId)
-
-            coVerify {
-                firestoreService.deleteDocumentFromSubcollection(
-                    expectedParentCollectionPathForEvent,
-                    expectedParentDocumentIdForEvent,
-                    congregationEventsSubcollectionName,
-                    testEventId
-                )
-            }
-        }
-
-        @Test
-        fun `deleteEvent should throw exception if firestoreService fails`() = runTest {
-            val errorMessage = "Firestore delete operation failed"
-            coEvery {
-                firestoreService.deleteDocumentFromSubcollection(any(), any(), any(), any())
-            } throws RuntimeException(errorMessage)
-
-            val exception = assertThrows<RuntimeException> {
                 repository.deleteEvent(testDistrictId, testCongregationId, testEventId)
-            }
-            assertEquals(
-                "Failed to delete entity '$testEventId' from subcollection '$congregationEventsSubcollectionName' " +
-                    "under parent '${expectedParentDocumentIdForEvent}' in '$expectedParentCollectionPathForEvent'",
-                exception.message
-            )
-            assertEquals(errorMessage, exception.cause?.message)
-        }
 
-        @Test
-        fun `deleteEvent should throw IllegalArgumentException when eventId is blank`() {
-            val exception = assertThrows<IllegalArgumentException> {
-                runTest { repository.deleteEvent(testDistrictId, testCongregationId, "") }
+                coVerify {
+                    firestoreService.deleteDocumentFromSubcollection(
+                        expectedParentCollectionPathForEvent,
+                        expectedParentDocumentIdForEvent,
+                        congregationEventsSubcollectionName,
+                        testEventId
+                    )
+                }
             }
-            assertEquals("Document ID cannot be blank for deletion.", exception.message)
-            coVerify(exactly = 0) { firestoreService.deleteDocumentFromSubcollection(any(), any(), any(), any()) }
+
+            then("it should throw an exception if firestoreService fails") {
+                val errorMessage = "Firestore delete operation failed"
+                coEvery {
+                    firestoreService.deleteDocumentFromSubcollection(any(), any(), any(), any())
+                } throws RuntimeException(errorMessage)
+
+                val exception = shouldThrow<RuntimeException> {
+                    repository.deleteEvent(testDistrictId, testCongregationId, testEventId)
+                }
+                exception.message shouldContain "Failed to delete entity '$testEventId' from subcollection " +
+                    "'$congregationEventsSubcollectionName' under parent '$expectedParentDocumentIdForEvent' in " +
+                    "'$expectedParentCollectionPathForEvent'"
+                exception.cause?.message shouldBe errorMessage
+            }
+
+            then("it should throw an IllegalArgumentException when eventId is blank") {
+                val exception = shouldThrow<IllegalArgumentException> {
+                    repository.deleteEvent(testDistrictId, testCongregationId, "")
+                }
+                exception.message shouldBe "Document ID cannot be blank for deletion."
+                coVerify(
+                    exactly = 0
+                ) { firestoreService.deleteDocumentFromSubcollection(any(), any(), any(), any()) }
+            }
         }
     }
 
-    @Nested
-    inner class HelperMethodTests {
-        @Test
-        fun `extractIdFromEntity should return entity id`() {
-            assertEquals(testEvent.id, repository.extractIdFromEntity(testEvent))
-            assertEquals(newEventWithoutId.id, repository.extractIdFromEntity(newEventWithoutId))
-        }
-
-        @Test
-        fun `buildParentCollectionPath returns correct path with districtId and congregationId`() {
-            val path = repository.buildParentCollectionPath(testDistrictId, testCongregationId)
-            assertEquals(expectedParentCollectionPathForEvent, path) // Verwendet die oben definierte Konstante
-        }
-
-        @Test
-        fun `buildParentCollectionPath throws exception when parentIds count is not two`() {
-            assertThrows<IllegalArgumentException>("Expected districtId and congregationId as parentIds") {
-                repository.buildParentCollectionPath(testDistrictId) // Nur eine ID
-            }
-            assertThrows<IllegalArgumentException>("Expected districtId and congregationId as parentIds") {
-                repository.buildParentCollectionPath() // Keine IDs
-            }
-            assertThrows<IllegalArgumentException>("Expected districtId and congregationId as parentIds") {
-                repository.buildParentCollectionPath(testDistrictId, testCongregationId, "extraId") // Drei IDs
+    given("HelperMethodTests") {
+        `when`("extracting id from entity") {
+            then("it should return the entity id") {
+                repository.extractIdFromEntity(testEvent) shouldBe testEvent.id
+                repository.extractIdFromEntity(newEventWithoutId) shouldBe newEventWithoutId.id
             }
         }
 
-        @Test
-        fun `getParentDocumentId returns congregationId when two parentIds are provided`() {
-            val result = repository.getParentDocumentId(testDistrictId, testCongregationId)
-            assertEquals(testCongregationId, result) // testCongregationId ist expectedParentDocumentIdForEvent
+        `when`("building parent collection path") {
+            then("it should return correct path with districtId and congregationId") {
+                val path = repository.buildParentCollectionPath(testDistrictId, testCongregationId)
+                path shouldBe expectedParentCollectionPathForEvent
+            }
+
+            then("it should throw an exception when parentIds count is not two") {
+                shouldThrow<IllegalArgumentException> {
+                    repository.buildParentCollectionPath(testDistrictId)
+                }.message shouldBe "Expected districtId and congregationId as parentIds"
+
+                shouldThrow<IllegalArgumentException> {
+                    repository.buildParentCollectionPath()
+                }.message shouldBe "Expected districtId and congregationId as parentIds"
+
+                shouldThrow<IllegalArgumentException> {
+                    repository.buildParentCollectionPath(testDistrictId, testCongregationId, "extraId")
+                }.message shouldBe "Expected districtId and congregationId as parentIds"
+            }
         }
 
-        @Test
-        fun `getParentDocumentId throws exception when parentIds count is not two`() {
-            assertThrows<IllegalArgumentException>("Expected districtId and congregationId as parentIds") {
-                repository.getParentDocumentId(testDistrictId) // Nur eine ID
+        `when`("getting parent document id") {
+            then("it should return congregationId when two parentIds are provided") {
+                val result = repository.getParentDocumentId(testDistrictId, testCongregationId)
+                result shouldBe testCongregationId
             }
-            assertThrows<IllegalArgumentException>("Expected districtId and congregationId as parentIds") {
-                repository.getParentDocumentId() // Keine IDs
-            }
-            assertThrows<IllegalArgumentException>("Expected districtId and congregationId as parentIds") {
-                repository.getParentDocumentId(testDistrictId, testCongregationId, "extraId") // Drei IDs
+
+            then("it should throw an exception when parentIds count is not two") {
+                shouldThrow<IllegalArgumentException> {
+                    repository.getParentDocumentId(testDistrictId)
+                }.message shouldBe "Expected districtId and congregationId as parentIds"
+
+                shouldThrow<IllegalArgumentException> {
+                    repository.getParentDocumentId()
+                }.message shouldBe "Expected districtId and congregationId as parentIds"
+
+                shouldThrow<IllegalArgumentException> {
+                    repository.getParentDocumentId(testDistrictId, testCongregationId, "extraId")
+                }.message shouldBe "Expected districtId and congregationId as parentIds"
             }
         }
     }
-}
+})
