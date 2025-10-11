@@ -11,7 +11,6 @@ import io.kotest.matchers.string.shouldContain
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,16 +43,17 @@ class AuthViewModelTest : BehaviorSpec({
                 // Given
                 val email = "test@example.com"
                 val password = "password"
-                coEvery { authRepository.createUserWithEmailAndPassword(email, password) } returns Unit
+                val displayName = "Test User"
+                coEvery { authRepository.createUserWithEmailAndPassword(email, password, displayName) } returns Unit
 
                 // When
-                viewModel.createUserWithEmailAndPassword(email, password)
+                viewModel.createUserWithEmailAndPassword(email, password, displayName)
                 testDispatcher.scheduler.advanceUntilIdle()
 
                 // Then
-                val state = viewModel.loginActionUiState.value
+                val state = viewModel.actionUiState.value
                 state.isSuccess.shouldBeTrue()
-                coVerify { authRepository.createUserWithEmailAndPassword(email, password) }
+                coVerify { authRepository.createUserWithEmailAndPassword(email, password, displayName) }
             }
         }
         `when`("failure with collision exception") {
@@ -61,17 +61,19 @@ class AuthViewModelTest : BehaviorSpec({
                 // Given
                 val email = "test@example.com"
                 val password = "password"
+                val displayName = "Test User"
                 val collisionException = mockk<FirebaseAuthUserCollisionException>()
-                coEvery { authRepository.createUserWithEmailAndPassword(email, password) } throws collisionException
+                coEvery { authRepository.createUserWithEmailAndPassword(email, password, displayName) } throws
+                    collisionException
 
                 // When
-                viewModel.createUserWithEmailAndPassword(email, password)
+                viewModel.createUserWithEmailAndPassword(email, password, displayName)
                 testDispatcher.scheduler.advanceUntilIdle()
 
                 // Then
-                val state = viewModel.loginActionUiState.value
+                val state = viewModel.actionUiState.value
                 state.error.shouldNotBeNull()
-                state.error!! shouldContain "existiert bereits"
+                state.error shouldContain "existiert bereits"
             }
         }
         `when`("generic exception") {
@@ -79,18 +81,19 @@ class AuthViewModelTest : BehaviorSpec({
                 // Given
                 val email = "test@example.com"
                 val password = "password"
+                val displayName = "Test User"
                 val errorMessage = "Ein unerwarteter Fehler ist aufgetreten"
-                coEvery { authRepository.createUserWithEmailAndPassword(email, password) } throws
+                coEvery { authRepository.createUserWithEmailAndPassword(email, password, displayName) } throws
                     Exception(errorMessage)
 
                 // When
-                viewModel.createUserWithEmailAndPassword(email, password)
+                viewModel.createUserWithEmailAndPassword(email, password, displayName)
                 testDispatcher.scheduler.advanceUntilIdle()
 
                 // Then
-                val state = viewModel.loginActionUiState.value
+                val state = viewModel.actionUiState.value
                 state.error.shouldNotBeNull()
-                state.error!! shouldContain errorMessage
+                state.error shouldContain errorMessage
             }
         }
     }
@@ -107,7 +110,7 @@ class AuthViewModelTest : BehaviorSpec({
                 testDispatcher.scheduler.advanceUntilIdle()
 
                 // Then
-                val state = viewModel.loginActionUiState.value
+                val state = viewModel.actionUiState.value
                 state.isSuccess.shouldBeTrue()
                 coVerify { authRepository.signInWithEmailAndPassword(email, password) }
             }
@@ -126,9 +129,9 @@ class AuthViewModelTest : BehaviorSpec({
                 testDispatcher.scheduler.advanceUntilIdle()
 
                 // Then
-                val state = viewModel.loginActionUiState.value
+                val state = viewModel.actionUiState.value
                 state.error.shouldNotBeNull()
-                state.error!! shouldContain errorMessage
+                state.error shouldContain errorMessage
             }
         }
     }
@@ -137,7 +140,8 @@ class AuthViewModelTest : BehaviorSpec({
         `when`("signOut is called") {
             then("it should call the repository's signOut method") {
                 viewModel.signOut()
-                verify { authRepository.signOut() }
+                testDispatcher.scheduler.advanceUntilIdle()
+                coVerify { authRepository.signOut() }
             }
         }
 
@@ -163,8 +167,8 @@ class AuthViewModelTest : BehaviorSpec({
                 viewModel.resetActionState()
 
                 // THEN: the state should be the default initial state
-                val expectedState = LoginActionUiState()
-                viewModel.loginActionUiState.value shouldBe expectedState
+                val expectedState = AuthActionUiState()
+                viewModel.actionUiState.value shouldBe expectedState
             }
         }
     }

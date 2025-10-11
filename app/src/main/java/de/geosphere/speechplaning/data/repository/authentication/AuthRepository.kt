@@ -1,34 +1,25 @@
 package de.geosphere.speechplaning.data.repository.authentication
 
+import android.app.Activity
 import kotlinx.coroutines.flow.StateFlow
 
-/**
- * Ein zentrales Repository, das als "Single Source of Truth" für den anwendungsweiten
- * Authentifizierungs- und Autorisierungsstatus dient.
- */
 interface AuthRepository {
-    /**
-     * Ein Flow, der den aktuellen, anwendungsweiten Authentifizierungsstatus bereitstellt.
-     */
     val authUiState: StateFlow<AuthUiState>
 
-    /**
-     * Registriert einen neuen Benutzer mit E-Mail und Passwort.
-     * Erstellt den Firebase Auth User und den zugehörigen AppUser-Eintrag in Firestore.
-     * @return Gibt bei einem Fehler eine Exception zurück, ansonsten nichts (Unit).
-     */
-    suspend fun createUserWithEmailAndPassword(email: String, password: String)
+    suspend fun createUserWithEmailAndPassword(email: String, password: String, name: String)
 
-    /**
-     * Meldet einen bestehenden Benutzer mit E-Mail und Passwort an.
-     * @return Gibt bei einem Fehler eine Exception zurück, ansonsten nichts (Unit).
-     */
     suspend fun signInWithEmailAndPassword(email: String, password: String)
 
-    suspend fun forceReloadAndCheckUserStatus()
+    suspend fun signOut()
 
-    /**
-     * Meldet den aktuellen Benutzer ab.
-     */
-    fun signOut()
+    suspend fun googleSignIn(activity: Activity): Result<Unit>
+
+    suspend fun forceReloadAndCheckUserStatus()
 }
+
+// sealed class AuthUiState {
+//     object Loading : AuthUiState()
+//     data class Authenticated(val user: FirebaseUser) : AuthUiState()
+//     object Unauthenticated : AuthUiState()
+//     object NeedsApproval : AuthUiState()
+// }

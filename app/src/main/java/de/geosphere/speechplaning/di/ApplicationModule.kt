@@ -43,7 +43,7 @@ val appModule =
         single { CongregationEventRepository(get()) }
 
         single<UserRepository> { UserRepositoryImpl(get()) }
-        single<AuthRepository> { AuthRepositoryImpl(get(), get(), get()) }
+        single<AuthRepository> { AuthRepositoryImpl(get(), get(), get(), androidContext()) }
 
         single { SpiritualStatusMapper(androidContext()) }
         single { EventMapper(androidContext()) }
