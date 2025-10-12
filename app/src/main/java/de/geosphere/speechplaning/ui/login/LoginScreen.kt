@@ -1,5 +1,6 @@
 package de.geosphere.speechplaning.ui.login
 
+import android.app.Activity
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -44,7 +45,7 @@ fun LoginScreen(
     val onGoToSignIn = { currentScreen = LoginSubScreen.SignIn }
 
     val authUiState by authViewModel.authUiState.collectAsState()
-    val loginActionUiState by authViewModel.loginActionUiState.collectAsState()
+    val actionUiState by authViewModel.actionUiState.collectAsState()
 
     // Wenn die Anzeige des LoginScreens verlassen wird (onDispose),
     // wird der temporäre Fehler- oder Ladezustand zurückgesetzt.
@@ -76,13 +77,24 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        Button(onClick = {
+            // Activity holen und Anmeldevorgang starten
+            val activity = context as? Activity
+            if (activity != null) {
+                authViewModel.signInWithGoogle(activity)
+            }
+            // Optional: Zeige eine Fehlermeldung, falls der Context keine Activity ist
+        }) {
+            Text(text = "Mit Google anmelden")
+        }
+
         // Zeige einen Lade-Spinner, wenn eine Aktion ausgeführt wird ODER der globale Zustand noch lädt
-        if (loginActionUiState.isLoading || authUiState is AuthUiState.Loading) {
+        if (actionUiState.isLoading || authUiState is AuthUiState.Loading) {
             CircularProgressIndicator()
         }
 
         // Zeige einen Fehler an, wenn die Login/Registrierungs-Aktion fehlschlägt
-        loginActionUiState.error?.let { error ->
+        actionUiState.error?.let { error ->
             Text(
                 text = error,
                 color = MaterialTheme.colorScheme.error,
@@ -109,9 +121,11 @@ fun LoginScreen(
         // Wenn `authUiState` zu `Authenticated` wechselt, würdest du normalerweise
         // zu einem anderen Bildschirm navigieren. Die reine Erfolgsmeldung hier
         // ist für die weitere Entwicklung nicht mehr nötig.
-        // `loginActionUiState.isSuccess` kann aber als Trigger für die Navigation dienen.
+        // `actionUiState.isSuccess` kann aber als Trigger für die Navigation dienen.
 
-        // if (loginActionUiState.isSuccess) { ... navigiere weg ... }
+        if (actionUiState.isSuccess) {
+            // onLoginSuccess()
+        }
     }
 }
 
@@ -128,4 +142,3 @@ fun LoginScreenPreview() = PreviewKoin {
         LoginScreen(onLoginSuccess = {})
     }
 }
-

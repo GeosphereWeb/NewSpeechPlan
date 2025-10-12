@@ -1,7 +1,17 @@
 package de.geosphere.speechplaning.data.repository.authentication
 
+import android.app.Activity
+import android.content.Context
 import android.util.Log
+import androidx.credentials.ClearCredentialStateRequest
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.GetCredentialResponse
+import androidx.credentials.exceptions.GetCredentialException
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.UserProfileChangeRequest
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,7 +23,8 @@ import kotlinx.coroutines.tasks.await
 class AuthRepositoryImpl(
     private val firebaseAuth: FirebaseAuth,
     private val userRepository: UserRepository,
-    private val externalScope: CoroutineScope
+    private val externalScope: CoroutineScope,
+    private val context: Context // Wird für den CredentialManager benötigt
 ) : AuthRepository {
 
     private val _authUiState = MutableStateFlow<AuthUiState>(AuthUiState.Loading)
@@ -65,7 +76,7 @@ class AuthRepositoryImpl(
         firebaseAuth.addAuthStateListener(authStateListener)
     }
 
-    override suspend fun createUserWithEmailAndPassword(email: String, password: String) {
+    override suspend fun createUserWithEmailAndPassword(email: String, password: String, name: String) {
         // Schritt 1: Firebase Auth Benutzer erstellen
         val result = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
         val firebaseUser = result.user
@@ -76,7 +87,13 @@ class AuthRepositoryImpl(
             "Firebase user creation succeeded but user is null."
         }
 
-        // Schritt 2: Den zugehörigen AppUser-Eintrag in Firestore erstellen.
+        // Schritt 2: Den Anzeigenamen aktualisieren
+        val profileUpdates = UserProfileChangeRequest.Builder()
+            .setDisplayName(name)
+            .build()
+        nonNullFirebaseUser.updateProfile(profileUpdates).await()
+
+        // Schritt 3: Den zugehörigen AppUser-Eintrag in Firestore erstellen.
         // 'nonNullFirebaseUser' ist garantiert nicht null.
         userRepository.getOrCreateUser(nonNullFirebaseUser)
     }
@@ -87,8 +104,61 @@ class AuthRepositoryImpl(
         firebaseAuth.signInWithEmailAndPassword(email, password).await()
     }
 
-    override fun signOut() {
+    override suspend fun signOut() {
+        // Meldet den Benutzer bei Firebase ab.
         firebaseAuth.signOut()
+
+        // Meldet den Benutzer über den CredentialManager ab, um den One-Tap-Zustand zurückzusetzen.
+        // Dies ersetzt den veralteten GoogleSignInClient.signOut().
+        try {
+            val credentialManager = CredentialManager.create(context)
+            credentialManager.clearCredentialState(ClearCredentialStateRequest())
+        } catch (e: Exception) {
+            Log.e("AuthRepositoryImpl", "Fehler beim Abmelden über CredentialManager", e)
+        }
+    }
+
+    // --- NEUE Implementierung für Google Sign-In ---
+    override suspend fun googleSignIn(activity: Activity): Result<Unit> {
+        // 1. Hole deine Web-Client-ID aus den Strings. Diese ist in der google-services.json zu finden.
+        val serverClientId = "252698290911-0tcqq62onf1mr5pkcgomktftfb7muicb.apps.googleusercontent.com"
+
+        // 2. Erstelle eine Anfrage für ein Google ID-Token.
+        val getGoogleIdOption = GetGoogleIdOption.Builder()
+            .setFilterByAuthorizedAccounts(false) // Zeigt alle Google-Konten auf dem Gerät
+            .setServerClientId(serverClientId)
+            .setAutoSelectEnabled(true) // Versucht, automatisch ein Konto auszuwählen (One-Tap)
+            .build()
+
+        val request = GetCredentialRequest.Builder()
+            .addCredentialOption(getGoogleIdOption)
+            .build()
+
+        // 3. Führe die Anfrage mit dem CredentialManager aus.
+        return try {
+            val credentialManager = CredentialManager.create(context)
+            val result = credentialManager.getCredential(activity, request) // Benötigt eine Activity
+            handleGoogleSignInResult(result)
+        } catch (e: GetCredentialException) {
+            // Behandelt Fehler wie "Nutzer hat den Dialog geschlossen" etc.
+            Result.failure(e)
+        }
+    }
+
+    private suspend fun handleGoogleSignInResult(result: GetCredentialResponse): Result<Unit> {
+        val credential = result.credential
+        val googleIdToken =
+            com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.createFrom(credential.data)
+                .idToken
+
+        // 4. Tausche das ID-Token bei Firebase Auth gegen Firebase-Credentials ein.
+        val firebaseCredential = GoogleAuthProvider.getCredential(googleIdToken, null)
+        return try {
+            firebaseAuth.signInWithCredential(firebaseCredential).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     override suspend fun forceReloadAndCheckUserStatus() {
