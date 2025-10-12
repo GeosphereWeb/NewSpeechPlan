@@ -101,8 +101,13 @@ dependencies {
     // Add the dependency for the Realtime Database library
     // When using the BoM, you don't specify versions in Firebase library dependencies
     implementation(libs.firebase.database)
-    implementation("com.google.firebase:firebase-auth") // Email u. Passwort
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
+    implementation(libs.firebase.auth) // Firebase Authentication Email u. Passwort
+    implementation(libs.play.services.auth) // Google Sign-In Client
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
+
+    implementation(libs.kotlinx.coroutines.play.services)
 
     // // Koin
     // // dependencies with Koin
@@ -120,9 +125,10 @@ dependencies {
     // testImplementation(libs.mockk.android) // Remove, not needed for pure unit tests
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.junit) // JUnit 4 für backwards compatibility
-    testImplementation("io.kotest:kotest-runner-junit5:6.0.3")
-    testImplementation("io.kotest:kotest-assertions-core:6.0.3")
-    testImplementation("io.kotest:kotest-property:6.0.3")
+    testImplementation(libs.kotest.framework)
+    testImplementation(libs.kotest.assertions)
+    testImplementation(libs.kotest.runner.junit5)
+    testImplementation(libs.kotest.property)
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

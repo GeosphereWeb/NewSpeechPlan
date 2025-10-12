@@ -32,8 +32,8 @@ fun SignUpScreen(
 
     // Dieser LaunchedEffect reagiert, wenn die Registrierung erfolgreich war,
     // zeigt einen Toast an und wechselt zurück zum Anmeldebildschirm.
-    LaunchedEffect(key1 = authViewModel.loginActionUiState.collectAsState().value.isSuccess) {
-        val state = authViewModel.loginActionUiState.value
+    LaunchedEffect(key1 = authViewModel.actionUiState.collectAsState().value.isSuccess) {
+        val state = authViewModel.actionUiState.value
         if (state.isSuccess) {
             Toast.makeText(
                 context,
@@ -73,7 +73,7 @@ fun SignUpScreen(
     )
     Spacer(modifier = Modifier.Companion.height(16.dp))
     Button(
-        onClick = { authViewModel.createUserWithEmailAndPassword(email, password) },
+        onClick = { authViewModel.createUserWithEmailAndPassword(email, password, displayName) },
         modifier = Modifier.Companion.fillMaxWidth()
     ) {
         Text("Registrieren")
