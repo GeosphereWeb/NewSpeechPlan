@@ -7,11 +7,12 @@ import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
-import androidx.credentials.exceptions.GetCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
+import de.geosphere.speechplaning.domain.usecase.auth.DetermineAppUserStatusUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,9 +23,9 @@ import kotlinx.coroutines.tasks.await
 @Suppress("TooGenericExceptionCaught")
 class AuthRepositoryImpl(
     private val firebaseAuth: FirebaseAuth,
-    private val userRepository: UserRepository,
     private val externalScope: CoroutineScope,
-    private val context: Context // Wird für den CredentialManager benötigt
+    private val context: Context,
+    private val determineAppUserStatusUseCase: DetermineAppUserStatusUseCase // Bleibt als Abhängigkeit
 ) : AuthRepository {
 
     private val _authUiState = MutableStateFlow<AuthUiState>(AuthUiState.Loading)
@@ -35,38 +36,24 @@ class AuthRepositoryImpl(
             try {
                 val user = firebaseAuth.currentUser
                 if (user == null) {
-                    // Benutzer ist nicht angemeldet.
                     _authUiState.value = AuthUiState.Unauthenticated
                     return@launch
                 }
 
-                // ========================================================================
-                // ===== HIER IST DER ENTSCHEIDENDE TEIL =====
-                //
-                // Diese Zeile weist Firebase an, das ID-Token des Benutzers
-                // vom Server neu abzurufen. Das Argument `true` erzwingt die
-                // Aktualisierung aus dem Netzwerk und ignoriert den lokalen Cache.
-                // Dieser Aufruf aktualisiert den gesamten internen Zustand des
-                // `currentUser`-Objekts, einschließlich der Informationen, die
-                // du serverseitig geändert hast (indirekt über das Token).
-                // ========================================================================
-                user.getIdToken(true).await()
-
-                // Nachdem das Token aktualisiert wurde, hat die App nun die
-                // neuesten Informationen vom Server.
-                val appUser = userRepository.getOrCreateUser(user)
-
-                // Jetzt sollte die Prüfung des 'approved'-Status korrekt funktionieren.
-                if (appUser.approved) {
-                    _authUiState.value = AuthUiState.Authenticated(user)
-                } else {
-                    _authUiState.value = AuthUiState.NeedsApproval
-                }
+                // Verwende den UseCase und übergebe die Low-Level-Reload-Aktion
+                _authUiState.value = determineAppUserStatusUseCase(
+                    firebaseUser = user,
+                    // authStateListener soll in der Regel keinen erzwungenen Reload
+                    // machen, da er bei Änderungen triggert
+                    forceReload = false,
+                    reloadTokenAction = { firebaseUserToReload ->
+                        // Hier rufen wir die eigene Low-Level-Methode des Repositories auf
+                        reloadFirebaseUserToken(firebaseUserToReload)
+                    }
+                )
             } catch (e: Exception) {
-                // Fehlerbehandlung: Wenn etwas schiefgeht (z.B. Netzwerkfehler
-                // beim Neuladen des Tokens), den Benutzer sicherheitshalber ausloggen.
                 Log.e("AuthRepository", "Fehler bei der Überprüfung des Auth-Status", e)
-                firebaseAuth.signOut()
+                firebaseAuth.signOut() // Nur Firebase-Abmeldung
                 _authUiState.value = AuthUiState.Unauthenticated
             }
         }
@@ -76,109 +63,89 @@ class AuthRepositoryImpl(
         firebaseAuth.addAuthStateListener(authStateListener)
     }
 
-    override suspend fun createUserWithEmailAndPassword(email: String, password: String, name: String) {
-        // Schritt 1: Firebase Auth Benutzer erstellen
+    override fun getCurrentUser(): FirebaseUser? = firebaseAuth.currentUser
+
+    // --- NEUE/ANGEPASSTE Low-Level-Methoden für Firebase Auth und CredentialManager ---
+
+    // Erstellt nur den Firebase-Benutzer, keine Profil-Updates oder userRepository-Aufrufe hier
+    override suspend fun createUserWithEmailAndPassword(email: String, password: String): FirebaseUser {
         val result = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
-        val firebaseUser = result.user
+        return checkNotNull(result.user) { "Firebase user creation succeeded but user is null." }
+    }
 
-        // Wenn die Erstellung fehlschlägt, wirft .await() eine Exception, die wir im ViewModel fangen.
-        // Wenn sie erfolgreich ist, aber der User null ist (sollte nie passieren), werfen wir einen Fehler.
-        val nonNullFirebaseUser = checkNotNull(firebaseUser) {
-            "Firebase user creation succeeded but user is null."
-        }
-
-        // Schritt 2: Den Anzeigenamen aktualisieren
+    // Low-Level-Methode zum Aktualisieren des Firebase-Benutzerprofils
+    override suspend fun updateFirebaseUserProfile(user: FirebaseUser, name: String) {
         val profileUpdates = UserProfileChangeRequest.Builder()
             .setDisplayName(name)
             .build()
-        nonNullFirebaseUser.updateProfile(profileUpdates).await()
-
-        // Schritt 3: Den zugehörigen AppUser-Eintrag in Firestore erstellen.
-        // 'nonNullFirebaseUser' ist garantiert nicht null.
-        userRepository.getOrCreateUser(nonNullFirebaseUser)
+        user.updateProfile(profileUpdates).await()
     }
 
     override suspend fun signInWithEmailAndPassword(email: String, password: String) {
-        // Die Anmeldung ändert nur den auth state. Der AuthStateListener
-        // kümmert sich dann automatisch um den Rest (Nutzerdaten laden, `approved` prüfen etc.).
         firebaseAuth.signInWithEmailAndPassword(email, password).await()
     }
 
-    override suspend fun signOut() {
-        // Meldet den Benutzer bei Firebase ab.
+    // Nur Firebase-Abmeldung
+    override suspend fun signOutFirebase() {
         firebaseAuth.signOut()
+    }
 
-        // Meldet den Benutzer über den CredentialManager ab, um den One-Tap-Zustand zurückzusetzen.
-        // Dies ersetzt den veralteten GoogleSignInClient.signOut().
+    // Nur CredentialManager-Abmeldung
+    override suspend fun clearCredentialManager() {
         try {
             val credentialManager = CredentialManager.create(context)
             credentialManager.clearCredentialState(ClearCredentialStateRequest())
         } catch (e: Exception) {
             Log.e("AuthRepositoryImpl", "Fehler beim Abmelden über CredentialManager", e)
+            // Fehler hier abfangen, da dies nicht unbedingt ein Kritischer Fehler für den Abmeldevorgang ist
         }
     }
 
-    // --- NEUE Implementierung für Google Sign-In ---
-    override suspend fun googleSignIn(activity: Activity): Result<Unit> {
-        // 1. Hole deine Web-Client-ID aus den Strings. Diese ist in der google-services.json zu finden.
-        val serverClientId = "252698290911-0tcqq62onf1mr5pkcgomktftfb7muicb.apps.googleusercontent.com"
+    // Low-Level-Methode zum Abrufen eines Google ID Credentials
+    override suspend fun getGoogleIdCredential(activity: Activity): GetCredentialResponse {
+        // Diese ID bleibt hier, da sie eine Konfigurationsabhängigkeit des Repositories ist
+        val serverClientId =
+            "252698290911-0tcqq62onf1mr5pkcgomktftfb7muicb.apps.googleusercontent.com"
 
-        // 2. Erstelle eine Anfrage für ein Google ID-Token.
         val getGoogleIdOption = GetGoogleIdOption.Builder()
-            .setFilterByAuthorizedAccounts(false) // Zeigt alle Google-Konten auf dem Gerät
+            .setFilterByAuthorizedAccounts(false)
             .setServerClientId(serverClientId)
-            .setAutoSelectEnabled(true) // Versucht, automatisch ein Konto auszuwählen (One-Tap)
+            .setAutoSelectEnabled(true)
             .build()
 
         val request = GetCredentialRequest.Builder()
             .addCredentialOption(getGoogleIdOption)
             .build()
 
-        // 3. Führe die Anfrage mit dem CredentialManager aus.
-        return try {
-            val credentialManager = CredentialManager.create(context)
-            val result = credentialManager.getCredential(activity, request) // Benötigt eine Activity
-            handleGoogleSignInResult(result)
-        } catch (e: GetCredentialException) {
-            // Behandelt Fehler wie "Nutzer hat den Dialog geschlossen" etc.
-            Result.failure(e)
-        }
+        val credentialManager = CredentialManager.create(context)
+        return credentialManager.getCredential(activity, request)
     }
 
-    private suspend fun handleGoogleSignInResult(result: GetCredentialResponse): Result<Unit> {
-        val credential = result.credential
-        val googleIdToken =
-            com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.createFrom(credential.data)
-                .idToken
+    // Low-Level-Methode zum Anmelden bei Firebase mit beliebigen AuthCredentials
+    override suspend fun signInWithFirebaseCredential(credential: AuthCredential) {
+        firebaseAuth.signInWithCredential(credential).await()
+    }
 
-        // 4. Tausche das ID-Token bei Firebase Auth gegen Firebase-Credentials ein.
-        val firebaseCredential = GoogleAuthProvider.getCredential(googleIdToken, null)
-        return try {
-            firebaseAuth.signInWithCredential(firebaseCredential).await()
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    override suspend fun reloadFirebaseUserToken(user: FirebaseUser) {
+        user.getIdToken(true).await()
     }
 
     override suspend fun forceReloadAndCheckUserStatus() {
         try {
-            val user = firebaseAuth.currentUser ?: return // Wenn kein User da, nichts tun
+            val user = firebaseAuth.currentUser ?: return
 
-            // 1. Lade die neuesten Daten vom Server
-            user.getIdToken(true).await()
-
-            // 2. Führe die gleiche Logik wie im AuthStateListener erneut aus!
-            val appUser = userRepository.getOrCreateUser(user)
-            if (appUser.approved) {
-                _authUiState.value = AuthUiState.Authenticated(user)
-            } else {
-                // Falls der Admin die Freigabe widerrufen hat, bleibe hier
-                _authUiState.value = AuthUiState.NeedsApproval
-            }
+            // Verwende den UseCase mit forceReload = true und gib die Reload-Aktion an
+            _authUiState.value = determineAppUserStatusUseCase(
+                firebaseUser = user,
+                forceReload = true,
+                reloadTokenAction = { firebaseUserToReload ->
+                    // Hier rufen wir die eigene Low-Level-Methode des Repositories auf
+                    reloadFirebaseUserToken(firebaseUserToReload)
+                }
+            )
         } catch (e: Exception) {
             Log.e("AuthRepository", "Fehler bei der manuellen Statusprüfung", e)
-            // Optional: Fehler an die UI melden, z.B. über einen separaten State
+            _authUiState.value = AuthUiState.Unauthenticated
         }
     }
 }

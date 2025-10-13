@@ -44,7 +44,7 @@ fun LoginScreen(
     val onGoToSignUp = { currentScreen = LoginSubScreen.SignUp }
     val onGoToSignIn = { currentScreen = LoginSubScreen.SignIn }
 
-    val authUiState by authViewModel.authUiState.collectAsState()
+    val authUiState by authViewModel.getAuthUiState().collectAsState(initial = AuthUiState.Loading)
     val actionUiState by authViewModel.actionUiState.collectAsState()
 
     // Wenn die Anzeige des LoginScreens verlassen wird (onDispose),
