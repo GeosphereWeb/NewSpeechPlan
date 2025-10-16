@@ -15,7 +15,7 @@ sealed interface AuthUiState {
     /**
      * Repräsentiert einen erfolgreich angemeldeten und freigegebenen Nutzer.
      */
-    data class Authenticated(val user: FirebaseUser) : AuthUiState
+    data class Authenticated(val firebaseUser: FirebaseUser) : AuthUiState
 
     /**
      * Repräsentiert einen angemeldeten, aber noch nicht für die App-Nutzung freigegebenen Nutzer.

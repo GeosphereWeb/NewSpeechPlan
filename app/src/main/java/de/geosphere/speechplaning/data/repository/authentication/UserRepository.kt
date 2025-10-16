@@ -5,10 +5,11 @@ import de.geosphere.speechplaning.data.model.AppUser
 
 fun interface UserRepository {
     /**
-     * Ruft einen AppUser aus Firestore ab oder erstellt einen neuen, falls keiner existiert.
+     * Ruft einen de.geosphere.speechplaning.domain.usecase.auth.AppUser aus Firestore ab oder erstellt einen neuen,
+     * falls keiner existiert.
      *
      * @param firebaseUser Der aktuell angemeldete FirebaseUser.
-     * @return Der AppUser aus Firestore.
+     * @return Der de.geosphere.speechplaning.domain.usecase.auth.AppUser aus Firestore.
      */
     suspend fun getOrCreateUser(firebaseUser: FirebaseUser): AppUser
 }
