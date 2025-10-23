@@ -9,6 +9,8 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
 import de.geosphere.speechplaning.data.model.AppUser
+import de.geosphere.speechplaning.data.model.repository.authentication.UserRepository
+import de.geosphere.speechplaning.data.model.repository.authentication.UserRepositoryImpl
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.shouldBe

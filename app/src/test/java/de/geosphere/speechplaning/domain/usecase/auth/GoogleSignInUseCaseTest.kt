@@ -8,9 +8,10 @@ import androidx.credentials.GetCredentialResponse
 import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
-import de.geosphere.speechplaning.data.repository.authentication.AuthRepository
-import de.geosphere.speechplaning.data.repository.authentication.UserRepository
-import de.geosphere.speechplaning.domain.util.GoogleIdTokenParser
+import de.geosphere.speechplaning.data.auth.usecase.GoogleSignInUseCase
+import de.geosphere.speechplaning.data.model.repository.authentication.AuthRepository
+import de.geosphere.speechplaning.data.model.repository.authentication.UserRepository
+import de.geosphere.speechplaning.data.util.GoogleIdTokenParser
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.result.shouldBeSuccess

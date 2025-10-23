@@ -24,7 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import de.geosphere.speechplaning.data.repository.authentication.AuthUiState
+import de.geosphere.speechplaning.data.authentication.AuthUiState
 import de.geosphere.speechplaning.di.PreviewKoin
 import de.geosphere.speechplaning.ui.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.ui.theme.ThemePreviews

@@ -8,7 +8,9 @@ import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
-import de.geosphere.speechplaning.domain.usecase.auth.DetermineAppUserStatusUseCase
+import de.geosphere.speechplaning.data.model.repository.authentication.AuthRepositoryImpl
+import de.geosphere.speechplaning.data.model.repository.authentication.AuthUiState
+import de.geosphere.speechplaning.data.auth.usecase.DetermineAppUserStatusUseCase
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.CapturingSlot

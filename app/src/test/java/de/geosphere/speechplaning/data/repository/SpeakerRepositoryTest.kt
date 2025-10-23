@@ -1,6 +1,7 @@
 package de.geosphere.speechplaning.data.repository
 
 import de.geosphere.speechplaning.data.model.Speaker
+import de.geosphere.speechplaning.data.model.repository.SpeakerRepository
 import de.geosphere.speechplaning.data.services.FirestoreService
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec

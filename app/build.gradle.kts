@@ -15,11 +15,11 @@ plugins {
 
 android {
     namespace = "de.geosphere.speechplaning"
-    compileSdk = 36
+    compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "de.geosphere.speechplaning"
-        minSdk = 33
+        minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -77,6 +77,10 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:model"))
+    implementation(project(":data"))
+    // implementation(project(":core:ui"))
+    // implementation(project(":core:navigation"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

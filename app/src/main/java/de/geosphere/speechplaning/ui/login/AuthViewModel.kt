@@ -1,16 +1,16 @@
 package de.geosphere.speechplaning.ui.login
 
-import de.geosphere.speechplaning.domain.usecase.auth.CreateUserWithEmailAndPasswordUseCase
-import de.geosphere.speechplaning.domain.usecase.auth.GoogleSignInUseCase
-import SignInWithEmailAndPasswordUseCase
-import SignOutUseCase
+import de.geosphere.speechplaning.data.auth.usecase.CreateUserWithEmailAndPasswordUseCase
+import de.geosphere.speechplaning.data.auth.usecase.GoogleSignInUseCase
+import de.geosphere.speechplaning.data.auth.usecase.SignOutUseCase
 import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
-import de.geosphere.speechplaning.data.repository.authentication.AuthRepository
-import de.geosphere.speechplaning.data.repository.authentication.AuthUiState
+import de.geosphere.speechplaning.data.auth.usecase.SignInWithEmailAndPasswordUseCase
+import de.geosphere.speechplaning.data.authentication.AuthRepository
+import de.geosphere.speechplaning.data.authentication.AuthUiState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

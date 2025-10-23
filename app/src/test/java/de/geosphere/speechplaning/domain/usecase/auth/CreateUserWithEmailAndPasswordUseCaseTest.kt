@@ -3,8 +3,9 @@ package de.geosphere.speechplaning.domain.usecase.auth
 // --- HIER IST DIE ÄNDERUNG ---
 // Korrekter Import der zu testenden Klasse.
 import com.google.firebase.auth.FirebaseUser
-import de.geosphere.speechplaning.data.repository.authentication.AuthRepository
-import de.geosphere.speechplaning.data.repository.authentication.UserRepository
+import de.geosphere.speechplaning.data.auth.usecase.CreateUserWithEmailAndPasswordUseCase
+import de.geosphere.speechplaning.data.model.repository.authentication.AuthRepository
+import de.geosphere.speechplaning.data.model.repository.authentication.UserRepository
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.result.shouldBeSuccess
 import io.mockk.coEvery

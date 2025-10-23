@@ -2,6 +2,7 @@ package de.geosphere.speechplaning.domain.util
 
 import android.os.Bundle
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import de.geosphere.speechplaning.data.util.GoogleIdTokenParser
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.every

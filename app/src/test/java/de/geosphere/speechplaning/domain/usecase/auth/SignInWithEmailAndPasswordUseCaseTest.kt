@@ -1,7 +1,7 @@
 package de.geosphere.speechplaning.domain.usecase.auth
 
 import SignInWithEmailAndPasswordUseCase
-import de.geosphere.speechplaning.data.repository.authentication.AuthRepository
+import de.geosphere.speechplaning.data.model.repository.authentication.AuthRepository
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.result.shouldBeSuccess

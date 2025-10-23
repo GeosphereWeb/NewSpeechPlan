@@ -1,10 +1,10 @@
 package de.geosphere.speechplaning.mockup
 
-import de.geosphere.speechplaning.data.SpiritualStatus
 import de.geosphere.speechplaning.data.model.Congregation
 import de.geosphere.speechplaning.data.model.District
 import de.geosphere.speechplaning.data.model.Speaker
 import de.geosphere.speechplaning.data.model.Speech
+import de.geosphere.speechplaning.data.model.data.SpiritualStatus
 
 @Suppress("LargeClass")
 class MockedListOfDummyClasses {
