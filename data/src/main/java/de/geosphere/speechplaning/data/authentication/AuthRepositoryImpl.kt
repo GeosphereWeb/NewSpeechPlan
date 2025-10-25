@@ -12,7 +12,7 @@ import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
-import de.geosphere.speechplaning.data.auth.usecase.DetermineAppUserStatusUseCase
+import de.geosphere.speechplaning.data.usecases.DetermineAppUserStatusUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

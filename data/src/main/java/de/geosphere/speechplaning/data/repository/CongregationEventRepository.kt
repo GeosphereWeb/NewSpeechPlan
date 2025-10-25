@@ -1,6 +1,6 @@
 package de.geosphere.speechplaning.data.repository
 
-import de.geosphere.speechplaning.data.model.CongregationEvent
+import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.data.repository.base.BaseFirestoreSubcollectionRepository
 import de.geosphere.speechplaning.data.repository.services.FirestoreService
 

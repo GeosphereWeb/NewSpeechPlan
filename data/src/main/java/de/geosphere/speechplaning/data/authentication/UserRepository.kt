@@ -1,7 +1,7 @@
 package de.geosphere.speechplaning.data.authentication
 
 import com.google.firebase.auth.FirebaseUser
-import de.geosphere.speechplaning.data.model.AppUser
+import de.geosphere.speechplaning.core.model.AppUser
 
 fun interface UserRepository {
     /**

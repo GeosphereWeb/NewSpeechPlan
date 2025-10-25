@@ -4,9 +4,9 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import de.geosphere.speechplaning.data.model.repository.authentication.AuthRepository
 import de.geosphere.speechplaning.data.model.repository.authentication.AuthUiState
-import de.geosphere.speechplaning.data.auth.usecase.CreateUserWithEmailAndPasswordUseCase
-import de.geosphere.speechplaning.data.auth.usecase.GoogleSignInUseCase
-import de.geosphere.speechplaning.data.auth.usecase.SignOutUseCase
+import de.geosphere.speechplaning.data.usecases.CreateUserWithEmailAndPasswordUseCase
+import de.geosphere.speechplaning.data.usecases.GoogleSignInUseCase
+import de.geosphere.speechplaning.data.usecases.SignOutUseCase
 import de.geosphere.speechplaning.ui.login.AuthViewModel
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.booleans.shouldBeFalse

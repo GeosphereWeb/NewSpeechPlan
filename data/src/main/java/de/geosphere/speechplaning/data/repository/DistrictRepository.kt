@@ -1,7 +1,7 @@
 package de.geosphere.speechplaning.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
-import de.geosphere.speechplaning.data.model.District
+import de.geosphere.speechplaning.core.model.District
 import de.geosphere.speechplaning.data.repository.base.BaseFirestoreRepository
 import kotlinx.coroutines.tasks.await
 

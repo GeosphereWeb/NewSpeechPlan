@@ -2,6 +2,7 @@ package de.geosphere.speechplaning
 
 import android.app.Application
 import com.google.firebase.FirebaseApp
+import de.geosphere.speechplaning.data.di.dataModule
 import de.geosphere.speechplaning.di.appModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -19,7 +20,7 @@ class MyApplication : Application() {
         startKoin {
             androidLogger()
             androidContext(this@MyApplication)
-            modules(appModule)
+            modules(appModule, dataModule)
         }
     }
 }

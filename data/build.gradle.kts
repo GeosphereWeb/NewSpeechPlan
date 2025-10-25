@@ -56,9 +56,9 @@ dependencies {
 
     // // Koin
     // // dependencies with Koin
-    implementation(libs.koin.android) // Oder die neueste Version
+    implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
+
     implementation(libs.org.jacoco.core)
-    implementation(libs.firebase.firestore.ktx)
     implementation(libs.androidx.ui.test.junit4.android) // Für
 }

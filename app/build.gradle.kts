@@ -104,14 +104,9 @@ dependencies {
     // https://firebase.google.com/docs/android/setup#available-libraries
     // Add the dependency for the Realtime Database library
     // When using the BoM, you don't specify versions in Firebase library dependencies
-    implementation(libs.firebase.database)
-    implementation(libs.firebase.auth) // Firebase Authentication Email u. Passwort
-    implementation(libs.play.services.auth) // Google Sign-In Client
-    implementation(libs.androidx.credentials)
-    implementation(libs.androidx.credentials.play.services.auth)
-    implementation(libs.googleid)
+    implementation(libs.firebase.auth)
 
-    implementation(libs.kotlinx.coroutines.play.services)
+    // implementation(libs.kotlinx.coroutines.play.services)
 
     // // Koin
     // // dependencies with Koin

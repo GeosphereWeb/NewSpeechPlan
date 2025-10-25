@@ -3,7 +3,7 @@ package de.geosphere.speechplaning.di
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import com.google.firebase.auth.FirebaseAuth
-import de.geosphere.speechplaning.data.ci.dataModule
+import de.geosphere.speechplaning.data.di.dataModule
 import io.mockk.mockk
 import org.koin.android.ext.koin.androidContext
 import org.koin.compose.KoinApplication

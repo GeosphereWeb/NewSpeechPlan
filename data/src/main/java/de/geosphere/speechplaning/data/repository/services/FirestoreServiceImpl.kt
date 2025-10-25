@@ -4,12 +4,12 @@ import android.util.Log
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
-import de.geosphere.speechplaning.data.model.Chairman
-import de.geosphere.speechplaning.data.model.Congregation
-import de.geosphere.speechplaning.data.model.District
-import de.geosphere.speechplaning.data.model.SavableDataClass
-import de.geosphere.speechplaning.data.model.Speaker
-import de.geosphere.speechplaning.data.model.Speech
+import de.geosphere.speechplaning.core.model.Chairman
+import de.geosphere.speechplaning.core.model.Congregation
+import de.geosphere.speechplaning.core.model.District
+import de.geosphere.speechplaning.core.model.SavableDataClass
+import de.geosphere.speechplaning.core.model.Speaker
+import de.geosphere.speechplaning.core.model.Speech
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
 

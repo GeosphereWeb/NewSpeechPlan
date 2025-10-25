@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "de.geosphere.speechplaning.data.model"
+    namespace = "de.geosphere.speechplaning.core.model"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {

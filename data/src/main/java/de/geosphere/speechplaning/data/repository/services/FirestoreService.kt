@@ -1,7 +1,7 @@
 package de.geosphere.speechplaning.data.repository.services
 
 import com.google.firebase.firestore.CollectionReference
-import de.geosphere.speechplaning.data.model.SavableDataClass
+import de.geosphere.speechplaning.core.model.SavableDataClass
 
 @Suppress("TooManyFunctions")
 interface FirestoreService {

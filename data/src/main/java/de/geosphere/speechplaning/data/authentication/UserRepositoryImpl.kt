@@ -3,7 +3,7 @@ package de.geosphere.speechplaning.data.authentication
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
-import de.geosphere.speechplaning.data.model.AppUser
+import de.geosphere.speechplaning.core.model.AppUser
 import kotlinx.coroutines.tasks.await
 
 class UserRepositoryImpl(private val firestore: FirebaseFirestore) : UserRepository {
