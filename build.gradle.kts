@@ -1,8 +1,12 @@
 import io.gitlab.arturbosch.detekt.Detekt
+import org.gradle.api.artifacts.VersionCatalogsExtension
+import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.libs
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+val libsws = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
 fun loadPatternsFromFile(filePath: String, descriptionForWarning: String): String {
     val exclusionFile = rootProject.file(filePath) // rootProject is available in this script's scope
@@ -112,14 +116,14 @@ subprojects {
     }
 
     detekt {
-      toolVersion = libs.versions.detekt.get()
+      toolVersion = libsws.findVersion("detekt").get().toString()
       config.setFrom(file("$rootDir/config/detekt/detekt.yml"))
       buildUponDefaultConfig = true
     }
 
     dependencies {
-      detekt(libs.detekt.cli)
-      detektPlugins(libs.detekt.formatting)
+      detekt(libsws.findLibrary("detekt-cli").get())
+      detektPlugins(libsws.findLibrary("detekt-formatting").get())
     }
 }
 
