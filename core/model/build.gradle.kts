@@ -30,6 +30,15 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            all {
+                it.useJUnitPlatform()
+            }
+        }
+    }
 }
 
 dependencies {
@@ -40,5 +49,18 @@ dependencies {
     // Import Serialization
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.gson)
+
+    // Unit Tests
+    testImplementation(kotlin("test"))
+    testImplementation(libs.mockk) {
+        exclude(group = "io.mockk", module = "mockk-android")
+    }
+    // testImplementation(libs.mockk.android) // Remove, not needed for pure unit tests
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.junit) // JUnit 4 für backwards compatibility
+    testImplementation(libs.kotest.framework)
+    testImplementation(libs.kotest.assertions)
+    testImplementation(libs.kotest.runner.junit5)
+    testImplementation(libs.kotest.property)
 
 }

@@ -79,6 +79,7 @@ android {
 dependencies {
     implementation(project(":core:model"))
     implementation(project(":data"))
+    implementation(project(":mocking"))
     // implementation(project(":core:ui"))
     // implementation(project(":core:navigation"))
 

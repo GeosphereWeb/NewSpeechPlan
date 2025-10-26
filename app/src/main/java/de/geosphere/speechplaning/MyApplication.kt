@@ -4,6 +4,7 @@ import android.app.Application
 import com.google.firebase.FirebaseApp
 import de.geosphere.speechplaning.data.di.dataModule
 import de.geosphere.speechplaning.di.appModule
+import de.geosphere.speechplaning.mocking.di.mockingModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.GlobalContext.startKoin
@@ -20,7 +21,7 @@ class MyApplication : Application() {
         startKoin {
             androidLogger()
             androidContext(this@MyApplication)
-            modules(appModule, dataModule)
+            modules(appModule, dataModule, mockingModule)
         }
     }
 }

@@ -33,7 +33,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import de.geosphere.speechplaning.core.model.Speaker
 import de.geosphere.speechplaning.di.PreviewKoin
-import de.geosphere.speechplaning.mockup.MockedListOfDummyClasses
+import de.geosphere.speechplaning.mocking.MockedListOfDummyClasses
 import de.geosphere.speechplaning.ui.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.ui.theme.ThemePreviews
 

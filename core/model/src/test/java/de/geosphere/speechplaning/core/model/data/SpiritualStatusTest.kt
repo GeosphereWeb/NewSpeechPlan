@@ -1,6 +1,9 @@
 package de.geosphere.speechplaning.core.model.data
 
 import de.geosphere.speechplaning.data.model.data.SpiritualStatus
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.shouldBe
 
 class SpiritualStatusTest : ShouldSpec({
 

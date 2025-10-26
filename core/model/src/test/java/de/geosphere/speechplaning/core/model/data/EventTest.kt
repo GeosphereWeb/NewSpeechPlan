@@ -1,6 +1,11 @@
 package de.geosphere.speechplaning.core.model.data
 
 import de.geosphere.speechplaning.data.model.data.Event
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.datatest.withData
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.kotest.matchers.shouldBe
 
 class EventTest : BehaviorSpec({
 
