@@ -1,6 +1,6 @@
 package de.geosphere.speechplaning.data.usecases
 
-import de.geosphere.speechplaning.data.model.repository.authentication.AuthRepository
+import de.geosphere.speechplaning.data.authentication.AuthRepository
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.result.shouldBeSuccess

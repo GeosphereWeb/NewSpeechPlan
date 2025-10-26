@@ -36,9 +36,9 @@ class UserRepositoryImplTest : BehaviorSpec({
             then("it should return existing user") {
                 // Given
                 val firebaseUser = mockk<FirebaseUser> {
-                    every { FirebaseUser.getUid } returns "test-uid"
-                    every { FirebaseUser.getEmail } returns "test@example.com"
-                    every { FirebaseUser.getDisplayName } returns "Test User"
+                    every { uid } returns "test-uid"
+                    every {email} returns "test@example.com"
+                    every { displayName } returns "Test User"
                 }
                 val existingAppUser = AppUser(
                     uid = "test-uid", email = "test@example.com",
@@ -65,9 +65,9 @@ class UserRepositoryImplTest : BehaviorSpec({
             then("it should create and return new user") {
                 // Given
                 val firebaseUser = mockk<FirebaseUser> {
-                    every { FirebaseUser.getUid } returns "new-user-uid"
-                    every { FirebaseUser.getEmail } returns "new@example.com"
-                    every { FirebaseUser.getDisplayName } returns "New User"
+                    every { uid } returns "new-user-uid"
+                    every { email } returns "new@example.com"
+                    every { displayName } returns "New User"
                 }
                 val documentSnapshot = mockk<DocumentSnapshot>()
                 val getTask: Task<DocumentSnapshot> = Tasks.forResult(documentSnapshot)

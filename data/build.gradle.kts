@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.ktlint)
+    alias(libs.plugins.detekt)
 }
 
 android {
@@ -29,6 +31,25 @@ android {
     }
     kotlinOptions {
         jvmTarget = "11"
+    }
+
+    lint {
+        // Definiere deine zentralen Lint-Optionen hier
+        baseline = file("lint-baseline.xml")
+        xmlReport = true
+        xmlOutput = file("$buildDir/reports/lint-results.xml")
+
+        // Weitere zentrale Optionen, die du vielleicht möchtest:
+        checkReleaseBuilds = true
+        abortOnError = true // Bricht den Build bei Lint-Fehlern ab
+    }
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            all {
+                it.useJUnitPlatform()
+            }
+        }
     }
 }
 
@@ -60,5 +81,35 @@ dependencies {
     implementation(libs.koin.androidx.compose)
 
     implementation(libs.org.jacoco.core)
-    implementation(libs.androidx.ui.test.junit4.android) // Für
+    implementation(libs.androidx.ui.test.junit4.android)
+
+    // Unit Tests
+    testImplementation(kotlin("test"))
+    testImplementation(libs.mockk) {
+        exclude(group = "io.mockk", module = "mockk-android")
+    }
+    // testImplementation(libs.mockk.android) // Remove, not needed for pure unit tests
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.junit) // JUnit 4 für backwards compatibility
+    testImplementation(libs.kotest.framework)
+    testImplementation(libs.kotest.assertions)
+    testImplementation(libs.kotest.runner.junit5)
+    testImplementation(libs.kotest.property)
+
+    detekt(libs.detekt.cli)
+    detektPlugins(libs.detekt.formatting)
+}
+
+detekt {
+    autoCorrect = true
+    source.from(
+        files(
+            "src/main/java",
+            "src/main/kotlin",
+            "src/test/java",
+            "src/test/kotlin",
+            "src/androidTest/java",
+            "src/androidTest/kotlin"
+        )
+    )
 }

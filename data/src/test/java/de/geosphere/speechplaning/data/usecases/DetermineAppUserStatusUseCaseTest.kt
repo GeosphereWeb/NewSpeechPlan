@@ -2,8 +2,8 @@ package de.geosphere.speechplaning.data.usecases
 
 import com.google.firebase.auth.FirebaseUser
 import de.geosphere.speechplaning.core.model.AppUser
-import de.geosphere.speechplaning.data.model.repository.authentication.AuthUiState
-import de.geosphere.speechplaning.data.model.repository.authentication.UserRepository
+import de.geosphere.speechplaning.data.authentication.AuthUiState
+import de.geosphere.speechplaning.data.authentication.UserRepository
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf

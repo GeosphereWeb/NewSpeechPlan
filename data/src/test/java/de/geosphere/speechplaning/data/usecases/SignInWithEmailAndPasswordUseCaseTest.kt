@@ -1,12 +1,11 @@
 package de.geosphere.speechplaning.data.usecases
 
-import de.geosphere.speechplaning.data.model.repository.authentication.AuthRepository
+import de.geosphere.speechplaning.data.authentication.AuthRepository
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.result.shouldBeSuccess
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.throwable.shouldHaveMessage
-import io.mockk.MockKMatcherScope.get
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
