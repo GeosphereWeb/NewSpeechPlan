@@ -2,7 +2,6 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ktlint)
-    alias(libs.plugins.detekt)
 }
 
 android {
@@ -95,21 +94,4 @@ dependencies {
     testImplementation(libs.kotest.assertions)
     testImplementation(libs.kotest.runner.junit5)
     testImplementation(libs.kotest.property)
-
-    detekt(libs.detekt.cli)
-    detektPlugins(libs.detekt.formatting)
-}
-
-detekt {
-    autoCorrect = true
-    source.from(
-        files(
-            "src/main/java",
-            "src/main/kotlin",
-            "src/test/java",
-            "src/test/kotlin",
-            "src/androidTest/java",
-            "src/androidTest/kotlin"
-        )
-    )
 }

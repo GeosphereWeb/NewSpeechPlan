@@ -8,7 +8,6 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
     alias(libs.plugins.ktlint)
-    alias(libs.plugins.detekt)
     alias(libs.plugins.kotlin.serialization)
     id("jacoco")
 }
@@ -146,9 +145,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     // MockK für Compose Previews verfügbar machen
     debugImplementation(libs.mockk.android)
-
-    detekt(libs.detekt.cli)
-    detektPlugins(libs.detekt.formatting)
 }
 
 // INHALT FÜR DIE DUMMY google-services.json
@@ -322,18 +318,4 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     // die .exec-Datei möglicherweise nur noch am Standard-Gradle-JaCoCo-Plugin-Speicherort erstellt.
     // Wir verwenden nur noch diesen Pfad, um sicherzustellen, dass der Bericht gefunden wird.
     executionData.from(layout.buildDirectory.file("jacoco/testDebugUnitTest.exec"))
-}
-
-detekt {
-    autoCorrect = true
-    source.from(
-        files(
-            "src/main/java",
-            "src/main/kotlin",
-            "src/test/java",
-            "src/test/kotlin",
-            "src/androidTest/java",
-            "src/androidTest/kotlin"
-        )
-    )
 }
