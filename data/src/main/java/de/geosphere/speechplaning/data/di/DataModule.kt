@@ -2,11 +2,6 @@ package de.geosphere.speechplaning.data.di
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import de.geosphere.speechplaning.data.usecases.CreateUserWithEmailAndPasswordUseCase
-import de.geosphere.speechplaning.data.usecases.DetermineAppUserStatusUseCase
-import de.geosphere.speechplaning.data.usecases.GoogleSignInUseCase
-import de.geosphere.speechplaning.data.usecases.SignInWithEmailAndPasswordUseCase
-import de.geosphere.speechplaning.data.usecases.SignOutUseCase
 import de.geosphere.speechplaning.data.authentication.AuthRepository
 import de.geosphere.speechplaning.data.authentication.AuthRepositoryImpl
 import de.geosphere.speechplaning.data.authentication.UserRepository
@@ -18,6 +13,11 @@ import de.geosphere.speechplaning.data.repository.SpeakerRepository
 import de.geosphere.speechplaning.data.repository.SpeechRepository
 import de.geosphere.speechplaning.data.repository.services.FirestoreService
 import de.geosphere.speechplaning.data.repository.services.FirestoreServiceImpl
+import de.geosphere.speechplaning.data.usecases.CreateUserWithEmailAndPasswordUseCase
+import de.geosphere.speechplaning.data.usecases.DetermineAppUserStatusUseCase
+import de.geosphere.speechplaning.data.usecases.GoogleSignInUseCase
+import de.geosphere.speechplaning.data.usecases.SignInWithEmailAndPasswordUseCase
+import de.geosphere.speechplaning.data.usecases.SignOutUseCase
 import de.geosphere.speechplaning.data.util.GoogleIdTokenParser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

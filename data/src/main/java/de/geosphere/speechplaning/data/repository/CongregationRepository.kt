@@ -16,8 +16,7 @@ class CongregationRepository(
     clazz = Congregation::class.java
 ) {
 
-    override fun extractIdFromEntity(entity: Congregation): String {
-        return entity.id
+    override fun extractIdFromEntity(entity: Congregation): String { return entity.id
     }
 
     /**

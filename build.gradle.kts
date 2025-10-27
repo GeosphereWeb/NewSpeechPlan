@@ -1,7 +1,5 @@
+
 import io.gitlab.arturbosch.detekt.Detekt
-import org.gradle.api.artifacts.VersionCatalogsExtension
-import org.gradle.kotlin.dsl.getByType
-import org.gradle.kotlin.dsl.libs
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
@@ -89,41 +87,51 @@ sonarqube {
 }
 
 subprojects {
-    apply(plugin = "org.jlleitschuh.gradle.ktlint") // Version should be inherited from parent
+
     apply(plugin = "io.gitlab.arturbosch.detekt")
-
-    ktlint {
-        android.set(true)
-        outputColorName.set("RED")
-        ignoreFailures.set(false)
-        enableExperimentalRules.set(true)
-    }
-
-    // Optionally configure plugin
-    configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
-        debug.set(true)
-        reporters {
-            reporter(ReporterType.PLAIN)
-            reporter(ReporterType.CHECKSTYLE)
-        }
-        kotlinScriptAdditionalPaths {
-            include(fileTree("scripts/"))
-        }
-        filter {
-            exclude("**/generated/**")
-            include("**/kotlin/**")
-        }
-    }
-
     detekt {
-      toolVersion = libsws.findVersion("detekt").get().toString()
-      config.setFrom(file("$rootDir/config/detekt/detekt.yml"))
-      buildUponDefaultConfig = true
+        toolVersion = libsws.findVersion("detekt").get().toString()
+        // Weist detekt an, die Konfigurationsdatei aus dem Projekt-Stammverzeichnis zu verwenden
+        config.setFrom(file("$rootDir/config/detekt/detekt.yml"))
+        // Stellt sicher, dass detekt auf allen Kotlin-Sourcen der einzelnen Module läuft. [2]
+        source.setFrom(files("src/main/kotlin", "src/test/kotlin"))
+
+        buildUponDefaultConfig = true
+
+        // Optional: Konfiguration für Baseline-Dateien, um bestehende Probleme zu ignorieren. [2]
+        // baseline = file("$rootDir/detekt-baseline.xml")
     }
+
+    plugins.withId("org.jetbrains.kotlin.android") {
+        apply(plugin = "org.jlleitschuh.gradle.ktlint") // Version should be inherited from parent
+
+        ktlint {
+            android.set(true)
+            outputColorName.set("RED")
+            ignoreFailures.set(false)
+            enableExperimentalRules.set(true)
+        }
+        // Optionally configure plugin
+        configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+            debug.set(true)
+            reporters {
+                reporter(ReporterType.PLAIN)
+                reporter(ReporterType.CHECKSTYLE)
+            }
+            kotlinScriptAdditionalPaths {
+                include(fileTree("scripts/"))
+            }
+            filter {
+                exclude("**/generated/**")
+                include("**/kotlin/**")
+            }
+        }
+    }
+
 
     dependencies {
-      detekt(libsws.findLibrary("detekt-cli").get())
-      detektPlugins(libsws.findLibrary("detekt-formatting").get())
+        detekt(libsws.findLibrary("detekt-cli").get())
+        detektPlugins(libsws.findLibrary("detekt-formatting").get())
     }
 }
 

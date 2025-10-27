@@ -7,7 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
-    alias(libs.plugins.ktlint)
+    // alias(libs.plugins.ktlint)
     alias(libs.plugins.kotlin.serialization)
     id("jacoco")
 }
@@ -52,16 +52,16 @@ android {
         compose = true
     }
 
-    lint {
-        // Definiere deine zentralen Lint-Optionen hier
-        baseline = file("lint-baseline.xml")
-        xmlReport = true
-        xmlOutput = file("$buildDir/reports/lint-results.xml")
-
-        // Weitere zentrale Optionen, die du vielleicht möchtest:
-        checkReleaseBuilds = true
-        abortOnError = true // Bricht den Build bei Lint-Fehlern ab
-    }
+    // lint {
+    //     // Definiere deine zentralen Lint-Optionen hier
+    //     baseline = file("lint-baseline.xml")
+    //     xmlReport = true
+    //     xmlOutput = file("$buildDir/reports/lint-results.xml")
+    //
+    //     // Weitere zentrale Optionen, die du vielleicht möchtest:
+    //     checkReleaseBuilds = true
+    //     abortOnError = true // Bricht den Build bei Lint-Fehlern ab
+    // }
 
     packaging {
         resources {
