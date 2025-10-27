@@ -55,11 +55,9 @@ android {
 dependencies {
     implementation(project(":core:model"))
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
 
     // Import the Firebase BoM
     implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.analytics)
     // Add the dependencies for any other desired Firebase products
     // https://firebase.google.com/docs/android/setup#available-libraries
     // Add the dependency for the Realtime Database library
@@ -77,10 +75,6 @@ dependencies {
     // // Koin
     // // dependencies with Koin
     implementation(libs.koin.android)
-    implementation(libs.koin.androidx.compose)
-
-    implementation(libs.org.jacoco.core)
-    implementation(libs.androidx.ui.test.junit4.android)
 
     // Unit Tests
     testImplementation(kotlin("test"))
