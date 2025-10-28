@@ -1,9 +1,7 @@
 package de.geosphere.speechplaning.data.util
 
 import android.os.Bundle
-import androidx.compose.ui.Modifier.Companion.then
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.google.common.base.Verify.verify
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.every

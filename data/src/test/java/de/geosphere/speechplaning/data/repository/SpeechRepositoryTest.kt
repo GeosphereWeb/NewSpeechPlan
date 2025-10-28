@@ -1,6 +1,5 @@
 package de.geosphere.speechplaning.data.repository
 
-import androidx.compose.ui.Modifier.Companion.then
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference

@@ -67,17 +67,10 @@ sonarqube {
             property("sonar.cpd.exclusions", duplicationExclusionPatterns)
         }
 
-        properties(
-            mapOf(
-                "sonar.coverage.jacoco.xmlReportPaths" to
-                    project(":app").layout.buildDirectory
-                        .file("reports/jacoco/jacocoTestReport/jacocoTestReport.xml").get().asFile.path,
+        // Use wildcard paths to find reports in all submodules
+        property("sonar.coverage.jacoco.xmlReportPaths", "**/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
+        property("sonar.androidLint.reportPaths", "**/build/reports/lint-results.xml")
 
-                "sonar.androidLint.reportPaths" to
-                    project(":app").layout.buildDirectory
-                        .file("reports/lint-results.xml").get().asFile.path
-            )
-        )
         property("sonar.gradle.skipCompile", "true")
 
         // Weitere Eigenschaften nach Bedarf (z.B. sonar.sources, sonar.java.binaries, etc.)
@@ -87,28 +80,19 @@ sonarqube {
 
 subprojects {
 
-    plugins.withId("org.jetbrains.kotlin.android") {
-        apply(plugin = "io.gitlab.arturbosch.detekt")
-        detekt {
-            toolVersion = libsws.findVersion("detekt").get().toString()
-            // Weist detekt an, die Konfigurationsdatei aus dem Projekt-Stammverzeichnis zu verwenden
-            config.setFrom(file("$rootDir/config/detekt/detekt.yml"))
-            // Stellt sicher, dass detekt auf allen Kotlin-Sourcen der einzelnen Module läuft. [2]
-            source.setFrom(files("src/main/java", "src/test/java", "src/main/kotlin", "src/test/kotlin"))
+    apply(plugin = "io.gitlab.arturbosch.detekt")
+    detekt {
+        toolVersion = libsws.findVersion("detekt").get().toString()
+        // Weist detekt an, die Konfigurationsdatei aus dem Projekt-Stammverzeichnis zu verwenden
+        config.setFrom(file("$rootDir/config/detekt/detekt.yml"))
+        // Stellt sicher, dass detekt auf allen Kotlin-Sourcen der einzelnen Module läuft. [2]
+        source.setFrom(files("src/main/java", "src/test/java", "src/main/kotlin", "src/test/kotlin"))
 
-            buildUponDefaultConfig = true
+        buildUponDefaultConfig = true
 
-            // Optional: Konfiguration für Baseline-Dateien, um bestehende Probleme zu ignorieren. [2]
-            // baseline = file("$rootDir/detekt-baseline.xml")
-        }
-
-        dependencies {
-            detekt(libsws.findLibrary("detekt-cli").get())
-            detektPlugins(libsws.findLibrary("detekt-formatting").get())
-        }
+        // Optional: Konfiguration für Baseline-Dateien, um bestehende Probleme zu ignorieren. [2]
+        // baseline = file("$rootDir/detekt-baseline.xml")
     }
-
-    tasks.findByName("check")?.dependsOn(tasks.withType<Detekt>())
 
     plugins.withId("org.jetbrains.kotlin.android") {
         apply(plugin = "org.jlleitschuh.gradle.ktlint") // Version should be inherited from parent
@@ -134,6 +118,12 @@ subprojects {
                 include("**/kotlin/**")
             }
         }
+    }
+
+
+    dependencies {
+        detekt(libsws.findLibrary("detekt-cli").get())
+        detektPlugins(libsws.findLibrary("detekt-formatting").get())
     }
 }
 
