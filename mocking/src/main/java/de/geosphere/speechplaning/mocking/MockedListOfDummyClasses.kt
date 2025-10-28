@@ -4,7 +4,7 @@ import de.geosphere.speechplaning.core.model.Congregation
 import de.geosphere.speechplaning.core.model.District
 import de.geosphere.speechplaning.core.model.Speaker
 import de.geosphere.speechplaning.core.model.Speech
-import de.geosphere.speechplaning.data.model.data.SpiritualStatus
+import de.geosphere.speechplaning.core.model.data.SpiritualStatus
 
 @Suppress("LargeClass")
 class MockedListOfDummyClasses {
@@ -20,7 +20,7 @@ class MockedListOfDummyClasses {
                     phone = "+01414558788",
                     mobile = "+478889988542555",
                     email = "alfred.meier@email.com",
-                    speechNumberIds = mutableListOf(1,4, 6),
+                    speechNumberIds = mutableListOf(1, 4, 6),
                     spiritualStatus = SpiritualStatus.ELDER,
                 ),
                 Speaker(
@@ -42,7 +42,7 @@ class MockedListOfDummyClasses {
                     phone = "+01414558788",
                     mobile = "+478889962288555",
                     email = "charlie.mueller@email.com",
-                    speechNumberIds = mutableListOf(21,25),
+                    speechNumberIds = mutableListOf(21, 25),
                     spiritualStatus = SpiritualStatus.UNKNOWN,
                 ),
                 Speaker(
@@ -75,7 +75,7 @@ class MockedListOfDummyClasses {
                     phone = "+01414558788",
                     mobile = "+47888998855425",
                     email = "frieda.wagner@email.com",
-                    speechNumberIds = mutableListOf(41,42,43),
+                    speechNumberIds = mutableListOf(41, 42, 43),
                     spiritualStatus = SpiritualStatus.ELDER,
                 ),
                 Speaker(
@@ -86,7 +86,7 @@ class MockedListOfDummyClasses {
                     phone = "+01414558788",
                     mobile = "+47888964988555",
                     email = "gustav.becker@email.com",
-                    speechNumberIds = mutableListOf(11,12,20),
+                    speechNumberIds = mutableListOf(11, 12, 20),
                     spiritualStatus = SpiritualStatus.MINISTERIAL_SERVANT,
                 ),
                 Speaker(
@@ -108,7 +108,7 @@ class MockedListOfDummyClasses {
                     phone = "+01414558788",
                     mobile = "+47888998834555",
                     email = "ingo.schulz@email.com",
-                    speechNumberIds = mutableListOf(21,22),
+                    speechNumberIds = mutableListOf(21, 22),
                     spiritualStatus = SpiritualStatus.ELDER,
                 ),
                 Speaker(
@@ -141,7 +141,7 @@ class MockedListOfDummyClasses {
                     phone = "+01414558788",
                     mobile = "+47888998568555",
                     email = "lena.lang@email.com",
-                    speechNumberIds = mutableListOf(21,22,32),
+                    speechNumberIds = mutableListOf(21, 22, 32),
                     spiritualStatus = SpiritualStatus.MINISTERIAL_SERVANT,
                 ),
                 Speaker(
@@ -174,7 +174,7 @@ class MockedListOfDummyClasses {
                     phone = "+01414558788",
                     mobile = "+478889988655",
                     email = "otto.wolf@email.com",
-                    speechNumberIds = mutableListOf(40,44),
+                    speechNumberIds = mutableListOf(40, 44),
                     spiritualStatus = SpiritualStatus.MINISTERIAL_SERVANT,
                 ),
             )

@@ -2,10 +2,10 @@ package de.geosphere.speechplaning.resterampe
 
 import android.content.Context
 import de.geosphere.speechplaning.R
-import de.geosphere.speechplaning.data.model.data.SpiritualStatus
+import de.geosphere.speechplaning.core.model.data.SpiritualStatus
 
 /**
- * Maps the [de.geosphere.speechplaning.data.model.data.SpiritualStatus] enum to and from its localized string representation.
+ * Maps the [SpiritualStatus] enum to and from its localized string representation.
  * @param context The application context to access string resources.
  */
 class SpiritualStatusMapper(private val context: Context) {
@@ -24,7 +24,6 @@ class SpiritualStatusMapper(private val context: Context) {
     private val stringToStatusMap by lazy {
         statusToStringMap.entries.associate { (k, v) -> v to k }
     }
-
 
     /**
      * Maps a [SpiritualStatus] enum to its display name string.

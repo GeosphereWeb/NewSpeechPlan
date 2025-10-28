@@ -3,10 +3,10 @@ package de.geosphere.speechplaning.resterampe
 import android.content.Context
 import android.content.res.Resources
 import de.geosphere.speechplaning.R
-import de.geosphere.speechplaning.data.model.data.Event
+import de.geosphere.speechplaning.core.model.data.Event
 
 /**
- * Maps the [de.geosphere.speechplaning.data.model.data.Event] enum to and from its localized string representation.
+ * Maps the [Event] enum to and from its localized string representation.
  * @param context The application context to access string resources.
  */
 @Suppress("SwallowedException")
@@ -52,7 +52,6 @@ class EventMapper(private val context: Context) {
         // the last one in the association wins. This is acceptable behavior.
         statusToStringMap.entries.associate { (key, value) -> value to key }
     }
-
 
     /**
      * Maps a [Event] enum to its display name string.

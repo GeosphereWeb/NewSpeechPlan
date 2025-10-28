@@ -1,4 +1,3 @@
-
 import io.gitlab.arturbosch.detekt.Detekt
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
@@ -94,7 +93,7 @@ subprojects {
         // Weist detekt an, die Konfigurationsdatei aus dem Projekt-Stammverzeichnis zu verwenden
         config.setFrom(file("$rootDir/config/detekt/detekt.yml"))
         // Stellt sicher, dass detekt auf allen Kotlin-Sourcen der einzelnen Module läuft. [2]
-        source.setFrom(files("src/main/kotlin", "src/test/kotlin"))
+        source.setFrom(files("src/main/java", "src/test/java", "src/main/kotlin", "src/test/kotlin"))
 
         buildUponDefaultConfig = true
 

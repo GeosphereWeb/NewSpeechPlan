@@ -148,8 +148,6 @@ class AuthRepositoryImplTest : BehaviorSpec({
         }
     }
 
-
-
     given("Firebase-Interaktionen") {
         `when`("signInWithFirebaseCredential aufgerufen wird") {
             then("sollte die signInWithCredential-Methode von FirebaseAuth aufgerufen werden") {

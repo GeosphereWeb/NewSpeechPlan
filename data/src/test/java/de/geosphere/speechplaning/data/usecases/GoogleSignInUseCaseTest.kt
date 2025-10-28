@@ -1,6 +1,5 @@
 package de.geosphere.speechplaning.data.usecases
 
-
 import android.app.Activity
 import android.os.Bundle
 import androidx.credentials.Credential

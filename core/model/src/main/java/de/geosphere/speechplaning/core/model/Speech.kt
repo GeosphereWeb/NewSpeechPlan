@@ -3,8 +3,6 @@ package de.geosphere.speechplaning.core.model
 import com.google.firebase.firestore.DocumentId
 import kotlinx.serialization.Serializable
 
-
-
 /**
  * Represents a speech entity with properties for identification, sequence, subject, and activity status.
  * This class is designed to be serialized and saved, likely to a database like Firebase Firestore,

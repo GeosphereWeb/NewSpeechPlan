@@ -2,7 +2,6 @@ package de.geosphere.speechplaning.core.model
 
 import com.google.firebase.firestore.DocumentId
 
-
 /**
  * Represents a Chairman entity within the application.
  *

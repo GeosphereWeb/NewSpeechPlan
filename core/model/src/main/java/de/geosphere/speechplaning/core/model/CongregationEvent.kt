@@ -1,7 +1,7 @@
 package de.geosphere.speechplaning.core.model
 
 import com.google.firebase.firestore.DocumentId
-import de.geosphere.speechplaning.data.model.data.Event
+import de.geosphere.speechplaning.core.model.data.Event
 import java.time.LocalDate // Using java.time.LocalDate as discussed
 
 /**
@@ -26,4 +26,3 @@ data class CongregationEvent(
     val chairmanId: String? = null,
     val notes: String? = null
 ) : SavableDataClass() // Assuming SavableDataClass is a suitable base class
-

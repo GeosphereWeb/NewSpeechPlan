@@ -74,7 +74,8 @@ class FirestoreServiceImpl(private val firestore: FirebaseFirestore) : Firestore
             District::class.java -> firestore.collection("districts")
             Speaker::class.java -> {
                 Log.w(
-                    TAG, "Attempted to get Speaker collection as a top-level collection. " +
+                    TAG,
+                    "Attempted to get Speaker collection as a top-level collection. " +
                         "Speakers are a subcollection of Congregations."
                 )
                 firestore.collection("speakers_dummy_do_not_use")
@@ -130,8 +131,11 @@ class FirestoreServiceImpl(private val firestore: FirebaseFirestore) : Firestore
             documentReference.id
         } catch (e: Exception) {
             Log.e(TAG, "Error adding document to subcollection $subcollection in $parentCollection/$parentId", e)
-            throw RuntimeException("Error adding document to subcollection $subcollection in " +
-                "$parentCollection/$parentId", e)
+            throw RuntimeException(
+                "Error adding document to subcollection $subcollection in " +
+                    "$parentCollection/$parentId",
+                e
+            )
         }
     }
 
@@ -150,10 +154,17 @@ class FirestoreServiceImpl(private val firestore: FirebaseFirestore) : Firestore
                 .set(data)
                 .await()
         } catch (e: Exception) {
-            Log.e(TAG, "Error setting document $documentId in subcollection $subcollection in " +
-                "$parentCollection/$parentId", e)
-            throw RuntimeException("Error setting document $documentId in subcollection $subcollection in " +
-                "$parentCollection/$parentId", e)
+            Log.e(
+                TAG,
+                "Error setting document $documentId in subcollection $subcollection in " +
+                    "$parentCollection/$parentId",
+                e
+            )
+            throw RuntimeException(
+                "Error setting document $documentId in subcollection $subcollection in " +
+                    "$parentCollection/$parentId",
+                e
+            )
         }
     }
 
@@ -172,8 +183,11 @@ class FirestoreServiceImpl(private val firestore: FirebaseFirestore) : Firestore
             querySnapshot.toObjects(objectClass)
         } catch (e: Exception) {
             Log.e(TAG, "Error getting documents from subcollection $subcollection in $parentCollection/$parentId", e)
-            throw RuntimeException("Error getting documents from subcollection $subcollection in " +
-                "$parentCollection/$parentId", e)
+            throw RuntimeException(
+                "Error getting documents from subcollection $subcollection in " +
+                    "$parentCollection/$parentId",
+                e
+            )
         }
     }
 
@@ -220,7 +234,6 @@ class FirestoreServiceImpl(private val firestore: FirebaseFirestore) : Firestore
         }
     }
 
-
     override suspend fun deleteDocumentFromSubcollection(
         parentCollection: String,
         parentId: String,
@@ -235,10 +248,17 @@ class FirestoreServiceImpl(private val firestore: FirebaseFirestore) : Firestore
                 .delete()
                 .await()
         } catch (e: Exception) {
-            Log.e(TAG, "Error deleting document $documentId from subcollection $subcollection in " +
-                "$parentCollection/$parentId", e)
-            throw RuntimeException("Error deleting document $documentId from subcollection $subcollection in " +
-                "$parentCollection/$parentId", e)
+            Log.e(
+                TAG,
+                "Error deleting document $documentId from subcollection $subcollection in " +
+                    "$parentCollection/$parentId",
+                e
+            )
+            throw RuntimeException(
+                "Error deleting document $documentId from subcollection $subcollection in " +
+                    "$parentCollection/$parentId",
+                e
+            )
         }
     }
 

@@ -23,7 +23,7 @@ class UserRepositoryImplTest : BehaviorSpec({
     lateinit var documentReference: DocumentReference
     lateinit var userRepository: UserRepository
 
-    beforeEach { 
+    beforeEach {
         firestore = mockk()
         usersCollection = mockk()
         documentReference = mockk()
@@ -37,12 +37,14 @@ class UserRepositoryImplTest : BehaviorSpec({
                 // Given
                 val firebaseUser = mockk<FirebaseUser> {
                     every { uid } returns "test-uid"
-                    every {email} returns "test@example.com"
+                    every { email } returns "test@example.com"
                     every { displayName } returns "Test User"
                 }
                 val existingAppUser = AppUser(
-                    uid = "test-uid", email = "test@example.com",
-                    displayName = "Test User", approved = true
+                    uid = "test-uid",
+                    email = "test@example.com",
+                    displayName = "Test User",
+                    approved = true
                 )
                 val documentSnapshot = mockk<DocumentSnapshot>()
                 val getTask: Task<DocumentSnapshot> = Tasks.forResult(documentSnapshot)

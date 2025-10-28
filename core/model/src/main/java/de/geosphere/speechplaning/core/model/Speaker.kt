@@ -3,9 +3,8 @@
 package de.geosphere.speechplaning.core.model
 
 import com.google.firebase.firestore.DocumentId
-import de.geosphere.speechplaning.data.model.data.SpiritualStatus
+import de.geosphere.speechplaning.core.model.data.SpiritualStatus
 import kotlinx.serialization.Serializable
-
 
 /**
  * Represents a speaker with their personal information and details.

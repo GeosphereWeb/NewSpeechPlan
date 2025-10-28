@@ -5,6 +5,7 @@ import de.geosphere.speechplaning.data.repository.base.BaseFirestoreSubcollectio
 import de.geosphere.speechplaning.data.repository.services.FirestoreService
 
 private const val CONGREGATION_EVENTS_SUBCOLLECTION = "congregationEvents"
+
 // Konstanten für übergeordnete Collections, wie in anderen Repositories definiert
 private const val CONGREGATIONS_SUBCOLLECTION = "congregations"
 private const val DISTRICTS_COLLECTION = "districts"
@@ -30,7 +31,7 @@ class CongregationEventRepository(
         require(parentIds.size == 2) { "Expected districtId and congregationId as parentIds" }
         val districtId = parentIds[0]
         // Der Pfad zur Collection, die das Elterndokument (Congregation) enthält.
-        return "${DISTRICTS_COLLECTION}/${districtId}/${CONGREGATIONS_SUBCOLLECTION}"
+        return "${DISTRICTS_COLLECTION}/$districtId/${CONGREGATIONS_SUBCOLLECTION}"
     }
 
     /**

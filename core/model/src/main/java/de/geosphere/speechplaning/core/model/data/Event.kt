@@ -1,4 +1,4 @@
-package de.geosphere.speechplaning.data.model.data
+package de.geosphere.speechplaning.core.model.data
 
 /**
  * Enum class representing different types of events.

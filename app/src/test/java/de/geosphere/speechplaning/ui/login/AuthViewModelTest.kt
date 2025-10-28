@@ -267,7 +267,6 @@ class AuthViewModelTest : BehaviorSpec({
             }
         }
 
-
         `when`("checkUserStatusAgain is called") {
             then("it calls repository forceReloadAndCheckUserStatus") {
                 // Given (authRepository.forceReloadAndCheckUserStatus() ist relaxed gemockt)
