@@ -140,7 +140,8 @@ private fun SpeakerListItemPreview() = PreviewKoin {
                 modifier = Modifier,
                 orderName = OrderName.LASTNAME_FIRSTNAME,
                 expandCard = true,
-                moreIsRequested = {})
+                moreIsRequested = {}
+            )
         }
     }
 }
