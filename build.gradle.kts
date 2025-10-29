@@ -1,3 +1,4 @@
+
 import io.gitlab.arturbosch.detekt.Detekt
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
@@ -37,6 +38,7 @@ plugins {
     alias(libs.plugins.detekt)
     alias(libs.plugins.sonarcube) apply true
     alias(libs.plugins.android.library) apply false // Überprüfe die neueste Version
+    id("jacoco") // Add Jacoco to the root project
 }
 
 buildscript {
@@ -68,7 +70,10 @@ sonarqube {
         }
 
         // Use wildcard paths to find reports in all submodules
-        property("sonar.coverage.jacoco.xmlReportPaths", "**/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
+        property(
+            "sonar.coverage.jacoco.xmlReportPaths",
+            "**/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml"
+        )
         property("sonar.androidLint.reportPaths", "**/build/reports/lint-results.xml")
 
         property("sonar.gradle.skipCompile", "true")
@@ -120,7 +125,6 @@ subprojects {
         }
     }
 
-
     dependencies {
         detekt(libsws.findLibrary("detekt-cli").get())
         detektPlugins(libsws.findLibrary("detekt-formatting").get())
@@ -135,5 +139,66 @@ tasks.withType<Detekt>().configureEach {
         txt.required.set(true)
         sarif.required.set(true)
         md.required.set(true)
+    }
+}
+
+// Define a list of modules to exclude from the aggregated report if needed
+val modulesToExcludeFromCoverage = listOf<String>() // No exclusions for now
+
+tasks.register<JacocoReport>("jacocoAggregatedReport") {
+    group = "verification"
+    description = "Generates a combined JaCoCo code coverage report for all sub-projects."
+
+    // Specify which projects to include in the report
+    val projectsToInclude = subprojects.filter {
+        (it.plugins.hasPlugin("com.android.library") || it.plugins.hasPlugin("com.android.application")) &&
+            !modulesToExcludeFromCoverage.contains(it.path)
+    }
+
+    // This task should run after the test tasks of the included projects have run
+    dependsOn(projectsToInclude.map { it.tasks.named("testDebugUnitTest") })
+
+    // Source files for the report
+    sourceDirectories.setFrom(
+        files(
+            projectsToInclude.map {
+                // Assuming standard Android project structure
+                listOf(
+                    it.file("src/main/java"),
+                    it.file("src/main/kotlin")
+                )
+            }
+        )
+    )
+
+    // Class files for the report
+    classDirectories.setFrom(
+        files(
+            projectsToInclude.map {
+                // Needs to point to the compiled class files for coverage analysis
+                fileTree(it.layout.buildDirectory.dir("tmp/kotlin-classes/debug")) {
+                    // You can add excludes here if needed
+                    exclude(
+                        "**/R.class",
+                        "**/BuildConfig.*",
+                        "**/*_Factory.*" // Exclude Dagger/Hilt generated factories
+                    )
+                }
+            }
+        )
+    )
+
+    // Execution data from each subproject
+    executionData.setFrom(
+        files(
+            projectsToInclude.map {
+                it.layout.buildDirectory.file("jacoco/testDebugUnitTest.exec")
+            }
+        )
+    )
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
     }
 }
