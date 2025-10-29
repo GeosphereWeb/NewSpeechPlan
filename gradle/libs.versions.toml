@@ -4,7 +4,7 @@ credentialsPlayServicesAuth = "1.5.0"
 detekt = "1.23.8"
 firebaseBom = "34.2.0"
 compileSdk = "36"
-minSdk = "24"
+minSdk = "31"
 
 googleid = "1.1.1"
 gson = "2.13.1"
