@@ -71,17 +71,14 @@ sonarqube {
             property("sonar.cpd.exclusions", duplicationExclusionPatterns)
         }
 
-        // // Point to the aggregated report
         property(
             "sonar.coverage.jacoco.xmlReportPaths",
             "$buildDir/reports/jacoco/jacocoAggregatedReport/jacocoAggregatedReport.xml"
         )
-        // property("sonar.androidLint.reportPaths", "**/build/reports/lint-results.xml")
+
+        property("sonar.androidLint.reportPaths", "**/build/reports/lint-results-*.xml")
 
         property("sonar.gradle.skipCompile", "true")
-
-        // Weitere Eigenschaften nach Bedarf (z.B. sonar.sources, sonar.java.binaries, etc.)
-        // Diese werden oft automatisch durch das Gradle-Plugin und die Projektstruktur erkannt.
     }
 }
 
@@ -89,15 +86,9 @@ subprojects {
     apply(plugin = "io.gitlab.arturbosch.detekt")
     detekt {
         toolVersion = libsws.findVersion("detekt").get().toString()
-        // Weist detekt an, die Konfigurationsdatei aus dem Projekt-Stammverzeichnis zu verwenden
         config.setFrom(file("$rootDir/config/detekt/detekt.yml"))
-        // Stellt sicher, dass detekt auf allen Kotlin-Sourcen der einzelnen Module läuft. [2]
         source.setFrom(files("src/main/java", "src/test/java", "src/main/kotlin", "src/test/kotlin"))
-
         buildUponDefaultConfig = true
-
-        // Optional: Konfiguration für Baseline-Dateien, um bestehende Probleme zu ignorieren. [2]
-        // baseline = file("$rootDir/detekt-baseline.xml")
     }
 
     plugins.withId("com.android.application") {
@@ -121,7 +112,7 @@ subprojects {
     }
 
     plugins.withId("org.jetbrains.kotlin.android") {
-        apply(plugin = "org.jlleitschuh.gradle.ktlint") // Version should be inherited from parent
+        apply(plugin = "org.jlleitschuh.gradle.ktlint")
 
         ktlint {
             android.set(true)
@@ -129,7 +120,6 @@ subprojects {
             ignoreFailures.set(false)
             enableExperimentalRules.set(true)
         }
-        // Optionally configure plugin
         configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
             debug.set(true)
             reporters {
@@ -152,7 +142,6 @@ subprojects {
     }
 }
 
-// Kotlin DSL
 tasks.withType<Detekt>().configureEach {
     reports {
         xml.required.set(true)
