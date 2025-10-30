@@ -53,17 +53,6 @@ android {
         compose = true
     }
 
-    // lint {
-    //     // Definiere deine zentralen Lint-Optionen hier
-    //     baseline = file("lint-baseline.xml")
-    //     xmlReport = true
-    //     xmlOutput = file("$buildDir/reports/lint-results.xml")
-    //
-    //     // Weitere zentrale Optionen, die du vielleicht möchtest:
-    //     checkReleaseBuilds = true
-    //     abortOnError = true // Bricht den Build bei Lint-Fehlern ab
-    // }
-
     packaging {
         resources {
             excludes.add("META-INF/LICENSE.md")

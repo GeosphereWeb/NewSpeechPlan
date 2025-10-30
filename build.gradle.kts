@@ -69,12 +69,12 @@ sonarqube {
             property("sonar.cpd.exclusions", duplicationExclusionPatterns)
         }
 
-        // Point to the aggregated report
-        property(
-            "sonar.coverage.jacoco.xmlReportPaths",
-            "$buildDir/reports/jacoco/jacocoAggregatedReport/jacocoAggregatedReport.xml"
-        )
-        property("sonar.androidLint.reportPaths", "**/build/reports/lint-results.xml")
+        // // Point to the aggregated report
+        // property(
+        //     "sonar.coverage.jacoco.xmlReportPaths",
+        //     "$buildDir/reports/jacoco/jacocoAggregatedReport/jacocoAggregatedReport.xml"
+        // )
+        // property("sonar.androidLint.reportPaths", "**/build/reports/lint-results.xml")
 
         property("sonar.gradle.skipCompile", "true")
 
@@ -142,68 +142,3 @@ tasks.withType<Detekt>().configureEach {
     }
 }
 
-// Define a list of modules to exclude from the aggregated report if needed
-val modulesToExcludeFromCoverage = listOf<String>() // No exclusions for now
-
-tasks.register<JacocoReport>("jacocoAggregatedReport") {
-    group = "verification"
-    description = "Generates a combined JaCoCo code coverage report for all sub-projects."
-
-    // Specify which projects to include in the report
-    val projectsToInclude = subprojects.filter {
-        (it.plugins.hasPlugin("com.android.library") || it.plugins.hasPlugin("com.android.application")) &&
-            !modulesToExcludeFromCoverage.contains(it.path)
-    }
-
-    // This task should run after the test tasks of the included projects have run
-    dependsOn(projectsToInclude.map { it.tasks.named("testDebugUnitTest") })
-
-    // Source files for the report
-    sourceDirectories.setFrom(
-        files(
-            projectsToInclude.map {
-                // Assuming standard Android project structure
-                listOf(
-                    it.file("src/main/java"),
-                    it.file("src/main/kotlin")
-                )
-            }
-        )
-    )
-
-    // Class files for the report
-    classDirectories.setFrom(
-        files(
-            projectsToInclude.map {
-                // Needs to point to the compiled class files for coverage analysis
-                fileTree(it.layout.buildDirectory.dir("tmp/kotlin-classes/debug")) {
-                    // You can add excludes here if needed
-                    exclude(
-                        "**/R.class",
-                        "**/BuildConfig.*",
-                        "**/*_Factory.*" // Exclude Dagger/Hilt generated factories
-                    )
-                }
-            }
-        )
-    )
-
-    // Execution data from each subproject
-    executionData.setFrom(
-        files(
-            projectsToInclude.map {
-                it.layout.buildDirectory.file("jacoco/testDebugUnitTest.exec")
-            }
-        )
-    )
-
-    reports {
-        xml.required.set(true)
-        html.required.set(true)
-    }
-}
-
-// Ensure Sonar runs after the aggregated report is generated.
-tasks.named("sonar") {
-    dependsOn(tasks.named("jacocoAggregatedReport"))
-}

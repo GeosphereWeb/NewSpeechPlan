@@ -15,16 +15,7 @@ android/**/*.*
 **/*_HiltModules*.*
 **/*Composable*.class
 **/*Component*.class
-de/geosphere/speechplaning/core.model/**/*.class
-de/geosphere/speechplaning/mocking/**/*.class
-de/geosphere/speechplaning/**/di/**/*.class
-de/geosphere/speechplaning/data/repository/services/**/*.class
-
-de/geosphere/speechplaning/data/database/**/*.class
-de/geosphere/speechplaning/data/network/**/*.class
-de/geosphere/speechplaning/ui/components/**/*.class
-de/geosphere/speechplaning/ui/theme/**/*.class
 **/*Activity*.class
 **/*Fragment*.class
 **/*Application*.class
-de/geosphere/speechplaning/**/*Screen*.class
+**/de/geosphere/speechplaning/mocking/**/*.class
