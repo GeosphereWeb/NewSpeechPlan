@@ -18,4 +18,8 @@ android/**/*.*
 **/*Activity*.class
 **/*Fragment*.class
 **/*Application*.class
+**/*Screen*.class
+**/*Module*.class
 **/de/geosphere/speechplaning/mocking/**/*.class
+**/de/geosphere/speechplaning/ui/theme/**/*.class
+**/de/geosphere/speechplaning/data/repository/services/FirestoreServiceImpl.class

@@ -41,6 +41,8 @@ plugins {
     id("jacoco") // Add Jacoco to the root project
 }
 
+apply(from = "${rootDir}/gradle/jacoco-report-aggregation.gradle.kts")
+
 buildscript {
     repositories {
         google()
@@ -70,10 +72,10 @@ sonarqube {
         }
 
         // // Point to the aggregated report
-        // property(
-        //     "sonar.coverage.jacoco.xmlReportPaths",
-        //     "$buildDir/reports/jacoco/jacocoAggregatedReport/jacocoAggregatedReport.xml"
-        // )
+        property(
+            "sonar.coverage.jacoco.xmlReportPaths",
+            "$buildDir/reports/jacoco/jacocoAggregatedReport/jacocoAggregatedReport.xml"
+        )
         // property("sonar.androidLint.reportPaths", "**/build/reports/lint-results.xml")
 
         property("sonar.gradle.skipCompile", "true")
@@ -84,7 +86,6 @@ sonarqube {
 }
 
 subprojects {
-
     apply(plugin = "io.gitlab.arturbosch.detekt")
     detekt {
         toolVersion = libsws.findVersion("detekt").get().toString()
@@ -97,6 +98,26 @@ subprojects {
 
         // Optional: Konfiguration für Baseline-Dateien, um bestehende Probleme zu ignorieren. [2]
         // baseline = file("$rootDir/detekt-baseline.xml")
+    }
+
+    plugins.withId("com.android.application") {
+        configure<com.android.build.api.dsl.ApplicationExtension> {
+            buildTypes {
+                getByName("debug") {
+                    enableUnitTestCoverage = true
+                }
+            }
+        }
+    }
+
+    plugins.withId("com.android.library") {
+        configure<com.android.build.api.dsl.LibraryExtension> {
+            buildTypes {
+                getByName("debug") {
+                    enableUnitTestCoverage = true
+                }
+            }
+        }
     }
 
     plugins.withId("org.jetbrains.kotlin.android") {
@@ -141,4 +162,3 @@ tasks.withType<Detekt>().configureEach {
         md.required.set(true)
     }
 }
-
