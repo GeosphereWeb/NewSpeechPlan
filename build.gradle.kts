@@ -69,10 +69,10 @@ sonarqube {
             property("sonar.cpd.exclusions", duplicationExclusionPatterns)
         }
 
-        // Use wildcard paths to find reports in all submodules
+        // Point to the aggregated report
         property(
             "sonar.coverage.jacoco.xmlReportPaths",
-            "**/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml"
+            "$buildDir/reports/jacoco/jacocoAggregatedReport/jacocoAggregatedReport.xml"
         )
         property("sonar.androidLint.reportPaths", "**/build/reports/lint-results.xml")
 
@@ -201,4 +201,9 @@ tasks.register<JacocoReport>("jacocoAggregatedReport") {
         xml.required.set(true)
         html.required.set(true)
     }
+}
+
+// Ensure SonarQube runs after the aggregated report is generated.
+tasks.named("sonarqube") {
+    dependsOn(tasks.named("jacocoAggregatedReport"))
 }
