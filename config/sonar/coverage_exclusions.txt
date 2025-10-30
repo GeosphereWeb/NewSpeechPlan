@@ -3,6 +3,7 @@
 **/mocking/**/*.kt
 **/app/**/build.gradle.kts
 **/app/**/MainActivity.kt
+**/app/**/*Application.kt
 **/*Component.kt
 **/*Screen.kt
 **/*Composable.kt
