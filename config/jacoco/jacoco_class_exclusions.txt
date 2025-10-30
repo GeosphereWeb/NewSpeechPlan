@@ -25,3 +25,4 @@ android/**/*.*
 **/de/geosphere/speechplaning/data/repository/services/FirestoreServiceImpl.class
 **/de/geosphere/speechplaning/core/model/**/*.class
 **/de/geosphere/speechplaning/**/di/*.class
+**/de/geosphere/speechplaning/*Application.class
