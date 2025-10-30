@@ -21,3 +21,11 @@ dependencyResolutionManagement {
 
 rootProject.name = "New Speech Plan"
 include(":app")
+include(":feature:home")
+include(":feature:settings")
+include(":feature:profile")
+include(":data")
+include(":core:ui")
+include(":core:model")
+include(":core:navigation")
+include(":mocking")

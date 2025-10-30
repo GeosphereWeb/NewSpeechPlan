@@ -1,8 +1,10 @@
+
 import io.gitlab.arturbosch.detekt.Detekt
-import org.gradle.kotlin.dsl.libs
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+val libsws = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
 fun loadPatternsFromFile(filePath: String, descriptionForWarning: String): String {
     val exclusionFile = rootProject.file(filePath) // rootProject is available in this script's scope
@@ -33,10 +35,13 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.google.services) apply false
     alias(libs.plugins.ktlint)
-    alias(libs.plugins.detekt) apply true
+    alias(libs.plugins.detekt)
     alias(libs.plugins.sonarcube) apply true
     alias(libs.plugins.android.library) apply false // Überprüfe die neueste Version
+    id("jacoco") // Add Jacoco to the root project
 }
+
+apply(from = "${rootDir}/gradle/jacoco-report-aggregation.gradle.kts")
 
 buildscript {
     repositories {
@@ -66,52 +71,77 @@ sonarqube {
             property("sonar.cpd.exclusions", duplicationExclusionPatterns)
         }
 
-        properties(
-            mapOf(
-                "sonar.coverage.jacoco.xmlReportPaths" to
-                    project(":app").layout.buildDirectory
-                        .file("reports/jacoco/jacocoTestReport/jacocoTestReport.xml").get().asFile.path,
-
-                "sonar.androidLint.reportPaths" to
-                    project(":app").layout.buildDirectory
-                        .file("reports/lint-results.xml").get().asFile.path
-            )
+        property(
+            "sonar.coverage.jacoco.xmlReportPaths",
+            "$buildDir/reports/jacoco/jacocoAggregatedReport/jacocoAggregatedReport.xml"
         )
-        property("sonar.gradle.skipCompile", "true")
 
-        // Weitere Eigenschaften nach Bedarf (z.B. sonar.sources, sonar.java.binaries, etc.)
-        // Diese werden oft automatisch durch das Gradle-Plugin und die Projektstruktur erkannt.
+        property("sonar.androidLint.reportPaths", "**/build/reports/lint-results-*.xml")
+
+        property("sonar.gradle.skipCompile", "true")
     }
 }
 
 subprojects {
-    apply(plugin = "org.jlleitschuh.gradle.ktlint") // Version should be inherited from parent
-
-    ktlint {
-        android.set(true)
-        outputColorName.set("RED")
-        ignoreFailures.set(false)
-        enableExperimentalRules.set(true)
+    apply(plugin = "io.gitlab.arturbosch.detekt")
+    detekt {
+        toolVersion = libsws.findVersion("detekt").get().toString()
+        config.setFrom(file("$rootDir/config/detekt/detekt.yml"))
+        source.setFrom(files("src/main/java", "src/test/java", "src/main/kotlin", "src/test/kotlin"))
+        buildUponDefaultConfig = true
     }
 
-    // Optionally configure plugin
-    configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
-        debug.set(true)
-        reporters {
-            reporter(ReporterType.PLAIN)
-            reporter(ReporterType.CHECKSTYLE)
+    plugins.withId("com.android.application") {
+        configure<com.android.build.api.dsl.ApplicationExtension> {
+            buildTypes {
+                getByName("debug") {
+                    enableUnitTestCoverage = true
+                }
+            }
         }
-        kotlinScriptAdditionalPaths {
-            include(fileTree("scripts/"))
+    }
+
+    plugins.withId("com.android.library") {
+        configure<com.android.build.api.dsl.LibraryExtension> {
+            buildTypes {
+                getByName("debug") {
+                    enableUnitTestCoverage = true
+                }
+            }
         }
-        filter {
-            exclude("**/generated/**")
-            include("**/kotlin/**")
+    }
+
+    plugins.withId("org.jetbrains.kotlin.android") {
+        apply(plugin = "org.jlleitschuh.gradle.ktlint")
+
+        ktlint {
+            android.set(true)
+            outputColorName.set("RED")
+            ignoreFailures.set(false)
+            enableExperimentalRules.set(true)
         }
+        configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+            debug.set(true)
+            reporters {
+                reporter(ReporterType.PLAIN)
+                reporter(ReporterType.CHECKSTYLE)
+            }
+            kotlinScriptAdditionalPaths {
+                include(fileTree("scripts/"))
+            }
+            filter {
+                exclude("**/generated/**")
+                include("**/kotlin/**")
+            }
+        }
+    }
+
+    dependencies {
+        detekt(libsws.findLibrary("detekt-cli").get())
+        detektPlugins(libsws.findLibrary("detekt-formatting").get())
     }
 }
 
-// Kotlin DSL
 tasks.withType<Detekt>().configureEach {
     reports {
         xml.required.set(true)
@@ -120,16 +150,4 @@ tasks.withType<Detekt>().configureEach {
         sarif.required.set(true)
         md.required.set(true)
     }
-}
-
-detekt {
-    toolVersion = libs.versions.detekt.get()
-    config.setFrom(file("config/detekt/detekt.yml"))
-    buildUponDefaultConfig = true
-}
-
-dependencies {
-    detekt(libs.detekt.cli)
-    detektPlugins(libs.detekt.formatting)
-    detekt(libs.detekt.formatting)
 }

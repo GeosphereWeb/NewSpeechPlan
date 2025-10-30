@@ -2,10 +2,12 @@
 import android.app.Activity
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
-import de.geosphere.speechplaning.data.repository.authentication.AuthRepository
-import de.geosphere.speechplaning.data.repository.authentication.AuthUiState
-import de.geosphere.speechplaning.domain.usecase.auth.CreateUserWithEmailAndPasswordUseCase
-import de.geosphere.speechplaning.domain.usecase.auth.GoogleSignInUseCase
+import de.geosphere.speechplaning.data.authentication.AuthRepository
+import de.geosphere.speechplaning.data.authentication.AuthUiState
+import de.geosphere.speechplaning.data.usecases.CreateUserWithEmailAndPasswordUseCase
+import de.geosphere.speechplaning.data.usecases.GoogleSignInUseCase
+import de.geosphere.speechplaning.data.usecases.SignInWithEmailAndPasswordUseCase
+import de.geosphere.speechplaning.data.usecases.SignOutUseCase
 import de.geosphere.speechplaning.ui.login.AuthViewModel
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.booleans.shouldBeFalse
@@ -265,7 +267,6 @@ class AuthViewModelTest : BehaviorSpec({
                 coVerify { signOutUseCase() }
             }
         }
-
 
         `when`("checkUserStatusAgain is called") {
             then("it calls repository forceReloadAndCheckUserStatus") {

@@ -3,6 +3,8 @@ package de.geosphere.speechplaning.data
 import android.content.Context
 import android.content.res.Resources
 import de.geosphere.speechplaning.R
+import de.geosphere.speechplaning.core.model.data.Event
+import de.geosphere.speechplaning.resterampe.EventMapper
 import io.kotest.common.ExperimentalKotest
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.datatest.withData

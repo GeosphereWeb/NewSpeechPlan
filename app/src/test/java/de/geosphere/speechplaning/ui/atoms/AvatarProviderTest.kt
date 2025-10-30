@@ -1,7 +1,7 @@
 package de.geosphere.speechplaning.ui.atoms
 
 import de.geosphere.speechplaning.R
-import de.geosphere.speechplaning.data.SpiritualStatus
+import de.geosphere.speechplaning.core.model.data.SpiritualStatus
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.datatest.withData
 import io.kotest.matchers.shouldBe

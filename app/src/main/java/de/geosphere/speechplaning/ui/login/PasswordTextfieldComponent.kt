@@ -29,7 +29,10 @@ import androidx.compose.ui.text.input.VisualTransformation
  */
 @Composable
 fun PasswordTextfieldComponent(
-    value: String, onValueChange: (String) -> Unit, label: String, modifier: Modifier = Modifier
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier
 ) {
     var passwortSichtbar by remember { mutableStateOf(false) }
 
@@ -39,8 +42,11 @@ fun PasswordTextfieldComponent(
         label = { Text(label) },
         modifier = modifier,
         singleLine = true,
-        visualTransformation = if (passwortSichtbar) VisualTransformation.Companion.None
-        else PasswordVisualTransformation(),
+        visualTransformation = if (passwortSichtbar) {
+            VisualTransformation.Companion.None
+        } else {
+            PasswordVisualTransformation()
+        },
         trailingIcon = {
             val image = if (passwortSichtbar) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
             val description = if (passwortSichtbar) "Passwort ausblenden" else "Passwort anzeigen"

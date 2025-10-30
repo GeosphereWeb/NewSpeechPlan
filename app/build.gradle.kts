@@ -7,19 +7,18 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
-    alias(libs.plugins.ktlint)
-    alias(libs.plugins.detekt)
+    // alias(libs.plugins.ktlint)
     alias(libs.plugins.kotlin.serialization)
     id("jacoco")
 }
 
 android {
     namespace = "de.geosphere.speechplaning"
-    compileSdk = 36
+    compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "de.geosphere.speechplaning"
-        minSdk = 33
+        minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -38,6 +37,7 @@ android {
         }
         debug {
             isMinifyEnabled = false // Usually false for debug builds
+            enableUnitTestCoverage = true
         }
     }
     compileOptions {
@@ -51,12 +51,6 @@ android {
 
     buildFeatures {
         compose = true
-    }
-
-    lint {
-        baseline = file("lint-baseline.xml")
-        xmlReport = true
-        xmlOutput = file("build/reports/lint-results.xml")
     }
 
     packaging {
@@ -77,6 +71,11 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:model"))
+    implementation(project(":data"))
+    implementation(project(":mocking"))
+    // implementation(project(":core:ui"))
+    // implementation(project(":core:navigation"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -100,14 +99,9 @@ dependencies {
     // https://firebase.google.com/docs/android/setup#available-libraries
     // Add the dependency for the Realtime Database library
     // When using the BoM, you don't specify versions in Firebase library dependencies
-    implementation(libs.firebase.database)
-    implementation(libs.firebase.auth) // Firebase Authentication Email u. Passwort
-    implementation(libs.play.services.auth) // Google Sign-In Client
-    implementation(libs.androidx.credentials)
-    implementation(libs.androidx.credentials.play.services.auth)
-    implementation(libs.googleid)
+    implementation(libs.firebase.auth)
 
-    implementation(libs.kotlinx.coroutines.play.services)
+    // implementation(libs.kotlinx.coroutines.play.services)
 
     // // Koin
     // // dependencies with Koin
@@ -141,9 +135,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     // MockK für Compose Previews verfügbar machen
     debugImplementation(libs.mockk.android)
-
-    detekt(libs.detekt.cli)
-    detektPlugins(libs.detekt.formatting)
 }
 
 // INHALT FÜR DIE DUMMY google-services.json
@@ -269,66 +260,4 @@ androidComponents {
             tasks.findByName("assemble$androidTestCapitalName")?.finalizedBy(restoreDummyGoogleServicesTask)
         }
     }
-}
-
-// Ab hier wird der Inhalt von jacoco.gradle.kts eingefügt
-// Kotlin-Version des JaCoCo-Build-Skripts.
-
-// Das jacoco-Plugin selbst und die Abhängigkeiten werden in app/build.gradle.kts verwaltet.
-
-// Lade JaCoCo-Klassenausschlüsse aus einer externen Datei
-val jacocoExclusionFile = rootProject.file("config/jacoco/jacoco_class_exclusions.txt")
-val jacocoExclusionPatterns = if (jacocoExclusionFile.exists()) {
-    jacocoExclusionFile.readLines().filter { it.isNotBlank() }
-} else {
-    println(
-        "Warning: JaCoCo class exclusion file not found at ${jacocoExclusionFile.absolutePath}. " +
-            "No class exclusions will be applied."
-    )
-    emptyList<String>() // Fallback, falls die Datei nicht existiert oder leer ist
-}
-
-// Erstellt den Task, den wir im Workflow aufrufen werden.
-tasks.register<JacocoReport>("jacocoTestReport") {
-    // Dieser Task hängt von den normalen Unit-Tests ab.
-    description = "Generate Jacoco coverage reports after running tests."
-    group = JavaBasePlugin.BUILD_TASK_NAME
-    dependsOn("testDebugUnitTest")
-
-    reports {
-        xml.required.set(true)
-        html.required.set(true)
-    }
-
-    // --- Korrektur 1: classDirectories ---
-    val classDirsProvider = layout.buildDirectory.dir("tmp/kotlin-classes/debug")
-    classDirectories.from(
-        files(classDirsProvider).asFileTree.matching {
-            exclude(jacocoExclusionPatterns)
-        }
-    )
-
-    // --- Quellverzeichnisse (war schon ok) ---
-    val sourceDirs = files("src/main/java", "src/main/kotlin")
-    sourceDirectories.setFrom(sourceDirs)
-
-    // --- Korrektur 2: executionData ---
-    // Der Pfad zu den JaCoCo-Ausführungsdaten. Nach dem Wechsel zu Kotest/JUnit5 wird
-    // die .exec-Datei möglicherweise nur noch am Standard-Gradle-JaCoCo-Plugin-Speicherort erstellt.
-    // Wir verwenden nur noch diesen Pfad, um sicherzustellen, dass der Bericht gefunden wird.
-    executionData.from(layout.buildDirectory.file("jacoco/testDebugUnitTest.exec"))
-}
-
-detekt {
-    autoCorrect = true
-    source.from(
-        files(
-            "src/main/java",
-            "src/main/kotlin",
-            "src/test/java",
-            "src/test/kotlin",
-            "src/androidTest/java",
-            "src/androidTest/kotlin"
-        )
-    )
 }

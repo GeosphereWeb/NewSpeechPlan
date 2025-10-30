@@ -31,9 +31,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import de.geosphere.speechplaning.data.model.Speaker
+import de.geosphere.speechplaning.core.model.Speaker
 import de.geosphere.speechplaning.di.PreviewKoin
-import de.geosphere.speechplaning.mockup.MockedListOfDummyClasses
+import de.geosphere.speechplaning.mocking.MockedListOfDummyClasses
 import de.geosphere.speechplaning.ui.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.ui.theme.ThemePreviews
 
@@ -140,7 +140,8 @@ private fun SpeakerListItemPreview() = PreviewKoin {
                 modifier = Modifier,
                 orderName = OrderName.LASTNAME_FIRSTNAME,
                 expandCard = true,
-                moreIsRequested = {})
+                moreIsRequested = {}
+            )
         }
     }
 }
