@@ -203,7 +203,7 @@ tasks.register<JacocoReport>("jacocoAggregatedReport") {
     }
 }
 
-// Ensure SonarQube runs after the aggregated report is generated.
-tasks.named("sonarqube") {
+// Ensure Sonar runs after the aggregated report is generated.
+tasks.named("sonar") {
     dependsOn(tasks.named("jacocoAggregatedReport"))
 }
