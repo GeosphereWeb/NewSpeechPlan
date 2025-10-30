@@ -1,9 +1,9 @@
-**/app/src/main/java/de/geosphere/speechplaning/di/**/*.kt
-**/app/src/main/java/de/geosphere/speechplaning/data/services/**/*.kt
-**/app/src/main/java/de/geosphere/speechplaning/mockup/**/*.kt
+**/src/main/java/de/geosphere/speechplaning/**/di/**/*.kt
+**/data/src/main/java/de/geosphere/speechplaning/data/repository/services/**/*.kt
+**/mocking/**/*.kt
 **/app/**/build.gradle.kts
 **/app/**/MainActivity.kt
-**/app/**/*Component.kt
-**/app/**/*Screen.kt
-**/app/**/*Composable.kt
+**/*Component.kt
+**/*Screen.kt
+**/*Composable.kt
 

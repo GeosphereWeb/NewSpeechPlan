@@ -10,7 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import de.geosphere.speechplaning.mockup.BuildDummyDBConnection
+import de.geosphere.speechplaning.mocking.BuildDummyDBConnection
 import de.geosphere.speechplaning.ui.login.AuthViewModel
 import de.geosphere.speechplaning.ui.login.LoginScreen
 import de.geosphere.speechplaning.ui.main.MainScreenComponent

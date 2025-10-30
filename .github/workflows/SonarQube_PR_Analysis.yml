@@ -23,7 +23,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build, generate JaCoCo and Lint reports
-        run: ./gradlew app:lintDebug jacocoTestReport --stacktrace
+        run: ./gradlew app:lintDebug jacocoAggregatedReport --stacktrace
 
       - name: SonarQube Analysis 
         env:
@@ -33,7 +33,7 @@ jobs:
           # oder Sie können es hier explizit setzen, wenn nötig:
           # SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: |
-          ./gradlew sonarqube --stacktrace \
+          ./gradlew sonar --stacktrace \
             -Dsonar.pullrequest.key=${{ github.event.pull_request.number }} \
             -Dsonar.pullrequest.branch=${{ github.event.pull_request.head.ref }} \
             -Dsonar.pullrequest.base=${{ github.event.pull_request.base.ref }} \

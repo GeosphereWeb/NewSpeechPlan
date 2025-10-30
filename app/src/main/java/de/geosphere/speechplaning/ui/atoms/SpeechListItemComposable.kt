@@ -14,9 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import de.geosphere.speechplaning.data.model.Speech
+import de.geosphere.speechplaning.core.model.Speech
 import de.geosphere.speechplaning.di.PreviewKoin
-import de.geosphere.speechplaning.mockup.MockedListOfDummyClasses
+import de.geosphere.speechplaning.mocking.MockedListOfDummyClasses
 import de.geosphere.speechplaning.ui.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.ui.theme.ThemePreviews
 
