@@ -1,5 +1,6 @@
 **/src/main/java/de/geosphere/speechplaning/**/di/**/*.kt
 **/data/src/main/java/de/geosphere/speechplaning/data/repository/services/**/*.kt
+**/theme/src/main/java/de/geosphere/speechplaning/theme/**/*.kt
 **/mocking/**/*.kt
 **/app/**/build.gradle.kts
 **/app/**/MainActivity.kt

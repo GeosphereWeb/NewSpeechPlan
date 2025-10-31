@@ -21,7 +21,7 @@ android/**/*.*
 **/*Screen*.class
 **/*Module*.class
 **/de/geosphere/speechplaning/mocking/**/*.class
-**/de/geosphere/speechplaning/ui/theme/**/*.class
+**/de/geosphere/speechplaning/theme/**/*.class
 **/de/geosphere/speechplaning/data/repository/services/FirestoreServiceImpl.class
 **/de/geosphere/speechplaning/core/model/**/*.class
 **/de/geosphere/speechplaning/**/di/*.class

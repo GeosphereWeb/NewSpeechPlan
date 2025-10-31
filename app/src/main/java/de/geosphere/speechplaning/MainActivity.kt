@@ -10,10 +10,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import de.geosphere.speechplaning.feature.login.ui.AuthViewModel
+import de.geosphere.speechplaning.feature.login.ui.LoginScreen
 import de.geosphere.speechplaning.mocking.BuildDummyDBConnection
-import de.geosphere.speechplaning.ui.login.AuthViewModel
-import de.geosphere.speechplaning.ui.login.LoginScreen
-import de.geosphere.speechplaning.ui.main.MainScreenComponent
+import de.geosphere.speechplaning.ui.MainScreenComponent
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
