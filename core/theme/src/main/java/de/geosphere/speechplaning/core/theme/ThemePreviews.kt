@@ -1,4 +1,4 @@
-package de.geosphere.speechplaning.ui.theme
+package de.geosphere.speechplaning.core.theme
 
 import android.content.res.Configuration
 import androidx.compose.ui.tooling.preview.Preview

@@ -1,6 +1,6 @@
 @file:Suppress("UnusedPrivateProperty")
 
-package de.geosphere.speechplaning.ui.theme
+package de.geosphere.speechplaning.core.theme
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme

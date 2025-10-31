@@ -1,4 +1,4 @@
-package de.geosphere.speechplaning.ui.theme
+package de.geosphere.speechplaning.core.theme
 
 import androidx.compose.material3.Typography
 
