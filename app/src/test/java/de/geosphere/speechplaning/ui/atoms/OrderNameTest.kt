@@ -1,5 +1,6 @@
 package de.geosphere.speechplaning.ui.atoms
 
+import de.geosphere.speechplaning.core.ui.atoms.OrderName
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 
