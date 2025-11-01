@@ -2,8 +2,8 @@ package de.geosphere.speechplaning.resterampe
 
 import android.content.Context
 import android.content.res.Resources
-import de.geosphere.speechplaning.R
 import de.geosphere.speechplaning.core.model.data.Event
+import de.geosphere.speechplaning.core.theme.R
 
 /**
  * Maps the [Event] enum to and from its localized string representation.

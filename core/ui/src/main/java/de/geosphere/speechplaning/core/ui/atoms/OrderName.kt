@@ -1,4 +1,4 @@
-package de.geosphere.speechplaning.ui.atoms
+package de.geosphere.speechplaning.core.ui.atoms
 
 /**
  * Order name.

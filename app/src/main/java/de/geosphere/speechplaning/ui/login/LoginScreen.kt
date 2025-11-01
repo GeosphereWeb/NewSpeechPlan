@@ -24,10 +24,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import de.geosphere.speechplaning.core.theme.SpeechPlaningTheme
+import de.geosphere.speechplaning.core.theme.ThemePreviews
+import de.geosphere.speechplaning.core.ui.atoms.di.PreviewKoin
 import de.geosphere.speechplaning.data.authentication.AuthUiState
-import de.geosphere.speechplaning.di.PreviewKoin
-import de.geosphere.speechplaning.ui.theme.SpeechPlaningTheme
-import de.geosphere.speechplaning.ui.theme.ThemePreviews
 import org.koin.androidx.compose.koinViewModel
 
 @Composable

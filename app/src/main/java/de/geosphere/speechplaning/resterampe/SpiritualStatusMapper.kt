@@ -1,8 +1,8 @@
 package de.geosphere.speechplaning.resterampe
 
 import android.content.Context
-import de.geosphere.speechplaning.R
 import de.geosphere.speechplaning.core.model.data.SpiritualStatus
+import de.geosphere.speechplaning.core.theme.R
 
 /**
  * Maps the [SpiritualStatus] enum to and from its localized string representation.

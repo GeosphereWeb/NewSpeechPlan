@@ -1,8 +1,8 @@
-package de.geosphere.speechplaning.ui.atoms
+package de.geosphere.speechplaning.core.ui.atoms
 
 import androidx.annotation.DrawableRes
-import de.geosphere.speechplaning.R
 import de.geosphere.speechplaning.core.model.data.SpiritualStatus
+import de.geosphere.speechplaning.core.theme.R
 
 /**
  * Provides avatar resources based on spiritual status.

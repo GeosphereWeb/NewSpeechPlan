@@ -1,4 +1,4 @@
-package de.geosphere.speechplaning.ui.atoms
+package de.geosphere.speechplaning.core.ui.atoms
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
@@ -15,10 +15,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import de.geosphere.speechplaning.core.model.Speech
-import de.geosphere.speechplaning.di.PreviewKoin
+import de.geosphere.speechplaning.core.theme.SpeechPlaningTheme
+import de.geosphere.speechplaning.core.theme.ThemePreviews
 import de.geosphere.speechplaning.mocking.MockedListOfDummyClasses
-import de.geosphere.speechplaning.ui.theme.SpeechPlaningTheme
-import de.geosphere.speechplaning.ui.theme.ThemePreviews
 
 @Suppress("MagicNumber")
 @Composable
@@ -59,10 +58,8 @@ fun SpeechListItemComposable(
 @Suppress("MagicNumber")
 @ThemePreviews
 @Composable
-private fun SpeechComposablePreview() = PreviewKoin {
-    SpeechPlaningTheme {
-        Column {
-            SpeechListItemComposable(MockedListOfDummyClasses.speechesMockupList[101])
-        }
+private fun SpeechComposablePreview() = SpeechPlaningTheme {
+    Column {
+        SpeechListItemComposable(MockedListOfDummyClasses.speechesMockupList[101])
     }
 }

@@ -1,4 +1,4 @@
-package de.geosphere.speechplaning.ui.atoms
+package de.geosphere.speechplaning.core.ui.atoms
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -32,10 +32,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import de.geosphere.speechplaning.core.model.Speaker
-import de.geosphere.speechplaning.di.PreviewKoin
+import de.geosphere.speechplaning.core.theme.SpeechPlaningTheme
+import de.geosphere.speechplaning.core.theme.ThemePreviews
 import de.geosphere.speechplaning.mocking.MockedListOfDummyClasses
-import de.geosphere.speechplaning.ui.theme.SpeechPlaningTheme
-import de.geosphere.speechplaning.ui.theme.ThemePreviews
 
 @Suppress("MagicNumber", "LongMethod")
 @Composable
@@ -124,7 +123,7 @@ fun SpeakerListItemComposable(
 
 @ThemePreviews
 @Composable
-private fun SpeakerListItemPreview() = PreviewKoin {
+private fun SpeakerListItemPreview() =
     SpeechPlaningTheme {
         Column {
             SpeakerListItemComposable(
@@ -144,4 +143,3 @@ private fun SpeakerListItemPreview() = PreviewKoin {
             )
         }
     }
-}
