@@ -1,4 +1,4 @@
-package de.geosphere.speechplaning.di
+package de.geosphere.speechplaning.core.ui.atoms.di
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
@@ -18,7 +18,7 @@ fun PreviewKoin(content: @Composable () -> Unit) {
     val context = LocalContext.current
     KoinApplication(application = {
         androidContext(context)
-        modules(dataModule, appModule, previewModule)
+        modules(previewModule, dataModule)
     }) {
         content()
     }

@@ -1,7 +1,5 @@
 package de.geosphere.speechplaning.di
 
-import androidx.lifecycle.LifecycleCoroutineScope
-import de.geosphere.speechplaning.mocking.BuildDummyDBConnection
 import de.geosphere.speechplaning.resterampe.EventMapper
 import de.geosphere.speechplaning.resterampe.SpiritualStatusMapper
 import de.geosphere.speechplaning.ui.login.AuthViewModel
@@ -30,7 +28,7 @@ val appModule =
         singleOf(::SpiritualStatusMapper)
         singleOf(::EventMapper)
 
-        factory { (scope: LifecycleCoroutineScope) -> BuildDummyDBConnection(scope) }
+        // factory { (scope: LifecycleCoroutineScope) -> BuildDummyDBConnection(scope) }
 
         // Use Cases
         // factoryOf(::CreateUserWithEmailAndPasswordUseCase)

@@ -12,7 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import de.geosphere.speechplaning.ui.theme.SpeechPlaningTheme
+import de.geosphere.speechplaning.core.theme.SpeechPlaningTheme
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
