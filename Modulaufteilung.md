@@ -50,9 +50,9 @@ Dieses Modul ist für die gesamte Datenlogik der Anwendung verantwortlich.
 
 ```mermaid
 graph TD
-subgraph " "
-app(":app")
-end
+    subgraph " "
+        app(":app")
+    end
 
     subgraph "Features"
         feature_home(":feature:home")
@@ -69,27 +69,41 @@ end
     subgraph "Data Layer"
         data(":data")
     end
+  
+    theme(":theme")
+    mocking(":mocking")
 
     app --> feature_home
     app --> feature_settings
     app --> feature_profile
     app --> core_ui
     app --> core_navigation
+    app --> mocking
+    app -- wg. KOIN --> data
+
 
     feature_home --> core_ui
     feature_home --> core_model
     feature_home --> core_navigation
     feature_home --> data
+    feature_home --> theme
 
     feature_settings --> core_ui
     feature_settings --> core_model
     feature_settings --> core_navigation
     feature_settings --> data
+    feature_settings --> theme
   
     feature_profile --> core_ui
     feature_profile --> core_model
     feature_profile --> core_navigation
     feature_profile --> data
+    feature_settings --> theme
+  
+    core_ui --> theme
 
     data --> core_model
+  
+    mocking --> core_model
+    mocking --> data
 ```
