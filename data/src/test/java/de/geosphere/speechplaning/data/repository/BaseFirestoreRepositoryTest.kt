@@ -1,4 +1,3 @@
-
 package de.geosphere.speechplaning.data.repository
 
 import com.google.android.gms.tasks.Task

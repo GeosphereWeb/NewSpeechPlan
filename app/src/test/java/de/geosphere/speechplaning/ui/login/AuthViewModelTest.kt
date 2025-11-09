@@ -8,7 +8,7 @@ import de.geosphere.speechplaning.data.usecases.CreateUserWithEmailAndPasswordUs
 import de.geosphere.speechplaning.data.usecases.GoogleSignInUseCase
 import de.geosphere.speechplaning.data.usecases.SignInWithEmailAndPasswordUseCase
 import de.geosphere.speechplaning.data.usecases.SignOutUseCase
-import de.geosphere.speechplaning.ui.login.AuthViewModel
+import de.geosphere.speechplaning.feature.login.ui.AuthViewModel
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue

@@ -71,17 +71,23 @@ android {
 }
 
 dependencies {
+    implementation(project(":feature:home"))
+    implementation(project(":feature:settings"))
+    implementation(project(":feature:profile"))
+    implementation(project(":feature:login"))
+    implementation(project(":core:ui"))
     implementation(project(":core:model"))
-    implementation(project(":data"))
+    implementation(project(":core:navigation"))
     implementation(project(":mocking"))
-    // implementation(project(":core:ui"))
-    // implementation(project(":core:navigation"))
+    implementation(project(":data"))
+    implementation(project(":theme"))
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
+    implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.ui.graphics)
 
     implementation(libs.androidx.ui.tooling.preview)
@@ -130,6 +136,11 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     androidTestImplementation(libs.mockk.android)
     androidTestImplementation(libs.mockk.agent.jvm)
+
+    androidTestImplementation(libs.kotest.framework)
+    androidTestImplementation(libs.kotest.assertions)
+    androidTestImplementation(libs.kotest.runner.junit5)
+    androidTestImplementation(libs.kotest.property)
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)

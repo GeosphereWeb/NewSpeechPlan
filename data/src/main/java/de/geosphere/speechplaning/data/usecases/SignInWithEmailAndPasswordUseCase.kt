@@ -2,7 +2,6 @@ package de.geosphere.speechplaning.data.usecases
 
 import android.util.Patterns
 import de.geosphere.speechplaning.data.authentication.AuthRepository
-
 class SignInWithEmailAndPasswordUseCase(
     private val authRepository: AuthRepository
 ) {

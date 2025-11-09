@@ -1,11 +1,12 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.serialization)
     id("jacoco")
 }
 
 android {
-    namespace = "de.geosphere.speechplaning.data.navigation"
+    namespace = "de.geosphere.speechplaning.core.navigation"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
@@ -45,9 +46,12 @@ android {
 }
 
 dependencies {
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.gson)
 
     // Unit Tests
     testImplementation(kotlin("test"))
