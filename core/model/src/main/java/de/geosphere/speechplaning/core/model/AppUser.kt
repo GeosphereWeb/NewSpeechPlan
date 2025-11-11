@@ -1,6 +1,7 @@
 package de.geosphere.speechplaning.core.model
 
 import com.google.firebase.firestore.DocumentId
+import de.geosphere.speechplaning.core.model.data.UserRole
 
 /**
  * Repräsentiert die Daten eines Nutzers, wie sie in der "users"-Collection in Firestore gespeichert sind.
@@ -15,5 +16,7 @@ data class AppUser(
     val uid: String = "",
     val email: String? = null,
     val displayName: String? = null,
-    val approved: Boolean = false, // Name an Firestore-Schema angepasst
+    val approved: Boolean = false,
+    val congregationAdmin: Boolean = false,
+    val userRole: List<UserRole> = emptyList()
 )
