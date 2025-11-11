@@ -1,4 +1,4 @@
-package de.geosphere.speechplaning.data.usecases
+package de.geosphere.speechplaning.data.usecases.login
 
 import com.google.firebase.auth.FirebaseUser
 import de.geosphere.speechplaning.data.authentication.AuthUiState

@@ -1,4 +1,4 @@
-package de.geosphere.speechplaning.data.usecases
+package de.geosphere.speechplaning.data.usecases.login
 
 import android.app.Activity
 import android.os.Bundle

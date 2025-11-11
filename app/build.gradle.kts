@@ -75,6 +75,7 @@ dependencies {
     implementation(project(":feature:settings"))
     implementation(project(":feature:profile"))
     implementation(project(":feature:login"))
+    implementation(project(":feature:planning"))
     implementation(project(":core:ui"))
     implementation(project(":core:model"))
     implementation(project(":core:navigation"))

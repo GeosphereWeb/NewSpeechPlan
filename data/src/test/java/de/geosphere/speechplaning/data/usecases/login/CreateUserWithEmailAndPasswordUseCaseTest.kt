@@ -1,4 +1,4 @@
-package de.geosphere.speechplaning.data.usecases
+package de.geosphere.speechplaning.data.usecases.login
 
 // --- HIER IST DIE ÄNDERUNG ---
 // Korrekter Import der zu testenden Klasse.

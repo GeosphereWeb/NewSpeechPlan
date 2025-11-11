@@ -16,7 +16,9 @@ import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun MainScreenComponent(onLogout: () -> Unit) {
+fun MainScreenComponent(
+    onLogout: () -> Unit,
+) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val navController = rememberNavController()
 
