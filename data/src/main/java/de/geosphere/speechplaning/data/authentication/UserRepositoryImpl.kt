@@ -1,9 +1,8 @@
 package de.geosphere.speechplaning.data.authentication
 
-
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Source
+import com.google.firebase.firestore.Source.SERVER
 import de.geosphere.speechplaning.core.model.AppUser
 import de.geosphere.speechplaning.core.model.data.UserRole
 import kotlinx.coroutines.tasks.await
@@ -15,7 +14,7 @@ class UserRepositoryImpl(private val firestore: FirebaseFirestore) : UserReposit
     override suspend fun getOrCreateUser(firebaseUser: FirebaseUser): AppUser {
         val document = usersCollection.document(firebaseUser.uid)
         // Wichtig: Source.SERVER erzwingt das Lesen vom Server und umgeht den Cache.
-        val snapshot = document.get(Source.SERVER).await() // <--- PRÜFEN
+        val snapshot = document.get(SERVER).await() // <--- PRÜFEN
 
         return if (snapshot.exists()) {
             snapshot.toObject(AppUser::class.java)!!
@@ -39,10 +38,10 @@ class UserRepositoryImpl(private val firestore: FirebaseFirestore) : UserReposit
      * @param userId Die UID des Nutzers, der aktualisiert werden soll.
      * @param roleToAdd Die Rolle, die hinzugefügt werden soll.
      */
+    @Suppress("UseCheckOrError")
     override suspend fun addRoleToUser(userId: String, roleToAdd: UserRole) {
         // 1. Lade den aktuellen Zustand des Nutzers vom Server.
-        val currentUser = getUser(userId)
-            ?: throw IllegalStateException("Benutzer mit ID $userId nicht gefunden.")
+        val currentUser = getUser(userId) ?: throw IllegalStateException("Benutzer mit ID $userId nicht gefunden.")
 
         // 2. Prüfe, ob die Rolle bereits vorhanden ist.
         if (currentUser.userRole.contains(roleToAdd)) {
@@ -68,7 +67,7 @@ class UserRepositoryImpl(private val firestore: FirebaseFirestore) : UserReposit
     override suspend fun getUser(userId: String): AppUser? {
         return try {
             usersCollection.document(userId)
-                .get(Source.SERVER)
+                .get(SERVER)
                 .await()
                 .toObject(AppUser::class.java)
         } catch (e: Exception) {
