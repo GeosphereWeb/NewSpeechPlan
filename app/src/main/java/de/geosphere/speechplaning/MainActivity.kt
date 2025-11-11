@@ -3,13 +3,17 @@ package de.geosphere.speechplaning
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.getValue
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import de.geosphere.speechplaning.data.authentication.AuthUiState
 import de.geosphere.speechplaning.feature.login.ui.AuthViewModel
 import de.geosphere.speechplaning.feature.login.ui.LoginScreen
 import de.geosphere.speechplaning.mocking.BuildDummyDBConnection
@@ -30,48 +34,49 @@ class MainActivity :
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // enableEdgeToEdge()
-        // Das Ausblenden der Systemleisten kann auch in eine Extension-Function ausgelagert werden
+        val splashScreen = installSplashScreen()
 
         WindowCompat.getInsetsController(window, window.decorView).hidestSystemBars()
 
-        // /////
         dummyDbBuilder()
-        // /////
-
         setContent {
-            // 1. NavController erstellen, der den Navigationszustand verwaltet.
-            val navController = rememberNavController()
             val authViewModel: AuthViewModel = koinViewModel()
-            NavHost(navController = navController, startDestination = "login") {
-                composable("login") {
-                    LoginScreen(authViewModel = authViewModel, onLoginSuccess = {
-                        // 3. Bei erfolgreichem Login zum Hauptbildschirm navigieren.
-                        // popUpTo("login") { inclusive = true } entfernt den Login-Screen
-                        // aus dem Back-Stack, damit der Nutzer nicht mit der Zurück-Taste
-                        // dorthin zurückkehren kann.
-                        navController.navigate("main") {
-                            popUpTo("login") {
-                                inclusive = true
-                            }
-                        }
-                    })
+            val authState by authViewModel.getAuthUiState()
+                .collectAsStateWithLifecycle(initialValue = AuthUiState.Loading)
+
+            splashScreen.setKeepOnScreenCondition {
+                authState is AuthUiState.Loading
+            }
+
+            if (authState !is AuthUiState.Loading) {
+                val navController = rememberNavController()
+                val startDestination = when (authState) {
+                    is AuthUiState.Authenticated -> "main"
+                    else -> "login"
                 }
-                // Definiert die Route für den Hauptbildschirm
-                composable("main") {
-                    // Hier wird dein Hauptbildschirm angezeigt.
-                    MainScreenComponent(
-                        onLogout = {
-                            // Navigiere zurück zum Login-Screen
-                            navController.navigate("login") {
-                                // Entferne den Main-Screen und alles darüber vom Back-Stack
-                                authViewModel.signOut()
-                                popUpTo("main") {
+
+                NavHost(navController = navController, startDestination = startDestination) {
+                    composable("login") {
+                        LoginScreen(authViewModel = authViewModel, onLoginSuccess = {
+                            navController.navigate("main") {
+                                popUpTo("login") {
                                     inclusive = true
                                 }
                             }
-                        }
-                    )
+                        })
+                    }
+                    composable("main") {
+                        MainScreenComponent(
+                            onLogout = {
+                                authViewModel.signOut()
+                                navController.navigate("login") {
+                                    popUpTo("main") {
+                                        inclusive = true
+                                    }
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }
