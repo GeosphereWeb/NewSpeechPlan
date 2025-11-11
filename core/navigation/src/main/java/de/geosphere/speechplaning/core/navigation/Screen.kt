@@ -2,12 +2,12 @@ package de.geosphere.speechplaning.core.navigation
 
 import kotlinx.serialization.Serializable
 
-@kotlinx.serialization.Serializable
+@Serializable
 sealed class Screen {
-    @kotlinx.serialization.Serializable
+    @Serializable
     data object SpeakerRoute : Screen()
 
-    @kotlinx.serialization.Serializable
+    @Serializable
     data object PlaningRoute : Screen()
 
     @Serializable
