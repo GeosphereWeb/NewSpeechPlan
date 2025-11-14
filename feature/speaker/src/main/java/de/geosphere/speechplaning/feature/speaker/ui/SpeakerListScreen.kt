@@ -88,7 +88,12 @@ fun SpeakerListContent(
 private fun SpeakerListContentPreview() {
     val speakers = listOf(
         Speaker(id = "1", nameFirst = "John", nameLast = "Doe", spiritualStatus = SpiritualStatus.ELDER),
-        Speaker(id = "2", nameFirst = "Jane", nameLast = "Smith", spiritualStatus = SpiritualStatus.MINISTERIAL_SERVANT),
+        Speaker(
+            id = "2",
+            nameFirst = "Jane",
+            nameLast = "Smith",
+            spiritualStatus = SpiritualStatus.MINISTERIAL_SERVANT
+        ),
         Speaker(id = "3", nameFirst = "Peter", nameLast = "Jones", spiritualStatus = SpiritualStatus.UNKNOWN)
     )
     val uiState = SpeakerUiState(isLoading = false, speakers = speakers)

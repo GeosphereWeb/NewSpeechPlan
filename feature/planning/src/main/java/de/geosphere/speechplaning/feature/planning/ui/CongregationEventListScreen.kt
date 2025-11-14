@@ -94,11 +94,23 @@ fun CongregationEventListContent(
 
 @ThemePreviews
 @Composable
-fun CongregationEventListScreenPreview_WithData() = PreviewKoin {
+fun CongregationEventListScreenPreviewWithData() = PreviewKoin {
     SpeechPlaningTheme {
         val sampleEvents = listOf(
-            CongregationEvent(id = "1", congregationId = "c1", date = LocalDate.now(), eventType = Event.CONVENTION, speechId = "s1", speakerId = "p1"),
-            CongregationEvent(id = "2", congregationId = "c1", date = LocalDate.now().plusDays(7), eventType = Event.CONVENTION)
+            CongregationEvent(
+                id = "1",
+                congregationId = "c1",
+                date = LocalDate.now(),
+                eventType = Event.CONVENTION,
+                speechId = "s1",
+                speakerId = "p1"
+            ),
+            CongregationEvent(
+                id = "2",
+                congregationId = "c1",
+                date = LocalDate.now().plusDays(7),
+                eventType = Event.CONVENTION
+            )
         )
         val uiState = CongregationEventUiState(events = sampleEvents)
         CongregationEventListContent(

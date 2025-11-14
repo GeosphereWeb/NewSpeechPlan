@@ -42,9 +42,9 @@ class GetCongregationEventsUseCaseTest : BehaviorSpec({
                     )
                 )
                 coEvery { repository.getAllEventsForCongregation(districtId, congregationId) } returns events
-                
+
                 val result = useCase(districtId, congregationId)
-                
+
                 result.shouldBeSuccess(events)
                 coVerify(exactly = 1) { repository.getAllEventsForCongregation(districtId, congregationId) }
             }
@@ -54,9 +54,9 @@ class GetCongregationEventsUseCaseTest : BehaviorSpec({
             then("it should return failure") {
                 val exception = RuntimeException("Test exception")
                 coEvery { repository.getAllEventsForCongregation(districtId, congregationId) } throws exception
-                
+
                 val result = useCase(districtId, congregationId)
-                
+
                 result.shouldBeFailure(exception)
                 coVerify(exactly = 1) { repository.getAllEventsForCongregation(districtId, congregationId) }
             }

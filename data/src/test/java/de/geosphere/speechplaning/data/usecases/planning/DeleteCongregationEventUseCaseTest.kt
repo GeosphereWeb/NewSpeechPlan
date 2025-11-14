@@ -26,9 +26,9 @@ class DeleteCongregationEventUseCaseTest : BehaviorSpec({
         `when`("the repository deletes the event successfully") {
             then("it should return success") {
                 coEvery { repository.deleteEvent(districtId, congregationId, eventId) } returns Unit
-                
+
                 val result = useCase(districtId, congregationId, eventId)
-                
+
                 result.shouldBeSuccess()
                 coVerify(exactly = 1) { repository.deleteEvent(districtId, congregationId, eventId) }
             }
@@ -38,9 +38,9 @@ class DeleteCongregationEventUseCaseTest : BehaviorSpec({
             then("it should return failure") {
                 val exception = RuntimeException("Test exception")
                 coEvery { repository.deleteEvent(districtId, congregationId, eventId) } throws exception
-                
+
                 val result = useCase(districtId, congregationId, eventId)
-                
+
                 result.shouldBeFailure(exception)
                 coVerify(exactly = 1) { repository.deleteEvent(districtId, congregationId, eventId) }
             }

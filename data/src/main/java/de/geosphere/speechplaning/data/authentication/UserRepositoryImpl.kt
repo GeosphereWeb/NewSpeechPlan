@@ -1,6 +1,5 @@
 package de.geosphere.speechplaning.data.authentication
 
-
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source

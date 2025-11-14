@@ -78,7 +78,9 @@ class SpeakerViewModelTest : BehaviorSpec({
             then("it should save the speaker and reload the list") {
                 runTest {
                     val speakerToSave = Speaker(id = "2", nameFirst = "Jane")
-                    coEvery { getSpeakersUseCase(districtId, congregationId) } returns Result.success(emptyList()) andThen Result.success(listOf(speakerToSave))
+                    coEvery {
+                        getSpeakersUseCase(districtId, congregationId)
+                    } returns Result.success(emptyList()) andThen Result.success(listOf(speakerToSave))
                     coEvery { saveSpeakerUseCase(districtId, congregationId, speakerToSave) } returns Result.success("2")
 
                     viewModel = SpeakerViewModel(getSpeakersUseCase, saveSpeakerUseCase, deleteSpeakerUseCase, districtId, congregationId)
@@ -99,7 +101,9 @@ class SpeakerViewModelTest : BehaviorSpec({
                 runTest {
                     val speakerIdToDelete = "1"
                     val initialSpeakers = listOf(Speaker(id = speakerIdToDelete))
-                    coEvery { getSpeakersUseCase(districtId, congregationId) } returns Result.success(initialSpeakers) andThen Result.success(emptyList())
+                    coEvery {
+                        getSpeakersUseCase(districtId, congregationId)
+                    } returns Result.success(initialSpeakers) andThen Result.success(emptyList())
                     coEvery { deleteSpeakerUseCase(districtId, congregationId, speakerIdToDelete) } returns Result.success(Unit)
 
                     viewModel = SpeakerViewModel(getSpeakersUseCase, saveSpeakerUseCase, deleteSpeakerUseCase, districtId, congregationId)

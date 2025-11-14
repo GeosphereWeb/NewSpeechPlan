@@ -10,7 +10,7 @@ import org.koin.dsl.module
 
 val planningModule = module {
     // Use Cases
-    factoryOf( ::GetCongregationEventsUseCase )
+    factoryOf(::GetCongregationEventsUseCase)
     factoryOf(::SaveCongregationEventUseCase)
     factoryOf(::DeleteCongregationEventUseCase)
 
