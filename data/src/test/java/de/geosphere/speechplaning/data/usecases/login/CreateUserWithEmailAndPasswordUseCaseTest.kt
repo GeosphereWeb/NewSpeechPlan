@@ -63,7 +63,8 @@ class CreateUserWithEmailAndPasswordUseCaseTest : BehaviorSpec({
 
         `when`("all inputs are valid and repositories succeed") {
             then("it should call all repository methods in order and return success") {
-                coEvery { authRepository.createUserWithEmailAndPassword(validEmail, validPassword) } returns mockFirebaseUser
+                coEvery { authRepository.createUserWithEmailAndPassword(validEmail, validPassword) } returns
+                    mockFirebaseUser
                 coEvery { authRepository.updateFirebaseUserProfile(mockFirebaseUser, validName) } returns Unit
                 coEvery { userRepository.getOrCreateUser(mockFirebaseUser) } returns mockk()
 

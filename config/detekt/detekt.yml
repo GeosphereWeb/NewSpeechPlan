@@ -630,6 +630,9 @@ style:
     ignoreConstantDeclaration: true
     ignoreCompanionObjectPropertyDeclaration: true
     ignoreAnnotation: false
+    ignoreAnnotated:
+      - 'Preview'
+      - 'de.geosphere.speechplaning.theme.ThemePreviews'
     ignoreNamedArgument: true
     ignoreEnums: false
     ignoreRanges: false

@@ -5,11 +5,6 @@ import de.geosphere.speechplaning.data.repository.CongregationEventRepository
 
 class SaveCongregationEventUseCase(private val repository: CongregationEventRepository) {
     suspend operator fun invoke(districtId: String, congregationId: String, event: CongregationEvent): Result<String> {
-        // Basic validation can be done here if needed
-        if (event.eventType == null) {
-            return Result.failure(IllegalArgumentException("Event type cannot be null."))
-        }
-
         return try {
             val eventId = repository.saveEvent(districtId, congregationId, event)
             Result.success(eventId)

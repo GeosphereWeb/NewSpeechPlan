@@ -78,7 +78,13 @@ class CongregationEventViewModelTest : FunSpec() {
 
         test("selectEvent should update selectedEvent in state") {
             runTest(testDispatcher) {
-                val event = CongregationEvent(id = "1", congregationId = "congregation1", date = LocalDate.now(), eventType = Event.SPECIAL_LECTURE)
+                val event =
+                    CongregationEvent(
+                        id = "1",
+                        congregationId = "congregation1",
+                        date = LocalDate.now(),
+                        eventType = Event.SPECIAL_LECTURE
+                    )
                 viewModel.selectEvent(event)
                 viewModel.uiState.value.selectedEvent shouldBe event
             }
@@ -86,7 +92,13 @@ class CongregationEventViewModelTest : FunSpec() {
 
         test("clearSelection should set selectedEvent in state to null") {
             runTest(testDispatcher) {
-                val event = CongregationEvent(id = "1", congregationId = "congregation1", date = LocalDate.now(), eventType = Event.SPECIAL_LECTURE)
+                val event =
+                    CongregationEvent(
+                        id = "1",
+                        congregationId = "congregation1",
+                        date = LocalDate.now(),
+                        eventType = Event.SPECIAL_LECTURE
+                    )
                 viewModel.selectEvent(event)
                 viewModel.clearSelection()
                 viewModel.uiState.value.selectedEvent shouldBe null
@@ -95,7 +107,13 @@ class CongregationEventViewModelTest : FunSpec() {
 
         test("saveEvent should reload events on success") {
             runTest(testDispatcher) {
-                val event = CongregationEvent(id = "1", congregationId = "congregation1", date = LocalDate.now(), eventType = Event.MEMORIAL)
+                val event =
+                    CongregationEvent(
+                        id = "1",
+                        congregationId = "congregation1",
+                        date = LocalDate.now(),
+                        eventType = Event.MEMORIAL
+                    )
                 coEvery { saveCongregationEventUseCase(any(), any(), any()) } returns Result.success("1")
                 coEvery { getCongregationEventsUseCase(any(), any()) } returns Result.success(listOf(event))
 
@@ -112,9 +130,16 @@ class CongregationEventViewModelTest : FunSpec() {
 
         test("saveEvent should update state with error on failure") {
             runTest(testDispatcher) {
-                val event = CongregationEvent(id = "1", congregationId = "congregation1", date = LocalDate.now(), eventType = Event.MEMORIAL)
+                val event =
+                    CongregationEvent(
+                        id = "1",
+                        congregationId = "congregation1",
+                        date = LocalDate.now(),
+                        eventType = Event.MEMORIAL
+                    )
                 val errorMessage = "Error saving event"
-                coEvery { saveCongregationEventUseCase(any(), any(), any()) } returns Result.failure(Exception(errorMessage))
+                coEvery { saveCongregationEventUseCase(any(), any(), any()) } returns
+                    Result.failure(Exception(errorMessage))
 
                 viewModel.saveEvent("district1", "congregation1", event)
 
@@ -127,8 +152,10 @@ class CongregationEventViewModelTest : FunSpec() {
         test("deleteEvent should reload events on success") {
             runTest(testDispatcher) {
                 val eventId = "1"
-                coEvery { deleteCongregationEventUseCase(any(), any(), any()) } returns Result.success(Unit)
-                coEvery { getCongregationEventsUseCase(any(), any()) } returns Result.success(emptyList())
+                coEvery { deleteCongregationEventUseCase(any(), any(), any()) } returns
+                    Result.success(Unit)
+                coEvery { getCongregationEventsUseCase(any(), any()) } returns
+                    Result.success(emptyList())
 
                 viewModel.deleteEvent("district1", "congregation1", eventId)
 
@@ -145,7 +172,8 @@ class CongregationEventViewModelTest : FunSpec() {
             runTest(testDispatcher) {
                 val eventId = "1"
                 val errorMessage = "Error deleting event"
-                coEvery { deleteCongregationEventUseCase(any(), any(), any()) } returns Result.failure(Exception(errorMessage))
+                coEvery { deleteCongregationEventUseCase(any(), any(), any()) } returns
+                    Result.failure(Exception(errorMessage))
 
                 viewModel.deleteEvent("district1", "congregation1", eventId)
 

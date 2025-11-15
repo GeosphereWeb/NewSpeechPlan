@@ -51,7 +51,10 @@ class SpeakerViewModelTest : BehaviorSpec({
                     val speakers = listOf(Speaker(id = "1", nameFirst = "John"))
                     coEvery { getSpeakersUseCase(districtId, congregationId) } returns Result.success(speakers)
 
-                    viewModel = SpeakerViewModel(getSpeakersUseCase, saveSpeakerUseCase, deleteSpeakerUseCase, districtId, congregationId)
+                    viewModel = SpeakerViewModel(
+                        getSpeakersUseCase, saveSpeakerUseCase, deleteSpeakerUseCase,
+                        districtId, congregationId
+                    )
 
                     advanceUntilIdle()
 
@@ -65,7 +68,10 @@ class SpeakerViewModelTest : BehaviorSpec({
                     val error = RuntimeException("Network error")
                     coEvery { getSpeakersUseCase(districtId, congregationId) } returns Result.failure(error)
 
-                    viewModel = SpeakerViewModel(getSpeakersUseCase, saveSpeakerUseCase, deleteSpeakerUseCase, districtId, congregationId)
+                    viewModel = SpeakerViewModel(
+                        getSpeakersUseCase, saveSpeakerUseCase, deleteSpeakerUseCase,
+                        districtId, congregationId
+                    )
 
                     advanceUntilIdle()
 
@@ -81,9 +87,13 @@ class SpeakerViewModelTest : BehaviorSpec({
                     coEvery {
                         getSpeakersUseCase(districtId, congregationId)
                     } returns Result.success(emptyList()) andThen Result.success(listOf(speakerToSave))
-                    coEvery { saveSpeakerUseCase(districtId, congregationId, speakerToSave) } returns Result.success("2")
+                    coEvery { saveSpeakerUseCase(districtId, congregationId, speakerToSave) } returns
+                        Result.success("2")
 
-                    viewModel = SpeakerViewModel(getSpeakersUseCase, saveSpeakerUseCase, deleteSpeakerUseCase, districtId, congregationId)
+                    viewModel = SpeakerViewModel(
+                        getSpeakersUseCase, saveSpeakerUseCase, deleteSpeakerUseCase,
+                        districtId, congregationId
+                    )
                     advanceUntilIdle()
 
                     viewModel.saveSpeaker(speakerToSave)
@@ -104,12 +114,18 @@ class SpeakerViewModelTest : BehaviorSpec({
                     coEvery {
                         getSpeakersUseCase(districtId, congregationId)
                     } returns Result.success(initialSpeakers) andThen Result.success(emptyList())
-                    coEvery { deleteSpeakerUseCase(districtId, congregationId, speakerIdToDelete) } returns Result.success(Unit)
+                    coEvery { deleteSpeakerUseCase(districtId, congregationId, speakerIdToDelete) } returns
+                        Result.success(Unit)
 
-                    viewModel = SpeakerViewModel(getSpeakersUseCase, saveSpeakerUseCase, deleteSpeakerUseCase, districtId, congregationId)
+                    viewModel = SpeakerViewModel(
+                        getSpeakersUseCase, saveSpeakerUseCase, deleteSpeakerUseCase,
+                        districtId, congregationId
+                    )
+
                     advanceUntilIdle()
 
                     viewModel.deleteSpeaker(speakerIdToDelete)
+
                     advanceUntilIdle()
 
                     coVerify(exactly = 1) { deleteSpeakerUseCase(districtId, congregationId, speakerIdToDelete) }
