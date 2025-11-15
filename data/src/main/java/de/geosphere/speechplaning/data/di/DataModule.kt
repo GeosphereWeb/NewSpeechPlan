@@ -13,11 +13,11 @@ import de.geosphere.speechplaning.data.repository.SpeakerRepository
 import de.geosphere.speechplaning.data.repository.SpeechRepository
 import de.geosphere.speechplaning.data.repository.services.FirestoreService
 import de.geosphere.speechplaning.data.repository.services.FirestoreServiceImpl
-import de.geosphere.speechplaning.data.usecases.CreateUserWithEmailAndPasswordUseCase
-import de.geosphere.speechplaning.data.usecases.DetermineAppUserStatusUseCase
-import de.geosphere.speechplaning.data.usecases.GoogleSignInUseCase
-import de.geosphere.speechplaning.data.usecases.SignInWithEmailAndPasswordUseCase
-import de.geosphere.speechplaning.data.usecases.SignOutUseCase
+import de.geosphere.speechplaning.data.usecases.login.CreateUserWithEmailAndPasswordUseCase
+import de.geosphere.speechplaning.data.usecases.login.DetermineAppUserStatusUseCase
+import de.geosphere.speechplaning.data.usecases.login.GoogleSignInUseCase
+import de.geosphere.speechplaning.data.usecases.login.SignInWithEmailAndPasswordUseCase
+import de.geosphere.speechplaning.data.usecases.login.SignOutUseCase
 import de.geosphere.speechplaning.data.util.GoogleIdTokenParser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

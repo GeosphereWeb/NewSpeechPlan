@@ -7,10 +7,10 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import de.geosphere.speechplaning.data.authentication.AuthRepository
 import de.geosphere.speechplaning.data.authentication.AuthUiState
-import de.geosphere.speechplaning.data.usecases.CreateUserWithEmailAndPasswordUseCase
-import de.geosphere.speechplaning.data.usecases.GoogleSignInUseCase
-import de.geosphere.speechplaning.data.usecases.SignInWithEmailAndPasswordUseCase
-import de.geosphere.speechplaning.data.usecases.SignOutUseCase
+import de.geosphere.speechplaning.data.usecases.login.CreateUserWithEmailAndPasswordUseCase
+import de.geosphere.speechplaning.data.usecases.login.GoogleSignInUseCase
+import de.geosphere.speechplaning.data.usecases.login.SignInWithEmailAndPasswordUseCase
+import de.geosphere.speechplaning.data.usecases.login.SignOutUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

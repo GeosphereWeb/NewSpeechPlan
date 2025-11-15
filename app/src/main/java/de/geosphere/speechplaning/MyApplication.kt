@@ -6,6 +6,7 @@ import de.geosphere.speechplaning.core.ui.atoms.di.coreUiModule
 import de.geosphere.speechplaning.data.di.dataModule
 import de.geosphere.speechplaning.di.appModule
 import de.geosphere.speechplaning.feature.login.di.loginModule
+import de.geosphere.speechplaning.feature.planning.di.planningModule
 import de.geosphere.speechplaning.mocking.di.mockingModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -23,7 +24,7 @@ class MyApplication : Application() {
         startKoin {
             androidLogger()
             androidContext(this@MyApplication)
-            modules(appModule, dataModule, mockingModule, loginModule, coreUiModule)
+            modules(appModule, dataModule, mockingModule, loginModule, coreUiModule, planningModule)
         }
     }
 }
