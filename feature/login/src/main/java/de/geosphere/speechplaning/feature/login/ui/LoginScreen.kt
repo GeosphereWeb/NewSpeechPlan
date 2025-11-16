@@ -88,7 +88,7 @@ fun LoginScreen(
             Text(text = "Mit Google anmelden")
         }
 
-        // Zeige einen Lade-Spinner, wenn eine Aktion ausgeführt wird ODER der globale Zustand noch lädt
+        // Zeige einen Lade-Spinner, wenn eine Aktion ausgeführt wird oder der globale Zustand noch lädt
         if (actionUiState.isLoading || authUiState is AuthUiState.Loading) {
             CircularProgressIndicator()
         }
