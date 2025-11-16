@@ -30,20 +30,16 @@ import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
 import org.koin.androidx.compose.koinViewModel
 
+/**
+ * Der zustandsbehaftete (stateful) LoginScreen.
+ * Er ist verantwortlich für das Holen des ViewModels und das Sammeln der Zustände.
+ */
 @Composable
 fun LoginScreen(
     authViewModel: AuthViewModel = koinViewModel(),
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: () -> Unit,
 ) {
     val context = LocalContext.current
-
-    // --- NEU: Zustand für die aktuelle Ansicht (SignIn oder SignUp) ---
-    var currentScreen by remember { mutableStateOf(LoginSubScreen.SignIn) }
-
-    // --- ÄNDERUNG: Die Callbacks für die Unter-Screens definieren ---
-    val onGoToSignUp = { currentScreen = LoginSubScreen.SignUp }
-    val onGoToSignIn = { currentScreen = LoginSubScreen.SignIn }
-
     val authUiState by authViewModel.getAuthUiState().collectAsState(initial = AuthUiState.Loading)
     val actionUiState by authViewModel.actionUiState.collectAsState()
 
@@ -53,38 +49,86 @@ fun LoginScreen(
         onDispose { authViewModel.resetActionState() }
     }
 
-    // --- NEU: LaunchedEffect, der auf den authUiState reagiert ---
+    LoginScreenContent(
+        authUiState = authUiState,
+        actionUiState = actionUiState,
+        onLoginSuccess = onLoginSuccess,
+        onSignInWithEmailAndPassword = authViewModel::signInWithEmailAndPassword,
+        onCreateUserWithEmailAndPassword = authViewModel::createUserWithEmailAndPassword,
+        onSignInWithGoogleClick = {
+            val activity = context as? Activity
+            activity?.let { authViewModel.signInWithGoogle(it) }
+        },
+        onCheckUserStatusAgain = authViewModel::checkUserStatusAgain,
+        onResetActionState = authViewModel::resetActionState,
+    )
+}
+
+/**
+ * Der zustandslose (stateless) LoginScreenContent.
+ * Er enthält nur die UI, nimmt Zustände und Events als Parameter entgegen und ist daher leicht als Vorschau darstellbar.
+ */
+@Composable
+@Suppress("kotlin:S107")
+fun LoginScreenContent(
+    authUiState: AuthUiState,
+    actionUiState: AuthActionUiState,
+    onLoginSuccess: () -> Unit,
+    onSignInWithEmailAndPassword: (String, String) -> Unit,
+    onCreateUserWithEmailAndPassword: (String, String, String) -> Unit,
+    onSignInWithGoogleClick: () -> Unit,
+    onCheckUserStatusAgain: () -> Unit,
+    onResetActionState: () -> Unit,
+) {
+    val context = LocalContext.current
+    var currentScreen by remember { mutableStateOf(LoginSubScreen.SignIn) }
+
+    val onGoToSignUp = { currentScreen = LoginSubScreen.SignUp }
+    val onGoToSignIn = { currentScreen = LoginSubScreen.SignIn }
+
+    // Effekt für erfolgreiche Authentifizierung (Anmeldung)
     LaunchedEffect(authUiState) {
         if (authUiState is AuthUiState.Authenticated) {
             Toast.makeText(context, "Anmeldung erfolgreich!", Toast.LENGTH_SHORT).show()
-            // Hier würdest du typischerweise als Nächstes zum Hauptbildschirm deiner App navigieren.
             onLoginSuccess()
         }
     }
 
-    // Ein Container für unsere UI-Elemente
+    // Effekt für erfolgreiche Registrierung
+    LaunchedEffect(actionUiState.isSuccess) {
+        if (actionUiState.isSuccess) {
+            Toast.makeText(
+                context,
+                "Registrierung erfolgreich! Bitte melde dich an.",
+                Toast.LENGTH_LONG,
+            ).show()
+            onResetActionState() // Zustand zurücksetzen
+            onGoToSignIn()      // Zum Login-Screen wechseln
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         when (currentScreen) {
-            LoginSubScreen.SignIn -> SignInScreen(authViewModel = authViewModel, onGoToSignUp = onGoToSignUp)
-            LoginSubScreen.SignUp -> SignUpScreen(authViewModel = authViewModel, onGoToSignIn = onGoToSignIn)
+            LoginSubScreen.SignIn -> SignInScreen(
+                onSignInClick = onSignInWithEmailAndPassword,
+                onGoToSignUp = onGoToSignUp,
+            )
+
+            LoginSubScreen.SignUp -> SignUpScreen(
+                onSignUpClick = onCreateUserWithEmailAndPassword,
+                onGoToSignIn = onGoToSignIn,
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(onClick = {
-            // Activity holen und Anmeldevorgang starten
-            val activity = context as? Activity
-            if (activity != null) {
-                authViewModel.signInWithGoogle(activity)
-            }
-            // Optional: Zeige eine Fehlermeldung, falls der Context keine Activity ist
-        }) {
+        Button(onClick = onSignInWithGoogleClick) {
             Text(text = "Mit Google anmelden")
         }
 
@@ -93,52 +137,100 @@ fun LoginScreen(
             CircularProgressIndicator()
         }
 
-        // Zeige einen Fehler an, wenn die Login/Registrierungs-Aktion fehlschlägt
         actionUiState.error?.let { error ->
             Text(
                 text = error,
                 color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier.padding(top = 8.dp),
             )
         }
 
-        // Zeige eine spezifische Nachricht an, wenn der Nutzer angemeldet ist, aber noch auf Freigabe wartet.
         if (authUiState is AuthUiState.NeedsApproval) {
             Text(
                 text = "Dein Konto wurde erstellt und wartet auf die Freigabe durch einen Administrator.",
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier.padding(top = 8.dp),
             )
-            // Button, um den Status zu prüfen
             Button(
-                onClick = { authViewModel.checkUserStatusAgain() },
-                modifier = Modifier.padding(top = 8.dp)
+                onClick = onCheckUserStatusAgain,
+                modifier = Modifier.padding(top = 8.dp),
             ) {
                 Text("Status erneut überprüfen")
             }
-        }
-
-        // Der Erfolgsfall wird jetzt durch den globalen `authUiState` abgedeckt.
-        // Wenn `authUiState` zu `Authenticated` wechselt, würdest du normalerweise
-        // zu einem anderen Bildschirm navigieren. Die reine Erfolgsmeldung hier
-        // ist für die weitere Entwicklung nicht mehr nötig.
-        // `actionUiState.isSuccess` kann aber als Trigger für die Navigation dienen.
-
-        if (actionUiState.isSuccess) {
-            // onLoginSuccess()
         }
     }
 }
 
 private enum class LoginSubScreen {
     SignIn,
-    SignUp
+    SignUp,
 }
 
-// Eine Vorschau, damit du das Design in Android Studio sehen kannst
+// --- PREVIEWS ---
+
 @ThemePreviews
 @Composable
-fun LoginScreenPreview() = PreviewKoin {
+fun LoginScreenPreviewUnauthenticatedPreview() = PreviewKoin {
     SpeechPlaningTheme {
-        LoginScreen(onLoginSuccess = {})
+        LoginScreenContent(
+            authUiState = AuthUiState.Unauthenticated,
+            actionUiState = AuthActionUiState(),
+            onLoginSuccess = {},
+            onSignInWithEmailAndPassword = { _, _ -> },
+            onCreateUserWithEmailAndPassword = { _, _, _ -> },
+            onSignInWithGoogleClick = {},
+            onCheckUserStatusAgain = {},
+            onResetActionState = {},
+        )
+    }
+}
+
+@ThemePreviews
+@Composable
+fun LoginScreenPreviewLoadingPreview() = PreviewKoin {
+    SpeechPlaningTheme {
+        LoginScreenContent(
+            authUiState = AuthUiState.Loading,
+            actionUiState = AuthActionUiState(isLoading = true),
+            onLoginSuccess = {},
+            onSignInWithEmailAndPassword = { _, _ -> },
+            onCreateUserWithEmailAndPassword = { _, _, _ -> },
+            onSignInWithGoogleClick = {},
+            onCheckUserStatusAgain = {},
+            onResetActionState = {},
+        )
+    }
+}
+
+@ThemePreviews
+@Composable
+fun LoginScreenPreviewNeedsApprovalPreview() = PreviewKoin {
+    SpeechPlaningTheme {
+        LoginScreenContent(
+            authUiState = AuthUiState.NeedsApproval,
+            actionUiState = AuthActionUiState(),
+            onLoginSuccess = {},
+            onSignInWithEmailAndPassword = { _, _ -> },
+            onCreateUserWithEmailAndPassword = { _, _, _ -> },
+            onSignInWithGoogleClick = {},
+            onCheckUserStatusAgain = {},
+            onResetActionState = {},
+        )
+    }
+}
+
+@ThemePreviews
+@Composable
+fun LoginScreenPreviewErrorPreview() = PreviewKoin {
+    SpeechPlaningTheme {
+        LoginScreenContent(
+            authUiState = AuthUiState.Unauthenticated,
+            actionUiState = AuthActionUiState(error = "E-Mail oder Passwort ist falsch."),
+            onLoginSuccess = {},
+            onSignInWithEmailAndPassword = { _, _ -> },
+            onCreateUserWithEmailAndPassword = { _, _, _ -> },
+            onSignInWithGoogleClick = {},
+            onCheckUserStatusAgain = {},
+            onResetActionState = {},
+        )
     }
 }

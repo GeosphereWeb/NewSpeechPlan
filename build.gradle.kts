@@ -79,6 +79,7 @@ sonarqube {
         property("sonar.androidLint.reportPaths", "**/build/reports/lint-results-*.xml")
 
         property("sonar.gradle.skipCompile", "true")
+        // property("sonar.kotlin.rules.S107.max", "10") // Erlaube bis zu 10 Parameter
     }
 }
 
