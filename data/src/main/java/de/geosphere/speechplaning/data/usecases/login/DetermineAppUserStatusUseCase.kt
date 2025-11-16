@@ -1,6 +1,5 @@
 package de.geosphere.speechplaning.data.usecases.login
 
-import android.util.Log
 import com.google.firebase.auth.FirebaseUser
 import de.geosphere.speechplaning.data.authentication.AuthUiState
 import de.geosphere.speechplaning.data.authentication.UserRepository
@@ -38,7 +37,6 @@ class DetermineAppUserStatusUseCase(
                 AuthUiState.NeedsApproval
             }
         } catch (e: Exception) {
-            Log.e("DetermineAppUserStatusUC", "Error determining app user status", e)
             AuthUiState.Unauthenticated
         }
     }
