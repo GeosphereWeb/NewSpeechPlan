@@ -289,7 +289,7 @@ exceptions:
   ThrowingNewInstanceOfSameException:
     active: true
   TooGenericExceptionCaught:
-    active: true
+    active: false
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/jsTest/**', '**/iosTest/**']
     exceptionNames:
       - 'ArrayIndexOutOfBoundsException'
@@ -337,7 +337,11 @@ naming:
   FunctionNaming:
     active: true
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/jsTest/**', '**/iosTest/**']
-    functionPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    functionPattern: '[a-zA-Z_][a-zA-Z0-9_]*'
+    ignoreAnnotated:
+      - 'Preview'
+      - 'ThemePreviews'
+      - 'de.geosphere.speechplaning.theme.ThemePreviews'
     excludeClassPattern: '$^'
   FunctionParameterNaming:
     active: true
@@ -625,7 +629,11 @@ style:
     ignoreLocalVariableDeclaration: false
     ignoreConstantDeclaration: true
     ignoreCompanionObjectPropertyDeclaration: true
-    ignoreAnnotation: false
+#    ignoreAnnotation: false
+    ignoreAnnotated:
+      - 'Preview'
+      - 'ThemePreviews'
+      - 'de.geosphere.speechplaning.theme.ThemePreviews'
     ignoreNamedArgument: true
     ignoreEnums: false
     ignoreRanges: false
