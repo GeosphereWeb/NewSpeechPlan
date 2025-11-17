@@ -8,4 +8,4 @@
 **/*Component.kt
 **/*Screen.kt
 **/*Composable.kt
-
+**/*AppUserExtensions.kt
