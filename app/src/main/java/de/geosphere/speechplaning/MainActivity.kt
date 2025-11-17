@@ -13,6 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import de.geosphere.speechplaning.core.navigation.Screen
 import de.geosphere.speechplaning.data.authentication.AuthUiState
 import de.geosphere.speechplaning.feature.login.ui.AuthViewModel
 import de.geosphere.speechplaning.feature.login.ui.LoginScreen
@@ -38,7 +39,7 @@ class MainActivity :
 
         WindowCompat.getInsetsController(window, window.decorView).hidestSystemBars()
 
-        dummyDbBuilder()
+        // dummyDbBuilder()
         setContent {
             val authViewModel: AuthViewModel = koinViewModel()
             val authState by authViewModel.getAuthUiState()
@@ -51,26 +52,26 @@ class MainActivity :
             if (authState !is AuthUiState.Loading) {
                 val navController = rememberNavController()
                 val startDestination = when (authState) {
-                    is AuthUiState.Authenticated -> "main"
-                    else -> "login"
+                    is AuthUiState.Authenticated -> Screen.Main
+                    else -> Screen.Login
                 }
 
                 NavHost(navController = navController, startDestination = startDestination) {
-                    composable("login") {
+                    composable<Screen.Login> {
                         LoginScreen(authViewModel = authViewModel, onLoginSuccess = {
-                            navController.navigate("main") {
-                                popUpTo("login") {
+                            navController.navigate(Screen.Main) {
+                                popUpTo(Screen.Login) {
                                     inclusive = true
                                 }
                             }
                         })
                     }
-                    composable("main") {
+                    composable<Screen.Main> {
                         MainScreenComponent(
                             onLogout = {
                                 authViewModel.signOut()
-                                navController.navigate("login") {
-                                    popUpTo("main") {
+                                navController.navigate(Screen.Login) {
+                                    popUpTo(Screen.Main) {
                                         inclusive = true
                                     }
                                 }
