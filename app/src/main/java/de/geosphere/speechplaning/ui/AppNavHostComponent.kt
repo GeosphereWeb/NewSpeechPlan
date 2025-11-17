@@ -10,6 +10,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import de.geosphere.speechplaning.core.navigation.Screen
+import de.geosphere.speechplaning.feature.speeches.ui.SpeechListScreen
 
 @Composable
 fun AppNavHostComponent(
@@ -30,7 +31,7 @@ fun AppNavHostComponent(
             HorizontalDivider()
         }
         composable<Screen.SpeechesRoute> {
-            HorizontalDivider()
+            SpeechListScreen()
         }
     }
 }

@@ -41,6 +41,8 @@ sonar = "6.3.1.5724"
 kotest = "6.0.1"
 ui = "1.9.4"
 
+turbine = "1.2.0"
+
 [libraries]
 
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
@@ -100,6 +102,8 @@ kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref =
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 kotest-property = { module = "io.kotest:kotest-property", version.ref = "kotestProperty" }
 androidx-compose-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
+
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

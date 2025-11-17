@@ -2,6 +2,7 @@ package de.geosphere.speechplaning.data.authentication
 
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
@@ -19,16 +20,20 @@ import io.mockk.mockk
 class UserRepositoryImplTest : BehaviorSpec({
 
     lateinit var firestore: FirebaseFirestore
+    lateinit var firebaseAuth: FirebaseAuth // Neuer Mock
     lateinit var usersCollection: CollectionReference
     lateinit var documentReference: DocumentReference
     lateinit var userRepository: UserRepository
 
     beforeEach {
         firestore = mockk()
+        firebaseAuth = mockk(relaxed = true) // Relaxed, da wir es in getOrCreateUser nicht direkt nutzen
         usersCollection = mockk()
         documentReference = mockk()
         every { firestore.collection("users") } returns usersCollection
-        userRepository = UserRepositoryImpl(firestore)
+
+        // Konstruktor angepasst: firebaseAuth übergeben
+        userRepository = UserRepositoryImpl(firestore, firebaseAuth)
     }
 
     given("getOrCreateUser") {

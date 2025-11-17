@@ -59,7 +59,7 @@ fun ColumnScope.SignInScreen(
 @Composable
 fun SignInScreenPreview() = PreviewKoin {
     SpeechPlaningTheme {
-        Column() {
+        Column {
             SignInScreen(
                 onSignInClick = { _, _ -> },
                 onGoToSignUp = {}

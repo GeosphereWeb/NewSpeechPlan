@@ -1,111 +1,171 @@
 package de.geosphere.speechplaning.data.repository
 
+import app.cash.turbine.test
 import com.google.android.gms.tasks.Task
+import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
-import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.EventListener
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
 import de.geosphere.speechplaning.core.model.Speech
-import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 
 class SpeechRepositoryTest : BehaviorSpec({
 
-    val firestoreMock: FirebaseFirestore = mockk()
-    val collectionReferenceMock: CollectionReference = mockk()
-    val documentReferenceMock: DocumentReference = mockk()
-    val queryMock: Query = mockk()
+    isolationMode = IsolationMode.InstancePerLeaf
 
-    // Tasks Mocks - Using relaxed = true to avoid mocking all Task methods
-    val voidTaskMock: Task<Void> = mockk(relaxed = true)
-    val documentReferenceTaskMock: Task<DocumentReference> = mockk(relaxed = true)
-    val querySnapshotTaskMock: Task<QuerySnapshot> = mockk(relaxed = true)
-    val documentSnapshotTaskMock: Task<DocumentSnapshot> = mockk(relaxed = true)
+    val firestore = mockk<FirebaseFirestore>()
+    val collection = mockk<CollectionReference>()
+    val documentReference = mockk<DocumentReference>()
+    val query = mockk<Query>()
+    val querySnapshot = mockk<QuerySnapshot>()
+    val registration = mockk<ListenerRegistration>(relaxed = true)
 
-    lateinit var speechRepository: SpeechRepository
+    // Dummy Tasks für await() Aufrufe
+    val voidTask: Task<Void> = Tasks.forResult(null)
+    val snapshotTask: Task<QuerySnapshot> = Tasks.forResult(querySnapshot)
 
-    beforeEach {
-        every { firestoreMock.collection(any()) } returns collectionReferenceMock
-        every { collectionReferenceMock.document(any()) } returns documentReferenceMock
-        every { collectionReferenceMock.add(any()) } returns documentReferenceTaskMock
-        every { documentReferenceMock.set(any()) } returns voidTaskMock
-        every { documentReferenceMock.get() } returns documentSnapshotTaskMock
-        every { documentReferenceMock.delete() } returns voidTaskMock
-        every { collectionReferenceMock.get() } returns querySnapshotTaskMock
-        every { collectionReferenceMock.whereEqualTo(any<String>(), any()) } returns queryMock
-        every { queryMock.get() } returns querySnapshotTaskMock
+    // Das Repository unter Test
+    val repository = SpeechRepository(firestore)
 
-        speechRepository = SpeechRepository(firestoreMock)
+    beforeTest {
+        // Basis-Setup: Jedes Mal, wenn "speeches" angefragt wird, geben wir den Mock zurück
+        every { firestore.collection("speeches") } returns collection
     }
 
-    // Helper to easily mock Task results for await()
-    fun <T> mockTaskResult(task: Task<T>, resultData: T?, exception: Exception? = null) {
-        every { task.isComplete } returns true
-        every { task.isCanceled } returns false
-        if (exception != null) {
-            every { task.isSuccessful } returns false
-            every { task.exception } returns exception
-        } else {
-            every { task.isSuccessful } returns true
-            every { task.exception } returns null
-            every { task.result } returns resultData
-        }
-    }
+    Given("getActiveSpeeches") {
+        When("called") {
+            // Mocking der Chain: collection -> whereEqualTo -> get -> await
+            every { collection.whereEqualTo("active", true) } returns query
+            every { query.get() } returns snapshotTask
 
-    given("extractIdFromEntity") {
-        `when`("a speech entity is provided") {
-            then("it should return the id of that entity") {
-                val speech = Speech(id = "test-id", subject = "A Subject")
-                val result = speechRepository.extractIdFromEntity(speech)
-                result shouldBe "test-id"
+            val activeSpeech = Speech(id = "1", number = "1", subject = "Active Subject", active = true)
+            every { querySnapshot.toObjects(Speech::class.java) } returns listOf(activeSpeech)
+
+            val result = repository.getActiveSpeeches()
+
+            Then("it should return only active speeches") {
+                result shouldContain activeSpeech
+                verify { collection.whereEqualTo("active", true) }
             }
         }
     }
 
-    given("getActiveSpeeches") {
-        `when`("query is successful") {
-            then("it should query and return active speeches") {
-                val activeSpeech = Speech(id = "active1", subject = "Active Speech", active = true)
-                val querySnapshotResultMock: QuerySnapshot = mockk()
+    Given("getAllSpeeches") {
+        When("called") {
+            // Mocking: collection -> get -> await
+            every { collection.get() } returns snapshotTask
 
-                mockTaskResult(querySnapshotTaskMock, querySnapshotResultMock)
-                every { querySnapshotResultMock.toObjects(Speech::class.java) } returns listOf(activeSpeech)
+            val speech = Speech(id = "1", number = "1", subject = "Subject")
+            every { querySnapshot.toObjects(Speech::class.java) } returns listOf(speech)
 
-                every { collectionReferenceMock.whereEqualTo("active", true) } returns queryMock
-                every { queryMock.get() } returns querySnapshotTaskMock
+            val result = repository.getAllSpeeches()
 
-                val result = speechRepository.getActiveSpeeches()
-
-                result.size shouldBe 1
-                result[0] shouldBe activeSpeech
-                verify { collectionReferenceMock.whereEqualTo("active", true) }
-                verify { queryMock.get() }
+            Then("it should return all speeches") {
+                result shouldContain speech
+                verify { collection.get() }
             }
         }
+    }
 
-        `when`("firestore fails") {
-            then("it should throw a runtime exception") {
-                val simulatedException = RuntimeException("Simulated Firestore error")
+    Given("saveSpeech") {
+        When("called with a speech") {
+            // Beispiel: Nummer ist 10 -> ID wird zu 10
+            val speech = Speech(id = "", number = "10", subject = "Subject")
 
-                every { collectionReferenceMock.whereEqualTo("active", true) } returns queryMock
-                every { queryMock.get() } returns querySnapshotTaskMock
-                mockTaskResult(querySnapshotTaskMock, null, simulatedException)
+            // Erwartet: document("10") -> set(speech) -> await
+            every { collection.document("10") } returns documentReference
+            every { documentReference.set(any()) } returns voidTask
 
-                val exception = shouldThrow<RuntimeException> {
-                    speechRepository.getActiveSpeeches()
+            repository.saveSpeech(speech)
+
+            Then("it should save to firestore using the speech number as ID") {
+                val slot = slot<Speech>()
+                verify { documentReference.set(capture(slot)) }
+
+                // Prüfen, ob die ID tatsächlich auf die Nummer gesetzt wurde (Logik in saveSpeech)
+                slot.captured.id shouldBe "10"
+                slot.captured.number shouldBe "10"
+            }
+        }
+    }
+
+    Given("deleteSpeech") {
+        When("called with an ID") {
+            val speechId = "123"
+
+            // Erwartet: document("123") -> delete() -> await
+            every { collection.document(speechId) } returns documentReference
+            every { documentReference.delete() } returns voidTask
+
+            repository.deleteSpeech(speechId)
+
+            Then("it should delete the document from firestore") {
+                verify { documentReference.delete() }
+                verify { collection.document(speechId) }
+            }
+        }
+    }
+
+    Given("getAllSpeechesFlow") {
+        When("listening to updates") {
+            val listenerSlot = slot<EventListener<QuerySnapshot>>()
+
+            // Mocking: addSnapshotListener -> gibt Registration zurück
+            every { collection.addSnapshotListener(capture(listenerSlot)) } returns registration
+
+            val speech = Speech(id = "FlowID", number = "99", subject = "Flow Subject")
+            every { querySnapshot.toObjects(Speech::class.java) } returns listOf(speech)
+
+            Then("it should emit updates when firestore notifies") {
+                repository.getAllSpeechesFlow().test {
+                    // 1. Listener wurde registriert (passiert beim collect)
+                    verify { collection.addSnapshotListener(any()) }
+
+                    // 2. Wir simulieren ein Event von Firestore
+                    // snapshot != null, error == null
+                    listenerSlot.captured.onEvent(querySnapshot, null)
+
+                    // 3. Flow sollte die Liste emittieren
+                    val result = awaitItem()
+                    result shouldContain speech
+
+                    cancelAndIgnoreRemainingEvents()
                 }
+            }
+        }
 
-                exception.message shouldContain "Failed to get active speech from speeches"
-                exception.cause shouldBe simulatedException
-                verify { collectionReferenceMock.whereEqualTo("active", true) }
-                verify { queryMock.get() }
+        When("firestore returns an error") {
+            val listenerSlot = slot<EventListener<QuerySnapshot>>()
+            every { collection.addSnapshotListener(capture(listenerSlot)) } returns registration
+
+            Then("it should close the flow with exception") {
+                repository.getAllSpeechesFlow().test {
+                    // FIX: Exception mocken und Standard-Properties definieren
+                    // Dies verhindert "no answer found for getCause()"
+                    val firestoreException = mockk<FirebaseFirestoreException> {
+                        every { message } returns "Firestore Error"
+                        every { cause } returns null
+                    }
+
+                    // Simulieren eines Fehlers (snapshot null, error != null)
+                    listenerSlot.captured.onEvent(null, firestoreException)
+
+                    // Erwartet: Flow bricht mit Fehler ab
+                    val error = awaitError()
+                    error shouldBe firestoreException
+                }
             }
         }
     }
