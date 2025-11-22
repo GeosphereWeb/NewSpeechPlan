@@ -17,6 +17,5 @@ data class AppUser(
     val email: String? = null,
     val displayName: String? = null,
     val approved: Boolean = false,
-    val congregationAdmin: Boolean = false,
-    val userRole: List<UserRole> = emptyList()
+    val role: UserRole = UserRole.SPEAKING_ASSISTANT
 )

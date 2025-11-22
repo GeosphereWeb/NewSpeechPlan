@@ -82,4 +82,5 @@ dependencies {
     testImplementation(libs.kotest.assertions)
     testImplementation(libs.kotest.runner.junit5)
     testImplementation(libs.kotest.property)
+    testImplementation(libs.turbine)
 }
