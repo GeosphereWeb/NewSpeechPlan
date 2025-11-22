@@ -1,15 +1,21 @@
 package de.geosphere.speechplaning.data.usecases.speeches
 
 import de.geosphere.speechplaning.data.repository.SpeechRepository
+import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.result.shouldBeSuccess
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 
 class DeleteSpeechUseCaseTest : BehaviorSpec({
+
+    // FIX: Sorgt dafür, dass für jeden Testzweig eine neue Instanz erstellt wird.
+    // Damit ist das 'repository' Mock für jeden Test frisch und leer.
+    isolationMode = IsolationMode.InstancePerLeaf
 
     val repository = mockk<SpeechRepository>(relaxed = true)
     val useCase = DeleteSpeechUseCase(repository)
@@ -40,7 +46,10 @@ class DeleteSpeechUseCaseTest : BehaviorSpec({
 
             Then("it should return a failure with IllegalArgumentException") {
                 result.shouldBeFailure()
-                result.exceptionOrNull() shouldBe IllegalArgumentException("Speech ID cannot be blank.")
+                // Bessere Prüfung: Typ und Nachricht separat prüfen, statt Objekt-Vergleich
+                val exception = result.exceptionOrNull()
+                exception.shouldBeInstanceOf<IllegalArgumentException>()
+                exception?.message shouldBe "Speech ID cannot be blank."
             }
 
             Then("it should NOT call the repository") {
