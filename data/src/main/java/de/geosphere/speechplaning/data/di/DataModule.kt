@@ -4,6 +4,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import de.geosphere.speechplaning.data.authentication.AuthRepository
 import de.geosphere.speechplaning.data.authentication.AuthRepositoryImpl
+import de.geosphere.speechplaning.data.authentication.SpeechPermissionPolicy
 import de.geosphere.speechplaning.data.authentication.UserRepository
 import de.geosphere.speechplaning.data.authentication.UserRepositoryImpl
 import de.geosphere.speechplaning.data.repository.CongregationEventRepository
@@ -18,6 +19,10 @@ import de.geosphere.speechplaning.data.usecases.login.DetermineAppUserStatusUseC
 import de.geosphere.speechplaning.data.usecases.login.GoogleSignInUseCase
 import de.geosphere.speechplaning.data.usecases.login.SignInWithEmailAndPasswordUseCase
 import de.geosphere.speechplaning.data.usecases.login.SignOutUseCase
+import de.geosphere.speechplaning.data.usecases.speeches.DeleteSpeechUseCase
+import de.geosphere.speechplaning.data.usecases.speeches.GetSpeechesUseCase
+import de.geosphere.speechplaning.data.usecases.speeches.SaveSpeechUseCase
+import de.geosphere.speechplaning.data.usecases.user.ObserveCurrentUserUseCase
 import de.geosphere.speechplaning.data.util.GoogleIdTokenParser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -42,6 +47,8 @@ val dataModule = module {
     singleOf(::SpeakerRepository)
     singleOf(::SpeechRepository)
 
+    singleOf(::SpeechPermissionPolicy)
+
     singleOf(::UserRepositoryImpl) { bind<UserRepository>() }
     singleOf(::AuthRepositoryImpl) { bind<AuthRepository>() }
 
@@ -51,6 +58,12 @@ val dataModule = module {
     factoryOf(::DetermineAppUserStatusUseCase) // <== Diese Definition ist jetzt korrekt
     factoryOf(::GoogleSignInUseCase)
     factoryOf(::GoogleIdTokenParser) // Füge diese Zeile hinzu
+
+    factoryOf(::GetSpeechesUseCase)
+    factoryOf(::DeleteSpeechUseCase)
+    factoryOf(::SaveSpeechUseCase)
     // factoryOf(::SignInWithEmailAndPasswordUseCase)
     factoryOf(::SignOutUseCase)
+
+    factoryOf(::ObserveCurrentUserUseCase)
 }

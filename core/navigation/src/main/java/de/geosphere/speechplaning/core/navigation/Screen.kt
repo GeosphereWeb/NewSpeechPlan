@@ -5,6 +5,12 @@ import kotlinx.serialization.Serializable
 @Serializable
 sealed class Screen {
     @Serializable
+    data object Login : Screen()
+
+    @Serializable
+    data object Main : Screen()
+
+    @Serializable
     data object SpeakerRoute : Screen()
 
     @Serializable

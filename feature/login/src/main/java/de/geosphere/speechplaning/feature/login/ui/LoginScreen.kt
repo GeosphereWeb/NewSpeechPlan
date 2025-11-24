@@ -66,7 +66,8 @@ fun LoginScreen(
 
 /**
  * Der zustandslose (stateless) LoginScreenContent.
- * Er enthält nur die UI, nimmt Zustände und Events als Parameter entgegen und ist daher leicht als Vorschau darstellbar.
+ * Er enthält nur die UI, nimmt Zustände und Events als Parameter entgegen und ist daher leicht als Vorschau
+ * darstellbar.
  */
 @Composable
 @Suppress("kotlin:S107")
@@ -102,8 +103,8 @@ fun LoginScreenContent(
                 "Registrierung erfolgreich! Bitte melde dich an.",
                 Toast.LENGTH_LONG,
             ).show()
-            onResetActionState() // Zustand zurücksetzen
-            onGoToSignIn()      // Zum Login-Screen wechseln
+            onResetActionState()
+            onGoToSignIn()
         }
     }
 
