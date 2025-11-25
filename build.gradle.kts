@@ -38,10 +38,10 @@ plugins {
     alias(libs.plugins.detekt)
     alias(libs.plugins.sonarcube) apply true
     alias(libs.plugins.android.library) apply false // Überprüfe die neueste Version
-    id("jacoco") // Add Jacoco to the root project
+    alias(libs.plugins.kover) // Add Kover plugin
 }
 
-apply(from = "${rootDir}/gradle/jacoco-report-aggregation.gradle.kts")
+// apply(from = "${rootDir}/gradle/jacoco-report-aggregation.gradle.kts") // Remove Jacoco script
 
 buildscript {
     repositories {
@@ -71,9 +71,13 @@ sonarqube {
             property("sonar.cpd.exclusions", duplicationExclusionPatterns)
         }
 
+        // property(
+        //     "sonar.coverage.jacoco.xmlReportPaths",
+        //     "$buildDir/reports/kover/report.xml" // Point Sonar to Kover report
+        // )
         property(
             "sonar.coverage.jacoco.xmlReportPaths",
-            "$buildDir/reports/jacoco/jacocoAggregatedReport/jacocoAggregatedReport.xml"
+            "**/build/reports/kover/report.xml,**/build/reports/kover/reportDebug.xml"
         )
 
         property("sonar.androidLint.reportPaths", "**/build/reports/lint-results-*.xml")
@@ -85,6 +89,12 @@ sonarqube {
 
 subprojects {
     apply(plugin = "io.gitlab.arturbosch.detekt")
+    // Kover wird automatisch vom Plugin verwaltet, wenn es auf root-Ebene angewendet wird.
+    // Es sammelt Daten aus allen Modulen.
+
+    // --- FIX: Kover für ALLE Module aktivieren, nicht nur für Android ---
+    apply(plugin = "org.jetbrains.kotlinx.kover")
+
     detekt {
         toolVersion = libsws.findVersion("detekt").get().toString()
         config.setFrom(file("$rootDir/config/detekt/detekt.yml"))
@@ -92,25 +102,7 @@ subprojects {
         buildUponDefaultConfig = true
     }
 
-    plugins.withId("com.android.application") {
-        configure<com.android.build.api.dsl.ApplicationExtension> {
-            buildTypes {
-                getByName("debug") {
-                    enableUnitTestCoverage = true
-                }
-            }
-        }
-    }
-
-    plugins.withId("com.android.library") {
-        configure<com.android.build.api.dsl.LibraryExtension> {
-            buildTypes {
-                getByName("debug") {
-                    enableUnitTestCoverage = true
-                }
-            }
-        }
-    }
+    // Jacoco Konfiguration entfernen wir hier
 
     plugins.withId("org.jetbrains.kotlin.android") {
         apply(plugin = "org.jlleitschuh.gradle.ktlint")
@@ -151,4 +143,43 @@ tasks.withType<Detekt>().configureEach {
         sarif.required.set(true)
         md.required.set(true)
     }
+}
+
+// Kover Configuration
+kover {
+    // useJacoco() // EMPFEHLUNG: Auskommentieren. Die Standard Kover-Engine ist für Kotlin meist präziser.
+
+    reports {
+        // Filterung (optional, hast du schon auskommentiert)
+        filters {
+            excludes {
+                classes("*.BuildConfig", "*_Factory", "*_MembersInjector", "*Hilt*")
+            }
+        }
+
+        // 3. Verifikation (Test schlägt fehl, wenn < 50%)
+        verify {
+            rule {
+                minBound(50)
+            }
+        }
+    }
+}
+
+dependencies {
+    kover(project(":app"))
+    kover(project(":core:model"))
+    kover(project(":core:navigation"))
+    kover(project(":core:ui"))
+    kover(project(":data"))
+    kover(project(":feature:congregation"))
+    kover(project(":feature:home"))
+    kover(project(":feature:login"))
+    kover(project(":feature:planning"))
+    kover(project(":feature:profile"))
+    kover(project(":feature:settings"))
+    kover(project(":feature:speaker"))
+    kover(project(":feature:speeches"))
+    kover(project(":mocking"))
+    kover(project(":theme"))
 }
