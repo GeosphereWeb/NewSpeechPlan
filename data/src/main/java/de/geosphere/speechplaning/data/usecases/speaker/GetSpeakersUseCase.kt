@@ -1,9 +1,9 @@
 package de.geosphere.speechplaning.data.usecases.speaker
 
 import de.geosphere.speechplaning.core.model.Speaker
-import de.geosphere.speechplaning.data.repository.SpeakerRepository
+import de.geosphere.speechplaning.data.repository.SpeakerRepositoryImpl
 
-class GetSpeakersUseCase(private val repository: SpeakerRepository) {
+class GetSpeakersUseCase(private val repository: SpeakerRepositoryImpl) {
     suspend operator fun invoke(districtId: String, congregationId: String): Result<List<Speaker>> {
         return try {
             val speakers = repository.getSpeakersForCongregation(districtId, congregationId)

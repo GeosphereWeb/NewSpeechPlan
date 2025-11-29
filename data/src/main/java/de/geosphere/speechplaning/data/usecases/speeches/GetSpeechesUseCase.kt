@@ -1,12 +1,12 @@
 package de.geosphere.speechplaning.data.usecases.speeches
 
 import de.geosphere.speechplaning.core.model.Speech
-import de.geosphere.speechplaning.data.repository.SpeechRepository
+import de.geosphere.speechplaning.data.repository.SpeechRepositoryImpl
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 
-class GetSpeechesUseCase(private val repository: SpeechRepository) {
+class GetSpeechesUseCase(private val repository: SpeechRepositoryImpl) {
     // WICHTIG: Kein 'suspend' mehr, da ein Flow direkt zurückgegeben wird
     operator fun invoke(): Flow<Result<List<Speech>>> {
         return repository.getAllSpeechesFlow()

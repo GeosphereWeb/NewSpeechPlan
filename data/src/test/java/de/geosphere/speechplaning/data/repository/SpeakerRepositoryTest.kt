@@ -1,7 +1,7 @@
 package de.geosphere.speechplaning.data.repository
 
 import de.geosphere.speechplaning.core.model.Speaker
-import de.geosphere.speechplaning.data.repository.services.FirestoreService
+import de.geosphere.speechplaning.data.repository.services.IFirestoreService
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
@@ -12,8 +12,8 @@ import io.mockk.mockk
 
 internal class SpeakerRepositoryTest : BehaviorSpec({
 
-    lateinit var firestoreService: FirestoreService
-    lateinit var speakerRepository: SpeakerRepository
+    lateinit var firestoreService: IFirestoreService
+    lateinit var speakerRepository: SpeakerRepositoryImpl
 
     val districtId = "testDistrictId"
     val congregationId = "testCongregationId"
@@ -30,7 +30,7 @@ internal class SpeakerRepositoryTest : BehaviorSpec({
 
     beforeEach {
         firestoreService = mockk(relaxed = true)
-        speakerRepository = SpeakerRepository(firestoreService)
+        speakerRepository = SpeakerRepositoryImpl(firestoreService)
     }
 
     given("SaveSpeaker") {

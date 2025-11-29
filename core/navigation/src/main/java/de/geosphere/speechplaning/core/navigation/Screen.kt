@@ -18,4 +18,7 @@ sealed class Screen {
 
     @Serializable
     data object SpeechesRoute : Screen()
+
+    @Serializable
+    data object DistrictsRoute : Screen()
 }

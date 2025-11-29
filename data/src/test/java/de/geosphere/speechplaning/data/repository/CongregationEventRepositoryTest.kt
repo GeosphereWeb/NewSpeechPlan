@@ -2,7 +2,7 @@ package de.geosphere.speechplaning.data.repository
 
 import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.core.model.data.Event
-import de.geosphere.speechplaning.data.repository.services.FirestoreService
+import de.geosphere.speechplaning.data.repository.services.IFirestoreService
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.nulls.shouldBeNull
@@ -15,8 +15,8 @@ import java.time.LocalDate
 
 internal class CongregationEventRepositoryTest : BehaviorSpec({
 
-    lateinit var firestoreService: FirestoreService
-    lateinit var repository: CongregationEventRepository
+    lateinit var firestoreService: IFirestoreService
+    lateinit var repository: CongregationEventRepositoryImpl
 
     val testDistrictId = "testDistrictId001"
     val testCongregationId = "testCongId002"
@@ -34,7 +34,7 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
 
     beforeEach {
         firestoreService = mockk(relaxed = true)
-        repository = CongregationEventRepository(firestoreService)
+        repository = CongregationEventRepositoryImpl(firestoreService)
 
         testEvent = CongregationEvent(
             id = testEventId,
