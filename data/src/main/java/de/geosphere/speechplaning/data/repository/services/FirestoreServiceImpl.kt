@@ -16,7 +16,7 @@ import kotlinx.coroutines.tasks.await
 const val TAG = "FirestoreServiceImpl"
 
 @Suppress("TooManyFunctions", "TooGenericExceptionCaught", "TooGenericExceptionThrown")
-class FirestoreServiceImpl(private val firestore: FirebaseFirestore) : FirestoreService {
+class IFirestoreServiceImpl(private val firestore: FirebaseFirestore) : IFirestoreService {
 
     override suspend fun <T> getDocument(collection: String, documentId: String, type: Class<T>): T? {
         return try {
@@ -75,11 +75,12 @@ class FirestoreServiceImpl(private val firestore: FirebaseFirestore) : Firestore
             Speaker::class.java -> {
                 Log.w(
                     TAG,
-                    "Attempted to get Speaker collection as a top-level collection. " +
-                        "Speakers are a subcollection of Congregations."
+                    "Speakers are a subcollection of Congregations." +
+                        "Attempted to get Speaker collection as a top-level collection. "
                 )
                 firestore.collection("speakers_dummy_do_not_use")
             }
+
             Speech::class.java -> firestore.collection("speeches")
             else -> {
                 Log.e(TAG, "Unknown class type for collection: ${clazz.simpleName}")
@@ -88,13 +89,13 @@ class FirestoreServiceImpl(private val firestore: FirebaseFirestore) : Firestore
         }
     }
 
-    override fun getSpeakersSubcollection(congregationId: String): CollectionReference {
-        require(congregationId.isNotBlank()) {
-            "Congregation ID cannot be blank to access speakers subcollection."
-        }
-        return firestore.collection("congregations").document(congregationId)
-            .collection("speakers")
-    }
+    // override fun getSpeakersSubcollection(congregationId: String): CollectionReference {
+    //     require(congregationId.isNotBlank()) {
+    //         "Congregation ID cannot be blank to access speakers subcollection."
+    //     }
+    //     return firestore.collection("congregations").document(congregationId)
+    //         .collection("speakers")
+    // }
 
     override suspend fun <T : Any> saveDocumentWithId(
         collectionPath: String,
@@ -123,17 +124,13 @@ class FirestoreServiceImpl(private val firestore: FirebaseFirestore) : Firestore
         data: T
     ): String {
         return try {
-            val documentReference = firestore.collection(parentCollection)
-                .document(parentId)
-                .collection(subcollection)
-                .add(data)
-                .await()
+            val documentReference =
+                firestore.collection(parentCollection).document(parentId).collection(subcollection).add(data).await()
             documentReference.id
         } catch (e: Exception) {
             Log.e(TAG, "Error adding document to subcollection $subcollection in $parentCollection/$parentId", e)
             throw RuntimeException(
-                "Error adding document to subcollection $subcollection in " +
-                    "$parentCollection/$parentId",
+                "Error adding document to subcollection $subcollection in " + "$parentCollection/$parentId",
                 e
             )
         }
@@ -147,12 +144,9 @@ class FirestoreServiceImpl(private val firestore: FirebaseFirestore) : Firestore
         data: T
     ) {
         try {
-            firestore.collection(parentCollection)
-                .document(parentId)
-                .collection(subcollection)
+            firestore.collection(parentCollection).document(parentId).collection(subcollection)
                 .document(documentId)
-                .set(data)
-                .await()
+                .set(data).await()
         } catch (e: Exception) {
             Log.e(
                 TAG,
@@ -175,14 +169,16 @@ class FirestoreServiceImpl(private val firestore: FirebaseFirestore) : Firestore
         objectClass: Class<T>
     ): List<T> {
         return try {
-            val querySnapshot = firestore.collection(parentCollection)
-                .document(parentId)
-                .collection(subcollection)
-                .get()
-                .await()
+            val querySnapshot =
+                firestore.collection(parentCollection).document(parentId)
+                    .collection(subcollection).get().await()
             querySnapshot.toObjects(objectClass)
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting documents from subcollection $subcollection in $parentCollection/$parentId", e)
+            Log.e(
+                TAG,
+                "Error getting documents from subcollection $subcollection in $parentCollection/$parentId",
+                e
+            )
             throw RuntimeException(
                 "Error getting documents from subcollection $subcollection in " +
                     "$parentCollection/$parentId",
@@ -200,12 +196,9 @@ class FirestoreServiceImpl(private val firestore: FirebaseFirestore) : Firestore
     ): T? {
         return try {
             if (parentDocumentId.isBlank() || documentId.isBlank()) return null
-            val documentSnapshot = firestore.collection(parentCollectionPath)
-                .document(parentDocumentId)
-                .collection(subcollectionName)
-                .document(documentId)
-                .get()
-                .await()
+            val documentSnapshot =
+                firestore.collection(parentCollectionPath).document(parentDocumentId).collection(subcollectionName)
+                    .document(documentId).get().await()
             documentSnapshot.toObject(objectClass)
         } catch (e: FirebaseFirestoreException) {
             Log.e(
@@ -241,12 +234,9 @@ class FirestoreServiceImpl(private val firestore: FirebaseFirestore) : Firestore
         documentId: String
     ) {
         try {
-            firestore.collection(parentCollection)
-                .document(parentId)
-                .collection(subcollection)
-                .document(documentId)
-                .delete()
-                .await()
+            firestore.collection(parentCollection).document(parentId)
+                .collection(subcollection).document(documentId)
+                .delete().await()
         } catch (e: Exception) {
             Log.e(
                 TAG,
@@ -271,9 +261,8 @@ class FirestoreServiceImpl(private val firestore: FirebaseFirestore) : Firestore
         document: T
     ): Boolean {
         return try {
-            firestore.collection(parentCollectionPath).document(parentId)
-                .collection(subCollectionName).document(documentId)
-                .set(document).await()
+            firestore.collection(parentCollectionPath).document(parentId).collection(subCollectionName)
+                .document(documentId).set(document).await()
             true
         } catch (e: CancellationException) {
             throw e
@@ -303,8 +292,8 @@ class FirestoreServiceImpl(private val firestore: FirebaseFirestore) : Firestore
         document: T
     ): String { // Gibt die ID des neuen Dokuments zurück
         return try {
-            val docRef = firestore.collection(parentCollectionPath).document(parentId)
-                .collection(subCollectionName).add(document).await()
+            val docRef = firestore.collection(parentCollectionPath).document(parentId).collection(subCollectionName)
+                .add(document).await()
             docRef.id
         } catch (e: CancellationException) {
             throw e
@@ -319,5 +308,17 @@ class FirestoreServiceImpl(private val firestore: FirebaseFirestore) : Firestore
             )
             ""
         }
+    }
+
+    override fun getSubcollection(
+        parentCollection: String,
+        parentId: String,
+        subcollection: String
+    ): CollectionReference {
+        require(parentId.isNotBlank()) {
+            "Parent document ID cannot be blank when accessing a subcollection."
+        }
+        // Baut den Pfad dynamisch zusammen: parentCollection/{parentId}/subcollection
+        return firestore.collection(parentCollection).document(parentId).collection(subcollection)
     }
 }

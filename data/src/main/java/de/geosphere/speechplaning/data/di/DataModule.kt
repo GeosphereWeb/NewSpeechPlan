@@ -7,13 +7,16 @@ import de.geosphere.speechplaning.data.authentication.AuthRepositoryImpl
 import de.geosphere.speechplaning.data.authentication.SpeechPermissionPolicy
 import de.geosphere.speechplaning.data.authentication.UserRepository
 import de.geosphere.speechplaning.data.authentication.UserRepositoryImpl
-import de.geosphere.speechplaning.data.repository.CongregationEventRepository
-import de.geosphere.speechplaning.data.repository.CongregationRepository
-import de.geosphere.speechplaning.data.repository.DistrictRepository
-import de.geosphere.speechplaning.data.repository.SpeakerRepository
-import de.geosphere.speechplaning.data.repository.SpeechRepository
-import de.geosphere.speechplaning.data.repository.services.FirestoreService
-import de.geosphere.speechplaning.data.repository.services.FirestoreServiceImpl
+import de.geosphere.speechplaning.data.repository.CongregationEventRepositoryImpl
+import de.geosphere.speechplaning.data.repository.CongregationRepositoryImpl
+import de.geosphere.speechplaning.data.repository.DistrictRepositoryImpl
+import de.geosphere.speechplaning.data.repository.SpeakerRepositoryImpl
+import de.geosphere.speechplaning.data.repository.SpeechRepositoryImpl
+import de.geosphere.speechplaning.data.repository.services.IFirestoreService
+import de.geosphere.speechplaning.data.repository.services.IFirestoreServiceImpl
+import de.geosphere.speechplaning.data.usecases.districts.DeleteDistrictUseCase
+import de.geosphere.speechplaning.data.usecases.districts.GetDistrictUseCase
+import de.geosphere.speechplaning.data.usecases.districts.SaveDistrictUseCase
 import de.geosphere.speechplaning.data.usecases.login.CreateUserWithEmailAndPasswordUseCase
 import de.geosphere.speechplaning.data.usecases.login.DetermineAppUserStatusUseCase
 import de.geosphere.speechplaning.data.usecases.login.GoogleSignInUseCase
@@ -35,17 +38,17 @@ val dataModule = module {
     // Database
     single<FirebaseFirestore> { FirebaseFirestore.getInstance() }
     single<FirebaseAuth> { FirebaseAuth.getInstance() }
-    singleOf(::FirestoreServiceImpl) { bind<FirestoreService>() }
+    singleOf(::IFirestoreServiceImpl) { bind<IFirestoreService>() }
 
     // Coroutine Scope für Repositories
     single { CoroutineScope(Dispatchers.IO) } // oder SupervisorJob() + Dispatchers.Default
 
     // Repositories
-    singleOf(::CongregationRepository)
-    singleOf(::CongregationEventRepository)
-    singleOf(::DistrictRepository)
-    singleOf(::SpeakerRepository)
-    singleOf(::SpeechRepository)
+    singleOf(::CongregationRepositoryImpl)
+    singleOf(::CongregationEventRepositoryImpl)
+    singleOf(::DistrictRepositoryImpl)
+    singleOf(::SpeakerRepositoryImpl)
+    singleOf(::SpeechRepositoryImpl)
 
     singleOf(::SpeechPermissionPolicy)
 
@@ -62,6 +65,11 @@ val dataModule = module {
     factoryOf(::GetSpeechesUseCase)
     factoryOf(::DeleteSpeechUseCase)
     factoryOf(::SaveSpeechUseCase)
+
+    factoryOf(::GetDistrictUseCase)
+    factoryOf(::DeleteDistrictUseCase)
+    factoryOf(::SaveDistrictUseCase)
+
     // factoryOf(::SignInWithEmailAndPasswordUseCase)
     factoryOf(::SignOutUseCase)
 
