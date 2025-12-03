@@ -23,7 +23,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build, generate JaCoCo and Lint reports
-        run: ./gradlew app:lintDebug jacocoAggregatedReport --stacktrace
+        run: ./gradlew app:lintDebug koverXmlReport  --stacktrace
 
       - name: SonarQube Analysis 
         env:
