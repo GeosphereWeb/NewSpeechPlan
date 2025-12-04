@@ -1,9 +1,14 @@
 package de.geosphere.speechplaning.feature.districts.ui
 
 import app.cash.turbine.test
+import de.geosphere.speechplaning.core.model.AppUser
 import de.geosphere.speechplaning.core.model.District
-import de.geosphere.speechplaning.data.repository.DistrictRepositoryImpl
+import de.geosphere.speechplaning.core.model.data.UserRole
+import de.geosphere.speechplaning.data.authentication.permission.SpeechPermissionPolicy
+import de.geosphere.speechplaning.data.usecases.districts.DeleteDistrictUseCase
+import de.geosphere.speechplaning.data.usecases.districts.GetDistrictUseCase
 import de.geosphere.speechplaning.data.usecases.districts.SaveDistrictUseCase
+import de.geosphere.speechplaning.data.usecases.user.ObserveCurrentUserUseCase
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.booleans.shouldBeFalse
@@ -17,6 +22,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -31,18 +37,25 @@ class DistrictsViewModelTest : BehaviorSpec({
     val testDispatcher = UnconfinedTestDispatcher()
 
     // Mocks
-    lateinit var districtRepository: DistrictRepositoryImpl
+    lateinit var getDistrictUseCase: GetDistrictUseCase
+    lateinit var deleteDistrictUseCase: DeleteDistrictUseCase
     lateinit var saveDistrictUseCase: SaveDistrictUseCase
-    lateinit var viewModel: DistrictsViewModel
+    lateinit var observeCurrentUserUseCase: ObserveCurrentUserUseCase
+    lateinit var permissionPolicy: SpeechPermissionPolicy
+    lateinit var cut: DistrictsViewModel
 
     // Test Data
     val dummyDistrict = District(id = "1", name = "Test District")
+    val dummyUser = AppUser(uid = "uid1", email = "test@test.com", displayName = "Tester", role = UserRole.ADMIN)
 
     beforeTest {
         Dispatchers.setMain(testDispatcher)
 
-        districtRepository = mockk()
+        getDistrictUseCase = mockk()
+        deleteDistrictUseCase = mockk()
         saveDistrictUseCase = mockk()
+        observeCurrentUserUseCase = mockk()
+        permissionPolicy = mockk()
 
         every { districtRepository.getAllDistrictFlow() } returns MutableStateFlow(
             listOf(
@@ -50,7 +63,7 @@ class DistrictsViewModelTest : BehaviorSpec({
             )
         )
 
-        viewModel = DistrictsViewModel(
+        cut = DistrictsViewModel(
             districtRepository,
             saveDistrictUseCase
         )
@@ -63,8 +76,8 @@ class DistrictsViewModelTest : BehaviorSpec({
     Given("Initialized ViewModel") {
         Then("UiState should be Success with correct initial data") {
             runTest {
-                viewModel.uiState.test {
-                    val successState = awaitItem().shouldBeInstanceOf<DistrictsUiState.Success>()
+                cut.uiState.test {
+                    val successState = awaitItem().shouldBeInstanceOf<DistrictUiState.Success>()
                     successState.districts.size shouldBe 1
                     successState.districts.first() shouldBe dummyDistrict
                     successState.canEditDistrict.shouldBeTrue()
@@ -78,11 +91,11 @@ class DistrictsViewModelTest : BehaviorSpec({
         When("selectDistrict is called") {
             Then("selectedDistrict in state should be set") {
                 runTest {
-                    viewModel.uiState.test {
+                    cut.uiState.test {
                         awaitItem() // Initial Success
-                        viewModel.selectDistrict(dummyDistrict)
+                        cut.selectDistrict(dummyDistrict)
                         val updatedState =
-                            awaitItem().shouldBeInstanceOf<DistrictsUiState.Success>()
+                            awaitItem().shouldBeInstanceOf<DistrictUiState.Success>()
                         updatedState.selectedDistrict shouldBe dummyDistrict
                     }
                 }
@@ -92,11 +105,11 @@ class DistrictsViewModelTest : BehaviorSpec({
         When("clearSelection is called") {
             Then("selectedDistrict should be null") {
                 runTest {
-                    viewModel.selectDistrict(dummyDistrict)
-                    viewModel.uiState.test {
+                    cut.selectDistrict(dummyDistrict)
+                    cut.uiState.test {
                         awaitItem() // State with selection
-                        viewModel.clearSelection()
-                        val finalState = awaitItem().shouldBeInstanceOf<DistrictsUiState.Success>()
+                        cut.clearSelection()
+                        val finalState = awaitItem().shouldBeInstanceOf<DistrictUiState.Success>()
                         finalState.selectedDistrict.shouldBeNull()
                     }
                 }
@@ -110,18 +123,19 @@ class DistrictsViewModelTest : BehaviorSpec({
                 runTest {
                     val newDistrict = District(id = "", name = "New")
                     coEvery { saveDistrictUseCase(newDistrict) } coAnswers {
+                        delay(10)
                         Result.success(Unit)
                     }
 
-                    viewModel.uiState.test {
+                    cut.uiState.test {
                         awaitItem() // Initial Success
-                        viewModel.saveDistrict(newDistrict)
+                        cut.saveDistrict(newDistrict)
 
                         val inProgressState =
-                            awaitItem().shouldBeInstanceOf<DistrictsUiState.Success>()
+                            awaitItem().shouldBeInstanceOf<DistrictUiState.Success>()
                         inProgressState.isActionInProgress.shouldBeTrue()
 
-                        val finalState = awaitItem().shouldBeInstanceOf<DistrictsUiState.Success>()
+                        val finalState = awaitItem().shouldBeInstanceOf<DistrictUiState.Success>()
                         finalState.isActionInProgress.shouldBeFalse()
                         finalState.selectedDistrict.shouldBeNull()
                     }
@@ -137,15 +151,15 @@ class DistrictsViewModelTest : BehaviorSpec({
                     val errorMessage = "Database error"
                     coEvery { saveDistrictUseCase(newDistrict) } throws Exception(errorMessage)
 
-                    viewModel.uiState.test {
+                    cut.uiState.test {
                         awaitItem() // Initial Success
-                        viewModel.saveDistrict(newDistrict)
+                        cut.saveDistrict(newDistrict)
 
                         val inProgressState =
-                            awaitItem().shouldBeInstanceOf<DistrictsUiState.Success>()
+                            awaitItem().shouldBeInstanceOf<DistrictUiState.Success>()
                         inProgressState.isActionInProgress.shouldBeTrue()
 
-                        val errorState = awaitItem().shouldBeInstanceOf<DistrictsUiState.Success>()
+                        val errorState = awaitItem().shouldBeInstanceOf<DistrictUiState.Success>()
                         errorState.isActionInProgress.shouldBeFalse()
                         errorState.actionError shouldBe errorMessage
                     }
@@ -160,17 +174,20 @@ class DistrictsViewModelTest : BehaviorSpec({
             Then("it should call repository's delete and clear selection") {
                 runTest {
                     val idToDelete = dummyDistrict.id
-                    coEvery { districtRepository.deleteDistrict(idToDelete) } returns Unit
+                    coEvery { districtRepository.deleteDistrict(idToDelete) } coAnswers{
+                        delay(10)
+                        Result.success(Unit)
+                    }
 
-                    viewModel.uiState.test {
+                    cut.uiState.test {
                         awaitItem() // Initial Success
-                        viewModel.deleteDistrict(idToDelete)
+                        cut.deleteDistrict(idToDelete)
 
                         val inProgressState =
-                            awaitItem().shouldBeInstanceOf<DistrictsUiState.Success>()
+                            awaitItem().shouldBeInstanceOf<DistrictUiState.Success>()
                         inProgressState.isActionInProgress.shouldBeTrue()
 
-                        val finalState = awaitItem().shouldBeInstanceOf<DistrictsUiState.Success>()
+                        val finalState = awaitItem().shouldBeInstanceOf<DistrictUiState.Success>()
                         finalState.isActionInProgress.shouldBeFalse()
                         finalState.selectedDistrict.shouldBeNull()
                     }
@@ -188,15 +205,15 @@ class DistrictsViewModelTest : BehaviorSpec({
                         errorMessage
                     )
 
-                    viewModel.uiState.test {
+                    cut.uiState.test {
                         awaitItem() // Initial Success
-                        viewModel.deleteDistrict(idToDelete)
+                        cut.deleteDistrict(idToDelete)
 
                         val inProgressState =
-                            awaitItem().shouldBeInstanceOf<DistrictsUiState.Success>()
+                            awaitItem().shouldBeInstanceOf<DistrictUiState.Success>()
                         inProgressState.isActionInProgress.shouldBeTrue()
 
-                        val errorState = awaitItem().shouldBeInstanceOf<DistrictsUiState.Success>()
+                        val errorState = awaitItem().shouldBeInstanceOf<DistrictUiState.Success>()
                         errorState.isActionInProgress.shouldBeFalse()
                         errorState.actionError shouldBe errorMessage
                     }

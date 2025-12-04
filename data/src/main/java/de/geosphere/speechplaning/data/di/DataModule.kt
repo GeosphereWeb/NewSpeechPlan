@@ -4,7 +4,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import de.geosphere.speechplaning.data.authentication.AuthRepository
 import de.geosphere.speechplaning.data.authentication.AuthRepositoryImpl
-import de.geosphere.speechplaning.data.authentication.SpeechPermissionPolicy
+import de.geosphere.speechplaning.data.authentication.permission.SpeechPermissionPolicy
 import de.geosphere.speechplaning.data.authentication.UserRepository
 import de.geosphere.speechplaning.data.authentication.UserRepositoryImpl
 import de.geosphere.speechplaning.data.repository.CongregationEventRepositoryImpl

@@ -3,7 +3,7 @@ package de.geosphere.speechplaning.feature.speeches.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.geosphere.speechplaning.core.model.Speech
-import de.geosphere.speechplaning.data.authentication.SpeechPermissionPolicy
+import de.geosphere.speechplaning.data.authentication.permission.SpeechPermissionPolicy
 import de.geosphere.speechplaning.data.usecases.speeches.DeleteSpeechUseCase
 import de.geosphere.speechplaning.data.usecases.speeches.GetSpeechesUseCase
 import de.geosphere.speechplaning.data.usecases.speeches.SaveSpeechUseCase

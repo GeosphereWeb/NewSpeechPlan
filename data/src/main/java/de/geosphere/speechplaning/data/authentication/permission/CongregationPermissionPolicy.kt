@@ -1,4 +1,4 @@
-package de.geosphere.speechplaning.data.authentication
+package de.geosphere.speechplaning.data.authentication.permission
 
 import de.geosphere.speechplaning.core.model.AppUser
 import de.geosphere.speechplaning.core.model.Congregation

@@ -3,7 +3,7 @@ package de.geosphere.speechplaning.feature.congregation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.geosphere.speechplaning.core.model.Congregation
-import de.geosphere.speechplaning.data.authentication.CongregationPermissionPolicy
+import de.geosphere.speechplaning.data.authentication.permission.CongregationPermissionPolicy
 import de.geosphere.speechplaning.data.usecases.congregation.DeleteCongregationUseCase
 import de.geosphere.speechplaning.data.usecases.congregation.GetCongregationUseCase
 import de.geosphere.speechplaning.data.usecases.congregation.SaveCongregationUseCase

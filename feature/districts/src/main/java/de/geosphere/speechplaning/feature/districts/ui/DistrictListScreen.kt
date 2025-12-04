@@ -47,12 +47,12 @@ fun DistrictListScreen(viewModel: DistrictsViewModel = koinViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     when (val state = uiState) {
-        is DistrictsUiState.Loading -> {
+        is DistrictUiState.Loading -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         }
-        is DistrictsUiState.Error -> {
+        is DistrictUiState.Error -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(imageVector = Icons.Default.Warning, contentDescription = "Error")
@@ -61,7 +61,7 @@ fun DistrictListScreen(viewModel: DistrictsViewModel = koinViewModel()) {
                 }
             }
         }
-        is DistrictsUiState.Success -> {
+        is DistrictUiState.Success -> {
             Scaffold(
                 floatingActionButton = {
                     if (state.canEditDistrict) {

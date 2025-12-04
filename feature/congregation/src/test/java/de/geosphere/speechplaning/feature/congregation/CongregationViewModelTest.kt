@@ -4,7 +4,7 @@ import app.cash.turbine.test
 import de.geosphere.speechplaning.core.model.AppUser
 import de.geosphere.speechplaning.core.model.Congregation
 import de.geosphere.speechplaning.core.model.data.UserRole
-import de.geosphere.speechplaning.data.authentication.CongregationPermissionPolicy
+import de.geosphere.speechplaning.data.authentication.permission.CongregationPermissionPolicy
 import de.geosphere.speechplaning.data.usecases.congregation.DeleteCongregationUseCase
 import de.geosphere.speechplaning.data.usecases.congregation.GetCongregationUseCase
 import de.geosphere.speechplaning.data.usecases.congregation.SaveCongregationUseCase
@@ -184,6 +184,7 @@ class CongregationViewModelTest : BehaviorSpec({
         When("Save congregation FAILS") {
             Then("it should set error message in state and reset progress") {
                 runTest {
+                    val newCongregation = Congregation(id = "", name = "New")
                     val errorMessage = "Datenbankfehler"
                     every { permissionPolicy.canCreate(dummyUser) } returns true
 
@@ -196,10 +197,12 @@ class CongregationViewModelTest : BehaviorSpec({
                         awaitItem() // Initial
                         viewModel.saveCongregation(newCongregation)
 
-                        val inProgressState = awaitItem().shouldBeInstanceOf<CongregationUiState.SuccessUIState>()
+                        val inProgressState =
+                            awaitItem().shouldBeInstanceOf<CongregationUiState.SuccessUIState>()
                         inProgressState.isActionInProgress.shouldBeTrue()
 
-                        val errorState = awaitItem().shouldBeInstanceOf<CongregationUiState.SuccessUIState>()
+                        val errorState =
+                            awaitItem().shouldBeInstanceOf<CongregationUiState.SuccessUIState>()
                         errorState.isActionInProgress.shouldBeFalse()
                         errorState.actionError shouldBe errorMessage
                     }
