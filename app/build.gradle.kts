@@ -77,6 +77,8 @@ dependencies {
     implementation(project(":feature:login"))
     implementation(project(":feature:planning"))
     implementation(project(":feature:speeches"))
+    implementation(project(":feature:districts"))
+    implementation(project(":feature:congregation"))
     implementation(project(":core:ui"))
     implementation(project(":core:model"))
     implementation(project(":core:navigation"))

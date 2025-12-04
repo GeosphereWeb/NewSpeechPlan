@@ -21,7 +21,7 @@ class DistrictRepositoryTest : BehaviorSpec({
     lateinit var queryMock: Query
     lateinit var querySnapshotTaskMock: Task<QuerySnapshot>
 
-    lateinit var districtRepository: DistrictRepository
+    lateinit var districtRepository: DistrictRepositoryImpl
 
     beforeEach {
         firestoreMock = mockk()
@@ -33,7 +33,7 @@ class DistrictRepositoryTest : BehaviorSpec({
         every { collectionReferenceMock.whereEqualTo(any<String>(), any()) } returns queryMock
         every { queryMock.get() } returns querySnapshotTaskMock
 
-        districtRepository = DistrictRepository(firestoreMock)
+        districtRepository = DistrictRepositoryImpl(firestoreMock)
     }
 
     // Helper to easily mock Task results for await()

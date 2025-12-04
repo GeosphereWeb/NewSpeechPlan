@@ -37,7 +37,7 @@ class SpeechRepositoryTest : BehaviorSpec({
     val snapshotTask: Task<QuerySnapshot> = Tasks.forResult(querySnapshot)
 
     // Das Repository unter Test
-    val repository = SpeechRepository(firestore)
+    val repository = SpeechRepositoryImpl(firestore)
 
     beforeTest {
         // Basis-Setup: Jedes Mal, wenn "speeches" angefragt wird, geben wir den Mock zurück
