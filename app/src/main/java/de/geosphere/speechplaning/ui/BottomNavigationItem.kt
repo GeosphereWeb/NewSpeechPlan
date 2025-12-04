@@ -36,12 +36,19 @@ data class BottomNavigationItem(
             ),
             BottomNavigationItem(
                 label = "Speeches",
-
                 selectedIcon = Icons.AutoMirrored.Filled.ListAlt,
                 unselectedIcon = Icons.AutoMirrored.Outlined.ListAlt,
                 hasNews = false,
                 route = Screen.SpeechesRoute,
                 badgeCount = 45
+            ),
+            BottomNavigationItem(
+                label = "Districts",
+                selectedIcon = Icons.AutoMirrored.Filled.ListAlt,
+                unselectedIcon = Icons.AutoMirrored.Outlined.ListAlt,
+                hasNews = false,
+                route = Screen.DistrictsRoute,
+                badgeCount = 1
             ),
         )
     }

@@ -1,9 +1,9 @@
 package de.geosphere.speechplaning.data.usecases.planning
 
 import de.geosphere.speechplaning.core.model.CongregationEvent
-import de.geosphere.speechplaning.data.repository.CongregationEventRepository
+import de.geosphere.speechplaning.data.repository.CongregationEventRepositoryImpl
 
-class SaveCongregationEventUseCase(private val repository: CongregationEventRepository) {
+class SaveCongregationEventUseCase(private val repository: CongregationEventRepositoryImpl) {
     suspend operator fun invoke(districtId: String, congregationId: String, event: CongregationEvent): Result<String> {
         return try {
             val eventId = repository.saveEvent(districtId, congregationId, event)

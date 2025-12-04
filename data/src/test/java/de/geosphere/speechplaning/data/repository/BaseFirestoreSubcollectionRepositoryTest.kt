@@ -1,7 +1,7 @@
 package de.geosphere.speechplaning.data.repository
 
-import de.geosphere.speechplaning.data.repository.base.BaseFirestoreSubcollectionRepository
-import de.geosphere.speechplaning.data.repository.services.FirestoreService
+import de.geosphere.speechplaning.data.repository.base.FirestoreSubcollectionRepositoryImpl
+import de.geosphere.speechplaning.data.repository.services.IFirestoreService
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.booleans.shouldBeFalse
@@ -17,10 +17,10 @@ import io.mockk.spyk
 
 internal data class TestData(val id: String, val data: String)
 
-internal class TestRepository(
-    firestoreService: FirestoreService,
+internal class TestRepositoryIImpl(
+    firestoreService: IFirestoreService,
     subcollectionName: String
-) : BaseFirestoreSubcollectionRepository<TestData>(
+) : FirestoreSubcollectionRepositoryImpl<TestData>(
     firestoreService,
     subcollectionName,
     TestData::class.java
@@ -35,9 +35,9 @@ internal class TestRepository(
 
 internal class BaseFirestoreSubcollectionRepositoryTest : BehaviorSpec({
 
-    lateinit var firestoreService: FirestoreService
-    lateinit var testRepository: TestRepository
-    lateinit var spyTestRepository: TestRepository // Für das Testen von open funcs
+    lateinit var firestoreService: IFirestoreService
+    lateinit var testRepository: TestRepositoryIImpl
+    lateinit var spyTestRepository: TestRepositoryIImpl // Für das Testen von open funcs
 
     val testSubcollectionName = "testSubcollection"
     val parentId1 = "parent1"
@@ -46,7 +46,7 @@ internal class BaseFirestoreSubcollectionRepositoryTest : BehaviorSpec({
     beforeEach {
         firestoreService = mockk(relaxed = true)
         // Verwende die TestRepository-Implementierung, die die öffentliche isEntityIdBlank hat
-        testRepository = TestRepository(firestoreService, testSubcollectionName)
+        testRepository = TestRepositoryIImpl(firestoreService, testSubcollectionName)
         spyTestRepository = spyk(testRepository) // Spioniere die Instanz, die die öffentliche Methode hat
     }
 

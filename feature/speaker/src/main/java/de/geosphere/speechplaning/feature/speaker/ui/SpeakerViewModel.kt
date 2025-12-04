@@ -9,6 +9,7 @@ import de.geosphere.speechplaning.data.usecases.speaker.SaveSpeakerUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class SpeakerUiState(
@@ -34,13 +35,21 @@ class SpeakerViewModel(
 
     fun loadSpeakers() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            // 1. Ladezustand setzen, alte Daten behalten, Fehler resetten
+            _uiState.update { it.copy(isLoading = true, error = null) }
+
             getSpeakersUseCase(districtId, congregationId)
-                .onSuccess {
-                    _uiState.value = _uiState.value.copy(isLoading = false, speakers = it)
+                .onSuccess { speakersList ->
+                    // 2. Erfolg: Neue Daten setzen, Laden beenden
+                    _uiState.update {
+                        it.copy(isLoading = false, speakers = speakersList)
+                    }
                 }
-                .onFailure {
-                    _uiState.value = _uiState.value.copy(isLoading = false, error = it.message)
+                .onFailure { exception ->
+                    // 3. Fehler: Fehlermeldung setzen, Laden beenden, (alte Daten bleiben evtl. sichtbar)
+                    _uiState.update {
+                        it.copy(isLoading = false, error = exception.message)
+                    }
                 }
         }
     }

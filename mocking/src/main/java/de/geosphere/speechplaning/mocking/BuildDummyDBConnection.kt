@@ -2,8 +2,8 @@ package de.geosphere.speechplaning.mocking
 
 import android.util.Log
 import androidx.lifecycle.LifecycleCoroutineScope
-import de.geosphere.speechplaning.data.repository.DistrictRepository
-import de.geosphere.speechplaning.data.repository.SpeechRepository
+import de.geosphere.speechplaning.data.repository.DistrictRepositoryImpl
+import de.geosphere.speechplaning.data.repository.SpeechRepositoryImpl
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -20,8 +20,8 @@ class BuildDummyDBConnection(
     val lifecycleScope: LifecycleCoroutineScope
 ) : KoinComponent {
     // Abhängigkeiten direkt hier injizieren
-    private val districtRepository: DistrictRepository by inject()
-    private val speechRepository: SpeechRepository by inject()
+    private val districtRepository: DistrictRepositoryImpl by inject()
+    private val speechRepository: SpeechRepositoryImpl by inject()
 
     operator fun invoke() {
         val test = MockedListOfDummyClasses.districtMockupList.toList()
