@@ -1,4 +1,4 @@
-package de.geosphere.speechplaning.feature.districts
+package de.geosphere.speechplaning.feature.districts.ui
 
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -47,12 +47,12 @@ fun DistrictListScreen(viewModel: DistrictsViewModel = koinViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     when (val state = uiState) {
-        is DistrictsUiState.Loading -> {
+        is DistrictUiState.LoadingUIState -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         }
-        is DistrictsUiState.Error -> {
+        is DistrictUiState.ErrorUIState -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(imageVector = Icons.Default.Warning, contentDescription = "Error")
@@ -61,7 +61,7 @@ fun DistrictListScreen(viewModel: DistrictsViewModel = koinViewModel()) {
                 }
             }
         }
-        is DistrictsUiState.Success -> {
+        is DistrictUiState.SuccessUIState -> {
             Scaffold(
                 floatingActionButton = {
                     if (state.canEditDistrict) {

@@ -4,7 +4,7 @@ import app.cash.turbine.test
 import de.geosphere.speechplaning.core.model.AppUser
 import de.geosphere.speechplaning.core.model.Speech
 import de.geosphere.speechplaning.core.model.data.UserRole
-import de.geosphere.speechplaning.data.authentication.SpeechPermissionPolicy
+import de.geosphere.speechplaning.data.authentication.permission.SpeechPermissionPolicy
 import de.geosphere.speechplaning.data.usecases.speeches.DeleteSpeechUseCase
 import de.geosphere.speechplaning.data.usecases.speeches.GetSpeechesUseCase
 import de.geosphere.speechplaning.data.usecases.speeches.SaveSpeechUseCase
@@ -42,7 +42,7 @@ class SpeechViewModelTest : BehaviorSpec({
     lateinit var deleteSpeechUseCase: DeleteSpeechUseCase
     lateinit var observeCurrentUserUseCase: ObserveCurrentUserUseCase
     lateinit var permissionPolicy: SpeechPermissionPolicy
-    lateinit var viewModel: SpeechViewModel
+    lateinit var cut: SpeechViewModel
 
     // Test Data
     val dummySpeech = Speech(id = "1", number = "10", subject = "Test Speech")
@@ -65,7 +65,7 @@ class SpeechViewModelTest : BehaviorSpec({
         every { permissionPolicy.canEdit(any(), any()) } returns true
         every { permissionPolicy.canDelete(any(), any()) } returns true
 
-        viewModel = SpeechViewModel(
+        cut = SpeechViewModel(
             getSpeechesUseCase,
             saveSpeechUseCase,
             deleteSpeechUseCase,
@@ -81,7 +81,7 @@ class SpeechViewModelTest : BehaviorSpec({
     Given("Initialized ViewModel") {
         Then("UiState should be Success with correct initial data") {
             runTest {
-                viewModel.uiState.test {
+                cut.uiState.test {
                     val successState = awaitItem().shouldBeInstanceOf<SpeechUiState.SuccessUIState>()
                     successState.speeches.size shouldBe 1
                     successState.speeches.first() shouldBe dummySpeech
@@ -124,9 +124,9 @@ class SpeechViewModelTest : BehaviorSpec({
         When("selectSpeech is called") {
             Then("selectedSpeech in state should be set") {
                 runTest {
-                    viewModel.uiState.test {
+                    cut.uiState.test {
                         awaitItem() // Initial Success
-                        viewModel.selectSpeech(dummySpeech)
+                        cut.selectSpeech(dummySpeech)
                         val updatedState = awaitItem().shouldBeInstanceOf<SpeechUiState.SuccessUIState>()
                         updatedState.selectedSpeech shouldBe dummySpeech
                     }
@@ -137,10 +137,10 @@ class SpeechViewModelTest : BehaviorSpec({
         When("clearSelection is called") {
             Then("selectedSpeech should be null") {
                 runTest {
-                    viewModel.selectSpeech(dummySpeech)
-                    viewModel.uiState.test {
+                    cut.selectSpeech(dummySpeech)
+                    cut.uiState.test {
                         awaitItem() // State with selection
-                        viewModel.clearSelection()
+                        cut.clearSelection()
                         val finalState = awaitItem().shouldBeInstanceOf<SpeechUiState.SuccessUIState>()
                         finalState.selectedSpeech.shouldBeNull()
                     }
@@ -162,9 +162,9 @@ class SpeechViewModelTest : BehaviorSpec({
                         Result.success(Unit)
                     }
 
-                    viewModel.uiState.test {
+                    cut.uiState.test {
                         awaitItem() // Initial Success
-                        viewModel.saveSpeech(newSpeech)
+                        cut.saveSpeech(newSpeech)
 
                         val inProgressState = awaitItem().shouldBeInstanceOf<SpeechUiState.SuccessUIState>()
                         inProgressState.isActionInProgress.shouldBeTrue()
@@ -189,9 +189,9 @@ class SpeechViewModelTest : BehaviorSpec({
                         Result.success(Unit)
                     }
 
-                    viewModel.uiState.test {
+                    cut.uiState.test {
                         awaitItem() // Initial Success
-                        viewModel.saveSpeech(existingSpeech)
+                        cut.saveSpeech(existingSpeech)
 
                         val inProgressState = awaitItem().shouldBeInstanceOf<SpeechUiState.SuccessUIState>()
                         inProgressState.isActionInProgress.shouldBeTrue()
@@ -217,9 +217,9 @@ class SpeechViewModelTest : BehaviorSpec({
                         Result.failure(Exception(errorMessage))
                     }
 
-                    viewModel.uiState.test {
+                    cut.uiState.test {
                         awaitItem() // Initial Success
-                        viewModel.saveSpeech(newSpeech)
+                        cut.saveSpeech(newSpeech)
 
                         // 1. Loading wird angezeigt
                         val inProgressState = awaitItem().shouldBeInstanceOf<SpeechUiState.SuccessUIState>()
@@ -242,9 +242,9 @@ class SpeechViewModelTest : BehaviorSpec({
                     // Mock: ObserveCurrentUserUseCase liefert null
                     every { observeCurrentUserUseCase() } returns MutableStateFlow(null)
 
-                    viewModel.uiState.test {
+                    cut.uiState.test {
                         awaitItem() // Initial Success
-                        viewModel.saveSpeech(newSpeech)
+                        cut.saveSpeech(newSpeech)
 
                         val errorState = awaitItem().shouldBeInstanceOf<SpeechUiState.SuccessUIState>()
                         errorState.actionError shouldBe "Keine Berechtigung!"
@@ -260,9 +260,9 @@ class SpeechViewModelTest : BehaviorSpec({
                     val newSpeech = Speech(id = "", number = "20", subject = "New")
                     every { permissionPolicy.canCreate(dummyUser) } returns false
 
-                    viewModel.uiState.test {
+                    cut.uiState.test {
                         awaitItem() // Initial Success
-                        viewModel.saveSpeech(newSpeech)
+                        cut.saveSpeech(newSpeech)
 
                         val errorState = awaitItem().shouldBeInstanceOf<SpeechUiState.SuccessUIState>()
                         errorState.actionError shouldBe "Keine Berechtigung!"
@@ -278,9 +278,9 @@ class SpeechViewModelTest : BehaviorSpec({
                     val existingSpeech = Speech(id = "existing_123", number = "20", subject = "Update")
                     every { permissionPolicy.canEdit(dummyUser, existingSpeech) } returns false
 
-                    viewModel.uiState.test {
+                    cut.uiState.test {
                         awaitItem() // Initial Success
-                        viewModel.saveSpeech(existingSpeech)
+                        cut.saveSpeech(existingSpeech)
 
                         val errorState = awaitItem().shouldBeInstanceOf<SpeechUiState.SuccessUIState>()
                         errorState.actionError shouldBe "Keine Berechtigung!"
@@ -301,9 +301,9 @@ class SpeechViewModelTest : BehaviorSpec({
                         Result.success(Unit)
                     }
 
-                    viewModel.uiState.test {
+                    cut.uiState.test {
                         awaitItem() // Initial Success
-                        viewModel.deleteSpeech(idToDelete)
+                        cut.deleteSpeech(idToDelete)
 
                         val inProgressState = awaitItem().shouldBeInstanceOf<SpeechUiState.SuccessUIState>()
                         inProgressState.isActionInProgress.shouldBeTrue()
@@ -330,16 +330,18 @@ class SpeechViewModelTest : BehaviorSpec({
                         Result.failure(Exception(errorMessage))
                     }
 
-                    viewModel.uiState.test {
+                    cut.uiState.test {
                         awaitItem() // Initial Success
-                        viewModel.deleteSpeech(idToDelete)
+                        cut.deleteSpeech(idToDelete)
 
                         // 1. Loading
-                        val inProgressState = awaitItem().shouldBeInstanceOf<SpeechUiState.SuccessUIState>()
+                        val inProgressState =
+                            awaitItem().shouldBeInstanceOf<SpeechUiState.SuccessUIState>()
                         inProgressState.isActionInProgress.shouldBeTrue()
 
                         // 2. Fehler
-                        val errorState = awaitItem().shouldBeInstanceOf<SpeechUiState.SuccessUIState>()
+                        val errorState =
+                            awaitItem().shouldBeInstanceOf<SpeechUiState.SuccessUIState>()
                         errorState.isActionInProgress.shouldBeFalse()
                         errorState.actionError shouldBe errorMessage
                     }
