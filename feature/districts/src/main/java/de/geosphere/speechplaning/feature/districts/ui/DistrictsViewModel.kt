@@ -1,4 +1,4 @@
-package de.geosphere.speechplaning.feature.districts
+package de.geosphere.speechplaning.feature.districts.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

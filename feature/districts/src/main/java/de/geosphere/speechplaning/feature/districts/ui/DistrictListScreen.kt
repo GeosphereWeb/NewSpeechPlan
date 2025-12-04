@@ -1,4 +1,4 @@
-package de.geosphere.speechplaning.feature.districts
+package de.geosphere.speechplaning.feature.districts.ui
 
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
