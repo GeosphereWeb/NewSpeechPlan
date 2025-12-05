@@ -1,11 +1,11 @@
-package de.geosphere.speechplaning.data.authentication
+package de.geosphere.speechplaning.data.authentication.permission
 
 import de.geosphere.speechplaning.core.model.AppUser
-import de.geosphere.speechplaning.core.model.Speech
+import de.geosphere.speechplaning.core.model.District
 import de.geosphere.speechplaning.core.model.data.UserRole
 
 @Suppress("ReturnCount")
-class SpeechPermissionPolicy {
+class DistrictPermissionPolicy {
 
     // Darf der User überhaupt neue Reden anlegen?
     fun canCreate(user: AppUser): Boolean {
@@ -14,7 +14,7 @@ class SpeechPermissionPolicy {
 
     // Darf der User diese spezifische Rede bearbeiten?
     @Suppress("UnusedParameter")
-    fun canEdit(user: AppUser, speech: Speech): Boolean {
+    fun canEdit(user: AppUser, district: District): Boolean {
         if (user.role == UserRole.ADMIN) return true
         if (user.role == UserRole.SPEAKING_PLANER) return true
 
@@ -26,7 +26,7 @@ class SpeechPermissionPolicy {
 
     // Darf der User diese Rede löschen? (Vielleicht strenger als Edit?)
     @Suppress("UnusedParameter")
-    fun canDelete(user: AppUser, speech: Speech): Boolean {
+    fun canDelete(user: AppUser, district: District): Boolean {
         // Nur Admins dürfen löschen
         if (user.role == UserRole.ADMIN) return true
 

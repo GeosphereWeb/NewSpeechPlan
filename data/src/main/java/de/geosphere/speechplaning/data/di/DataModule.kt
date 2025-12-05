@@ -4,9 +4,10 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import de.geosphere.speechplaning.data.authentication.AuthRepository
 import de.geosphere.speechplaning.data.authentication.AuthRepositoryImpl
-import de.geosphere.speechplaning.data.authentication.SpeechPermissionPolicy
 import de.geosphere.speechplaning.data.authentication.UserRepository
 import de.geosphere.speechplaning.data.authentication.UserRepositoryImpl
+import de.geosphere.speechplaning.data.authentication.permission.DistrictPermissionPolicy
+import de.geosphere.speechplaning.data.authentication.permission.SpeechPermissionPolicy
 import de.geosphere.speechplaning.data.repository.CongregationEventRepositoryImpl
 import de.geosphere.speechplaning.data.repository.CongregationRepositoryImpl
 import de.geosphere.speechplaning.data.repository.DistrictRepositoryImpl
@@ -51,6 +52,7 @@ val dataModule = module {
     singleOf(::SpeechRepositoryImpl)
 
     singleOf(::SpeechPermissionPolicy)
+    singleOf(::DistrictPermissionPolicy) // <--- NEU HINZUGEFÜGT
 
     singleOf(::UserRepositoryImpl) { bind<UserRepository>() }
     singleOf(::AuthRepositoryImpl) { bind<AuthRepository>() }
@@ -58,9 +60,9 @@ val dataModule = module {
     factoryOf(::SignInWithEmailAndPasswordUseCase)
 
     factoryOf(::CreateUserWithEmailAndPasswordUseCase)
-    factoryOf(::DetermineAppUserStatusUseCase) // <== Diese Definition ist jetzt korrekt
+    factoryOf(::DetermineAppUserStatusUseCase)
     factoryOf(::GoogleSignInUseCase)
-    factoryOf(::GoogleIdTokenParser) // Füge diese Zeile hinzu
+    factoryOf(::GoogleIdTokenParser)
 
     factoryOf(::GetSpeechesUseCase)
     factoryOf(::DeleteSpeechUseCase)
