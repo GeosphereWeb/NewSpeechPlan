@@ -12,8 +12,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 sealed interface DistrictUiState {
@@ -29,10 +29,10 @@ sealed interface DistrictUiState {
 
         // --- HIER KOMMEN DIE NEUEN FELDER HIN ---
         // Statt nur 'canEdit', splitten wir das auf:
-        val canCreateSpeech: Boolean = false, // Darf neue anlegen
-        val canEditSpeech: Boolean = false, // Darf existierende ändern
-        val canDeleteSpeech: Boolean = false // Darf löschen (nur Admin)
-    ): DistrictUiState
+        val canCreateDistrict: Boolean = false, // Darf neue anlegen
+        val canEditDistrict: Boolean = false, // Darf existierende ändern
+        val canDeleteDistrict: Boolean = false // Darf löschen (nur Admin)
+    ) : DistrictUiState
 }
 
 class DistrictsViewModel(
@@ -40,17 +40,17 @@ class DistrictsViewModel(
     private val saveDistrictUseCase: SaveDistrictUseCase,
     private val deleteDistrictUseCase: DeleteDistrictUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
-    private val permissionPolicy: DistrictPermissionPolicy,
-    // private val districtRepository: DistrictRepositoryImpl,
+    private val permissionPolicy: DistrictPermissionPolicy
 ) : ViewModel() {
 
     private val _viewState = MutableStateFlow(DistrictViewState())
 
     val uiState: StateFlow<DistrictUiState> = combine(
-        getDistrictUseCase(),
-        observeCurrentUserUseCase,
+        getDistrictUseCase(), // Ruft den Flow im UseCase auf
+        observeCurrentUserUseCase(),
         _viewState
     ) { speechesResult, appUser, viewState ->
+
         val speechList = speechesResult.getOrElse { emptyList() }
 
         // / 1. BERECHTIGUNGEN PRÜFEN MIT POLICY
@@ -76,9 +76,9 @@ class DistrictsViewModel(
             isActionInProgress = viewState.isActionInProgress,
             actionError = viewState.actionError,
             // Zuweisung der berechneten Werte an den State
-            canCreateSpeech = canCreate,
-            canEditSpeech = canEdit,
-            canDeleteSpeech = canDelete
+            canCreateDistrict = canCreate,
+            canEditDistrict = canEdit,
+            canDeleteDistrict = canDelete
         )
     }.stateIn(
         scope = viewModelScope,
@@ -86,80 +86,94 @@ class DistrictsViewModel(
         initialValue = DistrictUiState.LoadingUIState
     )
 
-    // init {
-    //     loadDistricts()
-    // }
-
-    // private fun loadDistricts() {
-    //     viewModelScope.launch {
-    //         _uiState.value = DistrictsUiState.Loading
-    //         getDistrictUseCase()
-    //             .catch { exception ->
-    //                 _uiState.value = DistrictsUiState.Error(exception.message ?: "An unknown error occurred")
-    //             }
-    //             .collect { districts ->
-    //                 _uiState.value = DistrictsUiState.Success(districts = districts)
-    //             }
-    //     }
-    // }
-
     fun selectDistrict(district: District) {
-        (_uiState.value as? DistrictUiState.Success)?.let { currentState ->
-            _uiState.value = currentState.copy(selectedDistrict = district)
-        }
+        _viewState.value = _viewState.value.copy(selectedDistrict = district)
     }
 
     fun clearSelection() {
-        (_uiState.value as? DistrictUiState.Success)?.let { currentState ->
-            _uiState.value = currentState.copy(selectedDistrict = null)
-        }
+        _viewState.value = _viewState.value.copy(selectedDistrict = null)
     }
 
     fun saveDistrict(district: District) {
         viewModelScope.launch {
-            updateSuccessState { it.copy(isActionInProgress = true, actionError = null) }
-            try {
-                saveDistrictUseCase(district)
-                updateSuccessState { it.copy(isActionInProgress = false, selectedDistrict = null) }
-                // No need to reload, Firestore will push updates. If not using Firestore, call loadDistricts().
-            } catch (e: Exception) {
-                updateSuccessState {
-                    it.copy(
-                        isActionInProgress = false,
-                        actionError = e.message ?: "Failed to save district"
-                    )
+            val currentUser = observeCurrentUserUseCase().firstOrNull()
+
+            val isNew = district.id.isBlank()
+
+            val hasPermission = if (currentUser != null) {
+                if (isNew) {
+                    permissionPolicy.canCreate(currentUser)
+                } else {
+                    permissionPolicy.canEdit(currentUser, district)
                 }
+            } else {
+                false
             }
+
+            if (!hasPermission) {
+                _viewState.value = _viewState.value.copy(actionError = "Keine Berechtigung!")
+                return@launch
+            }
+
+            _viewState.value = _viewState.value.copy(isActionInProgress = true, actionError = null)
+            saveDistrictUseCase(district)
+                .onSuccess {
+                    _viewState.value = _viewState.value.copy(isActionInProgress = false, selectedDistrict = null)
+                }
+                .onFailure { error ->
+                    _viewState.value =
+                        _viewState.value.copy(isActionInProgress = false, actionError = error.localizedMessage)
+                }
         }
     }
 
     fun deleteDistrict(districtId: String) {
         viewModelScope.launch {
-            updateSuccessState { it.copy(isActionInProgress = true, actionError = null) }
-            try {
-                // Assuming a deleteDistrict function exists in the repository
-                deleteDistrictUseCase(districtId)
-                updateSuccessState { it.copy(isActionInProgress = false, selectedDistrict = null) }
-            } catch (e: Exception) {
-                updateSuccessState {
-                    it.copy(
+            // 1. Aktuellen User laden
+            val currentUser = observeCurrentUserUseCase().firstOrNull()
+
+            // 2. Die zu löschende Rede aus dem aktuellen UI-State holen
+            // Da wir reaktiv sind, haben wir die Liste meistens schon im Speicher.
+            // Wir suchen die Rede in der aktuellen Liste.
+            val districtToDelete = (uiState.value as? DistrictUiState.SuccessUIState)
+                ?.districts
+                ?.find { it.id == districtId }
+
+            // Falls die Rede im State nicht gefunden wurde (z.B. durch Race Condition),
+            // brechen wir sicherheitshalber ab oder laden sie notfalls nach.
+            if (districtToDelete == null) {
+                _viewState.value = _viewState.value.copy(actionError = "District nicht gefunden.")
+                return@launch
+            }
+
+            // 3. Strenge Prüfung mit der Policy und dem ECHTEN Speech-Objekt
+            val hasPermission = currentUser != null && permissionPolicy.canDelete(currentUser, districtToDelete)
+
+            if (!hasPermission) {
+                _viewState.value = _viewState.value.copy(actionError = "Keine Berechtigung zum Löschen dieser Rede!")
+                return@launch
+            }
+
+            // 4. Loading setzen
+            _viewState.value = _viewState.value.copy(isActionInProgress = true, actionError = null)
+
+            // 5. Löschen ausführen
+            deleteDistrictUseCase(districtId)
+                .onSuccess {
+                    _viewState.value = _viewState.value.copy(
                         isActionInProgress = false,
-                        actionError = e.message ?: "Failed to delete district"
+                        selectedDistrict = null
                     )
                 }
-            }
+                .onFailure { error ->
+                    _viewState.value = _viewState.value.copy(
+                        isActionInProgress = false,
+                        actionError = error.localizedMessage ?: "Fehler beim Löschen"
+                    )
+                }
         }
     }
 
-    private fun updateSuccessState(update: (DistrictUiState.Success) -> DistrictUiState.Success) {
-        _uiState.update { currentState ->
-            if (currentState is DistrictUiState.Success) {
-                update(currentState)
-            } else {
-                currentState
-            }
-        }
-    }
 }
 
 /**
