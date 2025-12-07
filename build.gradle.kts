@@ -41,8 +41,6 @@ plugins {
     alias(libs.plugins.kover) // Add Kover plugin
 }
 
-// apply(from = "${rootDir}/gradle/jacoco-report-aggregation.gradle.kts") // Remove Jacoco script
-
 buildscript {
     repositories {
         google()
