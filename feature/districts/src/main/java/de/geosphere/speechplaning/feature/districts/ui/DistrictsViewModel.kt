@@ -1,12 +1,12 @@
-package de.geosphere.speechplaning.feature.speeches.ui
+package de.geosphere.speechplaning.feature.districts.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import de.geosphere.speechplaning.core.model.Speech
-import de.geosphere.speechplaning.data.authentication.permission.SpeechPermissionPolicy
-import de.geosphere.speechplaning.data.usecases.speeches.DeleteSpeechUseCase
-import de.geosphere.speechplaning.data.usecases.speeches.GetSpeechesUseCase
-import de.geosphere.speechplaning.data.usecases.speeches.SaveSpeechUseCase
+import de.geosphere.speechplaning.core.model.District
+import de.geosphere.speechplaning.data.authentication.permission.DistrictPermissionPolicy
+import de.geosphere.speechplaning.data.usecases.districts.DeleteDistrictUseCase
+import de.geosphere.speechplaning.data.usecases.districts.GetDistrictUseCase
+import de.geosphere.speechplaning.data.usecases.districts.SaveDistrictUseCase
 import de.geosphere.speechplaning.data.usecases.user.ObserveCurrentUserUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,50 +16,37 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-sealed interface SpeechUiState {
-    // Zustand 1: Initiales Laden der Liste
-    data object LoadingUIState : SpeechUiState
+sealed interface DistrictUiState {
+    data object LoadingUIState : DistrictUiState
 
     // Zustand 2: Fehler beim Laden
-    data class ErrorUIState(val message: String) : SpeechUiState
-
-    // Zustand 3: Daten erfolgreich geladen
-    // Hier packen wir alles rein, was wir sehen, wenn die Liste da ist.
-    // 'isActionInProgress' nutzen wir, um z.B. beim Speichern einen Ladebalken
-    // ÜBER der Liste anzuzeigen, ohne die Liste verschwinden zu lassen.
+    data class ErrorUIState(val message: String) : DistrictUiState
     data class SuccessUIState(
-        val speeches: List<Speech> = emptyList(),
-        val selectedSpeech: Speech? = null,
+        val districts: List<District> = emptyList(),
+        val selectedDistrict: District? = null,
         val isActionInProgress: Boolean = false,
         val actionError: String? = null,
 
         // --- HIER KOMMEN DIE NEUEN FELDER HIN ---
         // Statt nur 'canEdit', splitten wir das auf:
-        val canCreateSpeech: Boolean = false, // Darf neue anlegen
-        val canEditSpeech: Boolean = false, // Darf existierende ändern
-        val canDeleteSpeech: Boolean = false // Darf löschen (nur Admin)
-    ) : SpeechUiState
+        val canCreateDistrict: Boolean = false, // Darf neue anlegen
+        val canEditDistrict: Boolean = false, // Darf existierende ändern
+        val canDeleteDistrict: Boolean = false // Darf löschen (nur Admin)
+    ) : DistrictUiState
 }
 
-class SpeechViewModel(
-    private val getSpeechesUseCase: GetSpeechesUseCase,
-    private val saveSpeechUseCase: SaveSpeechUseCase,
-    private val deleteSpeechUseCase: DeleteSpeechUseCase,
+class DistrictsViewModel(
+    private val getDistrictUseCase: GetDistrictUseCase,
+    private val saveDistrictUseCase: SaveDistrictUseCase,
+    private val deleteDistrictUseCase: DeleteDistrictUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
-    private val permissionPolicy: SpeechPermissionPolicy // <-- NEU: Injiziert
+    private val permissionPolicy: DistrictPermissionPolicy
 ) : ViewModel() {
 
-    // Lokaler State für UI-Dinge, die nicht in der DB stehen (Dialoge, Ladeanzeigen bei Aktionen)
-    private val _viewState = MutableStateFlow(SpeechViewState())
+    private val _viewState = MutableStateFlow(DistrictViewState())
 
-    /**
-     * Der UI-Status ist eine Kombination aus drei Datenströmen:
-     * 1. Die Liste der Reden aus der Datenbank (GetSpeechesUseCase)
-     * 2. Der aktuelle User und seine Rechte (ObserveCurrentUserUseCase)
-     * 3. Der lokale View-Status (Selektion, Fehlertexte, Lade-Spinner)
-     */
-    val uiState: StateFlow<SpeechUiState> = combine(
-        getSpeechesUseCase(), // Ruft den Flow im UseCase auf
+    val uiState: StateFlow<DistrictUiState> = combine(
+        getDistrictUseCase(), // Ruft den Flow im UseCase auf
         observeCurrentUserUseCase(),
         _viewState
     ) { speechesResult, appUser, viewState ->
@@ -83,54 +70,41 @@ class SpeechViewModel(
         }
 
         // 3. Alles zum UI State zusammenbauen
-        SpeechUiState.SuccessUIState(
-            speeches = speechList,
-            selectedSpeech = viewState.selectedSpeech,
+        DistrictUiState.SuccessUIState(
+            districts = speechList,
+            selectedDistrict = viewState.selectedDistrict,
             isActionInProgress = viewState.isActionInProgress,
             actionError = viewState.actionError,
             // Zuweisung der berechneten Werte an den State
-            canCreateSpeech = canCreate,
-            canEditSpeech = canEdit,
-            canDeleteSpeech = canDelete
+            canCreateDistrict = canCreate,
+            canEditDistrict = canEdit,
+            canDeleteDistrict = canDelete
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = SpeechUiState.LoadingUIState
+        initialValue = DistrictUiState.LoadingUIState
     )
 
-    // --- User Aktionen ---
-
-    /**
-     * Wird aufgerufen, wenn eine Rede angeklickt wird (zum Bearbeiten)
-     */
-    fun selectSpeech(speech: Speech) {
-        _viewState.value = _viewState.value.copy(selectedSpeech = speech)
+    fun selectDistrict(district: District) {
+        _viewState.value = _viewState.value.copy(selectedDistrict = district)
     }
 
-    /**
-     * Schließt den Dialog / hebt die Auswahl auf
-     */
     fun clearSelection() {
-        _viewState.value = _viewState.value.copy(selectedSpeech = null)
+        _viewState.value = _viewState.value.copy(selectedDistrict = null)
     }
 
-    /**
-     * Speichert eine Rede. Prüft vorher zur Sicherheit noch einmal die Admin-Rechte.
-     */
-    fun saveSpeech(speech: Speech) {
+    fun saveDistrict(district: District) {
         viewModelScope.launch {
             val currentUser = observeCurrentUserUseCase().firstOrNull()
 
-            // 1. SICHERHEITSCHECK MIT POLICY
-            // Wir unterscheiden: Ist es eine neue Rede (ID leer) oder ein Update?
-            val isNew = speech.id.isBlank() // oder speech.id == ""
+            val isNew = district.id.isBlank()
 
             val hasPermission = if (currentUser != null) {
                 if (isNew) {
                     permissionPolicy.canCreate(currentUser)
                 } else {
-                    permissionPolicy.canEdit(currentUser, speech)
+                    permissionPolicy.canEdit(currentUser, district)
                 }
             } else {
                 false
@@ -141,11 +115,10 @@ class SpeechViewModel(
                 return@launch
             }
 
-            // ... (Rest wie gehabt: Loading setzen, saveSpeechUseCase aufrufen) ...
             _viewState.value = _viewState.value.copy(isActionInProgress = true, actionError = null)
-            saveSpeechUseCase(speech)
+            saveDistrictUseCase(district)
                 .onSuccess {
-                    _viewState.value = _viewState.value.copy(isActionInProgress = false, selectedSpeech = null)
+                    _viewState.value = _viewState.value.copy(isActionInProgress = false, selectedDistrict = null)
                 }
                 .onFailure { error ->
                     _viewState.value =
@@ -154,10 +127,7 @@ class SpeechViewModel(
         }
     }
 
-    /**
-     * Löscht eine Rede nach strenger Prüfung.
-     */
-    fun deleteSpeech(speechId: String) {
+    fun deleteDistrict(districtId: String) {
         viewModelScope.launch {
             // 1. Aktuellen User laden
             val currentUser = observeCurrentUserUseCase().firstOrNull()
@@ -165,19 +135,19 @@ class SpeechViewModel(
             // 2. Die zu löschende Rede aus dem aktuellen UI-State holen
             // Da wir reaktiv sind, haben wir die Liste meistens schon im Speicher.
             // Wir suchen die Rede in der aktuellen Liste.
-            val speechToDelete = (uiState.value as? SpeechUiState.SuccessUIState)
-                ?.speeches
-                ?.find { it.id == speechId }
+            val districtToDelete = (uiState.value as? DistrictUiState.SuccessUIState)
+                ?.districts
+                ?.find { it.id == districtId }
 
             // Falls die Rede im State nicht gefunden wurde (z.B. durch Race Condition),
             // brechen wir sicherheitshalber ab oder laden sie notfalls nach.
-            if (speechToDelete == null) {
-                _viewState.value = _viewState.value.copy(actionError = "Rede nicht gefunden.")
+            if (districtToDelete == null) {
+                _viewState.value = _viewState.value.copy(actionError = "District nicht gefunden.")
                 return@launch
             }
 
             // 3. Strenge Prüfung mit der Policy und dem ECHTEN Speech-Objekt
-            val hasPermission = currentUser != null && permissionPolicy.canDelete(currentUser, speechToDelete)
+            val hasPermission = currentUser != null && permissionPolicy.canDelete(currentUser, districtToDelete)
 
             if (!hasPermission) {
                 _viewState.value = _viewState.value.copy(actionError = "Keine Berechtigung zum Löschen dieser Rede!")
@@ -188,11 +158,11 @@ class SpeechViewModel(
             _viewState.value = _viewState.value.copy(isActionInProgress = true, actionError = null)
 
             // 5. Löschen ausführen
-            deleteSpeechUseCase(speechId)
+            deleteDistrictUseCase(districtId)
                 .onSuccess {
                     _viewState.value = _viewState.value.copy(
                         isActionInProgress = false,
-                        selectedSpeech = null
+                        selectedDistrict = null
                     )
                 }
                 .onFailure { error ->
@@ -209,8 +179,8 @@ class SpeechViewModel(
  * Interne Hilfsklasse für den lokalen View-Status.
  * Diese Daten kommen nicht aus der DB, sondern entstehen durch UI-Interaktion.
  */
-private data class SpeechViewState(
-    val selectedSpeech: Speech? = null,
+private data class DistrictViewState(
+    val selectedDistrict: District? = null,
     val isActionInProgress: Boolean = false,
     val actionError: String? = null
 )

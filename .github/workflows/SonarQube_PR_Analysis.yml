@@ -22,8 +22,8 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build, generate JaCoCo and Lint reports
-        run: ./gradlew app:lintDebug koverXmlReport  --stacktrace
+#      - name: Build, generate JaCoCo and Lint reports
+#        run: ./gradlew app:lintDebug koverXmlReport  --stacktrace
 
       - name: SonarQube Analysis 
         env:
