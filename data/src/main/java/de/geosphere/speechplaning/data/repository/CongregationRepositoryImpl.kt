@@ -84,4 +84,13 @@ class CongregationRepositoryImpl(
     fun getCongregationsForDistrictFlow(districtId: String): Flow<List<Congregation>> {
         return getAllFlow(districtId)
     }
+
+    /**
+     * Ruft ALLE Versammlungen aus der gesamten Datenbank ab,
+     * unabhängig davon, in welchem District sie liegen.
+     */
+    fun getAllCongregationsGlobalFlow(): Flow<List<Congregation>> {
+        // "congregations" ist der Name der Subcollection, definiert in der Konstante oben
+        return firestoreService.getCollectionGroupFlow("congregations", Congregation::class.java)
+    }
 }

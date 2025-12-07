@@ -2,6 +2,7 @@ package de.geosphere.speechplaning.data.repository.services
 
 import com.google.firebase.firestore.CollectionReference
 import de.geosphere.speechplaning.core.model.SavableDataClass
+import kotlinx.coroutines.flow.Flow
 
 @Suppress("TooManyFunctions")
 interface IFirestoreService {
@@ -76,4 +77,6 @@ interface IFirestoreService {
         subcollection: String,
         documentId: String
     )
+
+    fun <T : Any> getCollectionGroupFlow(collectionId: String, type: Class<T>): Flow<List<T>>
 }

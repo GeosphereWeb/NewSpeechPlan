@@ -232,7 +232,7 @@ class CongregationViewModelTest : BehaviorSpec({
             Then("it should call deleteUseCase") {
                 runTest {
                     val idToDelete = dummyCongregation.id
-                    coEvery { deleteCongregationUseCase(idToDelete) } coAnswers {
+                    coEvery { deleteCongregationUseCase(idToDelete, congregationToDelete.district) } coAnswers {
                         delay(10)
                         Result.success(Unit)
                     }
@@ -249,7 +249,12 @@ class CongregationViewModelTest : BehaviorSpec({
                         finalState.selectedCongregation.shouldBeNull()
                     }
 
-                    coVerify(exactly = 1) { deleteCongregationUseCase(idToDelete) }
+                    coVerify(exactly = 1) {
+                        deleteCongregationUseCase(
+                            idToDelete,
+                            congregationToDelete.district
+                        )
+                    }
                 }
             }
 
@@ -264,7 +269,12 @@ class CongregationViewModelTest : BehaviorSpec({
                             val errorState = awaitItem().shouldBeInstanceOf<CongregationUiState.SuccessUIState>()
                             errorState.actionError.shouldNotBeBlank()
                         }
-                        coVerify(exactly = 0) { deleteCongregationUseCase(any()) }
+                        coVerify(exactly = 0) {
+                            deleteCongregationUseCase(
+                                any(),
+                                congregationToDelete.district
+                            )
+                        }
                     }
                 }
             }
