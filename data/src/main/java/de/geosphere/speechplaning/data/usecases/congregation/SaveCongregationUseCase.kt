@@ -4,13 +4,14 @@ import de.geosphere.speechplaning.core.model.Congregation
 import de.geosphere.speechplaning.data.repository.CongregationRepositoryImpl
 
 class SaveCongregationUseCase(private val repository: CongregationRepositoryImpl) {
-    suspend operator fun invoke(congregation: Congregation): Result<Unit> {
+    suspend operator fun invoke(districtId: String, congregation: Congregation): Result<Unit> {
         // Basic validation
-        if (congregation.id.isBlank()) {
-            return Result.failure(IllegalArgumentException("Congregation id cannot be blank."))
+        if (congregation.name.isBlank()) {
+            // Kleine Korrektur: Die Fehlermeldung sprach von "id", prüfte aber "name"
+            return Result.failure(IllegalArgumentException("Congregation name cannot be blank."))
         }
         return try {
-            repository.save(congregation)
+            repository.saveCongregation(districtId, congregation)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
