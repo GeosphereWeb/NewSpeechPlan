@@ -1,6 +1,6 @@
 package de.geosphere.speechplaning.feature.districts.di
 
-import de.geosphere.speechplaning.feature.districts.DistrictsViewModel
+import de.geosphere.speechplaning.feature.districts.ui.DistrictsViewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
