@@ -59,7 +59,7 @@ dependencies {
     testImplementation(libs.mockk) {
         exclude(group = "io.mockk", module = "mockk-android")
     }
-    // testImplementation(libs.mockk.android) // Remove, not needed for pure unit tests
+    testImplementation(libs.mockk.android)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.junit) // JUnit 4 für backwards compatibility
     testImplementation(libs.kotest.framework)
