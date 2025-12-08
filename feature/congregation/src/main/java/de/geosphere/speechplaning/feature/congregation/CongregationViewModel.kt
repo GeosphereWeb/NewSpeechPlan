@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import de.geosphere.speechplaning.core.model.Congregation
 import de.geosphere.speechplaning.data.authentication.permission.CongregationPermissionPolicy
 import de.geosphere.speechplaning.data.usecases.congregation.DeleteCongregationUseCase
-import de.geosphere.speechplaning.data.usecases.congregation.GetCongregationUseCase
+import de.geosphere.speechplaning.data.usecases.congregation.GetAllCongregationsUseCase
 import de.geosphere.speechplaning.data.usecases.congregation.SaveCongregationUseCase
 import de.geosphere.speechplaning.data.usecases.user.ObserveCurrentUserUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,15 +17,19 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class CongregationViewModel(
-    private val getCongregationUseCase: GetCongregationUseCase,
     private val saveCongregationUseCase: SaveCongregationUseCase,
     private val deleteCongregationUseCase: DeleteCongregationUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
+    private val getAllCongregationsUseCase: GetAllCongregationsUseCase,
     private val permissionPolicy: CongregationPermissionPolicy
 ) : ViewModel() {
 
     // Lokaler State für UI-Dinge, die nicht in der DB stehen (Dialoge, Ladeanzeigen bei Aktionen)
     private val _viewState = MutableStateFlow(CongregationViewState())
+
+    // Wenn wir speichern, brauchen wir aber zwingend noch einen District.
+    // Wenn die Congregation neu ist, setzen wir hier deinen Default-District.
+    private val defaultDistrictId = "555"
 
     /**
      * Der UI-Status ist eine Kombination aus drei Datenströmen:
@@ -34,12 +38,14 @@ class CongregationViewModel(
      * 3. Der lokale View-Status (Selektion, Fehlertexte, Lade-Spinner)
      */
     val uiState: StateFlow<CongregationUiState> = combine(
-        getCongregationUseCase(), // Ruft den Flow im UseCase auf
+        getAllCongregationsUseCase(),
         observeCurrentUserUseCase(),
         _viewState
-    ) { congregationResult, appUser, viewState ->
-
-        val congregationsList = congregationResult.getOrElse { emptyList() }
+    ) { allCongregations, appUser, viewState ->
+        allCongregations.onFailure { exception ->
+            android.util.Log.e("CongregationViewModel", "Fehler beim Laden aller Versammlungen", exception)
+        }
+        val congregationsList = allCongregations.getOrElse { emptyList() }
 
         // / 1. BERECHTIGUNGEN PRÜFEN MIT POLICY
         var canCreate = false
@@ -118,7 +124,12 @@ class CongregationViewModel(
 
             // ... (Rest wie gehabt: Loading setzen, saveCongregationUseCase aufrufen) ...
             _viewState.value = _viewState.value.copy(isActionInProgress = true, actionError = null)
-            saveCongregationUseCase(congregation)
+            // Beim SPEICHERN muss die Congregation aber wissen, wohin sie gehört.
+            // Entweder hat das Congregation-Objekt selbst eine districtId gespeichert,
+            // oder wir nutzen (wie in deinem Code vorher) den Hardcode/Default District.
+            val targetDistrict = congregation.district.ifBlank { defaultDistrictId }
+
+            saveCongregationUseCase(targetDistrict, congregation)
                 .onSuccess {
                     _viewState.value = _viewState.value.copy(isActionInProgress = false, selectedCongregation = null)
                 }
@@ -168,7 +179,7 @@ class CongregationViewModel(
             _viewState.value = _viewState.value.copy(isActionInProgress = true, actionError = null)
 
             // 5. Löschen ausführen
-            deleteCongregationUseCase(congregationId)
+            deleteCongregationUseCase(congregationToDelete.id, congregationToDelete.district)
                 .onSuccess {
                     _viewState.value = _viewState.value.copy(
                         isActionInProgress = false,
