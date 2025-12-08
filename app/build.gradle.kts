@@ -79,6 +79,7 @@ dependencies {
     implementation(project(":feature:speeches"))
     implementation(project(":feature:districts"))
     implementation(project(":feature:congregation"))
+    implementation(project(":feature:speaker"))
     implementation(project(":core:ui"))
     implementation(project(":core:model"))
     implementation(project(":core:navigation"))

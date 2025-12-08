@@ -9,6 +9,7 @@ import de.geosphere.speechplaning.feature.congregation.di.congregationModule
 import de.geosphere.speechplaning.feature.districts.di.districtModule
 import de.geosphere.speechplaning.feature.login.di.loginModule
 import de.geosphere.speechplaning.feature.planning.di.planningModule
+import de.geosphere.speechplaning.feature.speaker.di.speakerModule
 import de.geosphere.speechplaning.feature.speeches.di.speechModule
 import de.geosphere.speechplaning.mocking.di.mockingModule
 import org.koin.android.ext.koin.androidContext
@@ -36,7 +37,8 @@ class MyApplication : Application() {
                 planningModule,
                 speechModule,
                 districtModule,
-                congregationModule
+                congregationModule,
+                speakerModule
             )
         }
     }

@@ -8,6 +8,7 @@ import de.geosphere.speechplaning.data.authentication.UserRepository
 import de.geosphere.speechplaning.data.authentication.UserRepositoryImpl
 import de.geosphere.speechplaning.data.authentication.permission.CongregationPermissionPolicy
 import de.geosphere.speechplaning.data.authentication.permission.DistrictPermissionPolicy
+import de.geosphere.speechplaning.data.authentication.permission.SpeakerPermissionPolicy
 import de.geosphere.speechplaning.data.authentication.permission.SpeechPermissionPolicy
 import de.geosphere.speechplaning.data.repository.CongregationEventRepositoryImpl
 import de.geosphere.speechplaning.data.repository.CongregationRepositoryImpl
@@ -19,6 +20,7 @@ import de.geosphere.speechplaning.data.repository.services.IFirestoreServiceImpl
 import de.geosphere.speechplaning.data.usecases.congregation.DeleteCongregationUseCase
 import de.geosphere.speechplaning.data.usecases.congregation.GetAllCongregationsUseCase
 import de.geosphere.speechplaning.data.usecases.congregation.GetCongregationUseCase
+import de.geosphere.speechplaning.data.usecases.congregation.ObserveAllCongregationsUseCase
 import de.geosphere.speechplaning.data.usecases.congregation.SaveCongregationUseCase
 import de.geosphere.speechplaning.data.usecases.districts.DeleteDistrictUseCase
 import de.geosphere.speechplaning.data.usecases.districts.GetDistrictUseCase
@@ -28,6 +30,9 @@ import de.geosphere.speechplaning.data.usecases.login.DetermineAppUserStatusUseC
 import de.geosphere.speechplaning.data.usecases.login.GoogleSignInUseCase
 import de.geosphere.speechplaning.data.usecases.login.SignInWithEmailAndPasswordUseCase
 import de.geosphere.speechplaning.data.usecases.login.SignOutUseCase
+import de.geosphere.speechplaning.data.usecases.speaker.DeleteSpeakerUseCase
+import de.geosphere.speechplaning.data.usecases.speaker.GetSpeakersUseCase
+import de.geosphere.speechplaning.data.usecases.speaker.SaveSpeakerUseCase
 import de.geosphere.speechplaning.data.usecases.speeches.DeleteSpeechUseCase
 import de.geosphere.speechplaning.data.usecases.speeches.GetSpeechesUseCase
 import de.geosphere.speechplaning.data.usecases.speeches.SaveSpeechUseCase
@@ -59,6 +64,7 @@ val dataModule = module {
     singleOf(::SpeechPermissionPolicy)
     singleOf(::DistrictPermissionPolicy)
     singleOf(::CongregationPermissionPolicy)
+    singleOf(::SpeakerPermissionPolicy)
 
     singleOf(::UserRepositoryImpl) { bind<UserRepository>() }
     singleOf(::AuthRepositoryImpl) { bind<AuthRepository>() }
@@ -74,6 +80,11 @@ val dataModule = module {
     factoryOf(::DeleteSpeechUseCase)
     factoryOf(::SaveSpeechUseCase)
 
+    // Speaker UseCases
+    factoryOf(::GetSpeakersUseCase)
+    factoryOf(::DeleteSpeakerUseCase)
+    factoryOf(::SaveSpeakerUseCase)
+
     factoryOf(::GetDistrictUseCase)
     factoryOf(::DeleteDistrictUseCase)
     factoryOf(::SaveDistrictUseCase)
@@ -82,6 +93,7 @@ val dataModule = module {
     factoryOf(::DeleteCongregationUseCase)
     factoryOf(::SaveCongregationUseCase)
     factoryOf(::GetAllCongregationsUseCase)
+    factoryOf(::ObserveAllCongregationsUseCase)
 
     // factoryOf(::SignInWithEmailAndPasswordUseCase)
     factoryOf(::SignOutUseCase)

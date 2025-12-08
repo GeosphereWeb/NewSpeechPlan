@@ -1,4 +1,4 @@
-package de.geosphere.speechplaning.ui
+package de.geosphere.speechplaning.core.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ListAlt
@@ -12,7 +12,6 @@ import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.FolderShared
 import androidx.compose.material.icons.outlined.MeetingRoom
 import androidx.compose.ui.graphics.vector.ImageVector
-import de.geosphere.speechplaning.core.navigation.Screen
 
 data class BottomNavigationItem(
     val label: String,
