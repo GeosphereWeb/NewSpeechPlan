@@ -6,7 +6,6 @@ import de.geosphere.speechplaning.core.model.Congregation
 import de.geosphere.speechplaning.data.authentication.permission.CongregationPermissionPolicy
 import de.geosphere.speechplaning.data.usecases.congregation.DeleteCongregationUseCase
 import de.geosphere.speechplaning.data.usecases.congregation.GetAllCongregationsUseCase
-import de.geosphere.speechplaning.data.usecases.congregation.GetCongregationUseCase
 import de.geosphere.speechplaning.data.usecases.congregation.SaveCongregationUseCase
 import de.geosphere.speechplaning.data.usecases.user.ObserveCurrentUserUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +17,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class CongregationViewModel(
-    private val getCongregationUseCase: GetCongregationUseCase,
     private val saveCongregationUseCase: SaveCongregationUseCase,
     private val deleteCongregationUseCase: DeleteCongregationUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
@@ -41,14 +39,12 @@ class CongregationViewModel(
      */
     val uiState: StateFlow<CongregationUiState> = combine(
         getAllCongregationsUseCase(),
-        getCongregationUseCase(), // Ruft den Flow im UseCase auf
         observeCurrentUserUseCase(),
         _viewState
-    ) { allCongregations, congregationResult, appUser, viewState ->
+    ) { allCongregations, appUser, viewState ->
         allCongregations.onFailure { exception ->
             android.util.Log.e("CongregationViewModel", "Fehler beim Laden aller Versammlungen", exception)
         }
-        // val congregationsList = congregationResult.getOrElse { emptyList() }
         val congregationsList = allCongregations.getOrElse { emptyList() }
 
         // / 1. BERECHTIGUNGEN PRÜFEN MIT POLICY
