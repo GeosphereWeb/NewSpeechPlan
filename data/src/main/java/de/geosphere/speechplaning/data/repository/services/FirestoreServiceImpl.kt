@@ -92,14 +92,6 @@ class IFirestoreServiceImpl(private val firestore: FirebaseFirestore) : IFiresto
         }
     }
 
-    // override fun getSpeakersSubcollection(congregationId: String): CollectionReference {
-    //     require(congregationId.isNotBlank()) {
-    //         "Congregation ID cannot be blank to access speakers subcollection."
-    //     }
-    //     return firestore.collection("congregations").document(congregationId)
-    //         .collection("speakers")
-    // }
-
     override suspend fun <T : Any> saveDocumentWithId(
         collectionPath: String,
         documentId: String,
