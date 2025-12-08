@@ -53,6 +53,10 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.gson)
 
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.material.icons.extended)
+
     // Unit Tests
     testImplementation(kotlin("test"))
     testImplementation(libs.mockk) {

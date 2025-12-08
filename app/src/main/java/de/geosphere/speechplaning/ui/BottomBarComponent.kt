@@ -12,6 +12,7 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import de.geosphere.speechplaning.core.navigation.BottomNavigationItem
 
 @Composable
 fun BottomBarComponent(

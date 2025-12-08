@@ -317,27 +317,17 @@ class IFirestoreServiceImpl(private val firestore: FirebaseFirestore) : IFiresto
         return firestore.collection(parentCollection).document(parentId).collection(subcollection)
     }
 
-    // Fügen Sie diese Methode in Ihre FirestoreServiceImpl Klasse ein
-    override fun <T : Any> getCollectionGroupFlow(
-        collectionId: String,
-        type: Class<T>
-    ): Flow<List<T>> = callbackFlow {
-        // "collectionGroup" sucht in ALLEN Pfaden nach dieser Collection-ID
-        val query = firestore.collectionGroup(collectionId)
-
-        val listenerRegistration = query.addSnapshotListener { snapshot, error ->
+    override fun <T : Any> getCollectionGroupFlow(collectionId: String, type: Class<T>): Flow<List<T>> = callbackFlow {
+        val registration = firestore.collectionGroup(collectionId).addSnapshotListener { snapshot, error ->
             if (error != null) {
                 close(error)
                 return@addSnapshotListener
             }
             if (snapshot != null) {
-                val data = snapshot.toObjects(type)
-                trySend(data)
+                val objects = snapshot.toObjects(type)
+                trySend(objects)
             }
         }
-
-        awaitClose {
-            listenerRegistration.remove()
-        }
+        awaitClose { registration.remove() }
     }
 }
