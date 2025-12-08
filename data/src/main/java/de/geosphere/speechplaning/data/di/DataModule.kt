@@ -6,6 +6,7 @@ import de.geosphere.speechplaning.data.authentication.AuthRepository
 import de.geosphere.speechplaning.data.authentication.AuthRepositoryImpl
 import de.geosphere.speechplaning.data.authentication.UserRepository
 import de.geosphere.speechplaning.data.authentication.UserRepositoryImpl
+import de.geosphere.speechplaning.data.authentication.permission.CongregationPermissionPolicy
 import de.geosphere.speechplaning.data.authentication.permission.DistrictPermissionPolicy
 import de.geosphere.speechplaning.data.authentication.permission.SpeechPermissionPolicy
 import de.geosphere.speechplaning.data.repository.CongregationEventRepositoryImpl
@@ -15,6 +16,10 @@ import de.geosphere.speechplaning.data.repository.SpeakerRepositoryImpl
 import de.geosphere.speechplaning.data.repository.SpeechRepositoryImpl
 import de.geosphere.speechplaning.data.repository.services.IFirestoreService
 import de.geosphere.speechplaning.data.repository.services.IFirestoreServiceImpl
+import de.geosphere.speechplaning.data.usecases.congregation.DeleteCongregationUseCase
+import de.geosphere.speechplaning.data.usecases.congregation.GetAllCongregationsUseCase
+import de.geosphere.speechplaning.data.usecases.congregation.GetCongregationUseCase
+import de.geosphere.speechplaning.data.usecases.congregation.SaveCongregationUseCase
 import de.geosphere.speechplaning.data.usecases.districts.DeleteDistrictUseCase
 import de.geosphere.speechplaning.data.usecases.districts.GetDistrictUseCase
 import de.geosphere.speechplaning.data.usecases.districts.SaveDistrictUseCase
@@ -52,7 +57,8 @@ val dataModule = module {
     singleOf(::SpeechRepositoryImpl)
 
     singleOf(::SpeechPermissionPolicy)
-    singleOf(::DistrictPermissionPolicy) // <--- NEU HINZUGEFÜGT
+    singleOf(::DistrictPermissionPolicy)
+    singleOf(::CongregationPermissionPolicy)
 
     singleOf(::UserRepositoryImpl) { bind<UserRepository>() }
     singleOf(::AuthRepositoryImpl) { bind<AuthRepository>() }
@@ -71,6 +77,11 @@ val dataModule = module {
     factoryOf(::GetDistrictUseCase)
     factoryOf(::DeleteDistrictUseCase)
     factoryOf(::SaveDistrictUseCase)
+
+    factoryOf(::GetCongregationUseCase)
+    factoryOf(::DeleteCongregationUseCase)
+    factoryOf(::SaveCongregationUseCase)
+    factoryOf(::GetAllCongregationsUseCase)
 
     // factoryOf(::SignInWithEmailAndPasswordUseCase)
     factoryOf(::SignOutUseCase)

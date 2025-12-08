@@ -3,10 +3,14 @@ package de.geosphere.speechplaning.ui
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.automirrored.outlined.ListAlt
+import androidx.compose.material.icons.filled.Apartment
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.FolderShared
+import androidx.compose.material.icons.filled.MeetingRoom
+import androidx.compose.material.icons.outlined.Apartment
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.FolderShared
+import androidx.compose.material.icons.outlined.MeetingRoom
 import androidx.compose.ui.graphics.vector.ImageVector
 import de.geosphere.speechplaning.core.navigation.Screen
 
@@ -44,10 +48,19 @@ data class BottomNavigationItem(
             ),
             BottomNavigationItem(
                 label = "Districts",
-                selectedIcon = Icons.AutoMirrored.Filled.ListAlt,
-                unselectedIcon = Icons.AutoMirrored.Outlined.ListAlt,
+                selectedIcon = Icons.Filled.Apartment,
+                unselectedIcon = Icons.Outlined.Apartment,
                 hasNews = false,
                 route = Screen.DistrictsRoute,
+                badgeCount = 1
+            ),
+
+            BottomNavigationItem(
+                label = "Congregation",
+                selectedIcon = Icons.Filled.MeetingRoom,
+                unselectedIcon = Icons.Outlined.MeetingRoom,
+                hasNews = false,
+                route = Screen.CongregationRoute,
                 badgeCount = 1
             ),
         )

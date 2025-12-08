@@ -21,4 +21,7 @@ sealed class Screen {
 
     @Serializable
     data object DistrictsRoute : Screen()
+
+    @Serializable
+    data object CongregationRoute : Screen()
 }

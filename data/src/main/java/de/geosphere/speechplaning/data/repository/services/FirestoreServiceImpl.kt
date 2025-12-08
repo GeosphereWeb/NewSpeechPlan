@@ -11,6 +11,9 @@ import de.geosphere.speechplaning.core.model.SavableDataClass
 import de.geosphere.speechplaning.core.model.Speaker
 import de.geosphere.speechplaning.core.model.Speech
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
 const val TAG = "FirestoreServiceImpl"
@@ -88,14 +91,6 @@ class IFirestoreServiceImpl(private val firestore: FirebaseFirestore) : IFiresto
             }
         }
     }
-
-    // override fun getSpeakersSubcollection(congregationId: String): CollectionReference {
-    //     require(congregationId.isNotBlank()) {
-    //         "Congregation ID cannot be blank to access speakers subcollection."
-    //     }
-    //     return firestore.collection("congregations").document(congregationId)
-    //         .collection("speakers")
-    // }
 
     override suspend fun <T : Any> saveDocumentWithId(
         collectionPath: String,
@@ -320,5 +315,29 @@ class IFirestoreServiceImpl(private val firestore: FirebaseFirestore) : IFiresto
         }
         // Baut den Pfad dynamisch zusammen: parentCollection/{parentId}/subcollection
         return firestore.collection(parentCollection).document(parentId).collection(subcollection)
+    }
+
+    // Fügen Sie diese Methode in Ihre FirestoreServiceImpl Klasse ein
+    override fun <T : Any> getCollectionGroupFlow(
+        collectionId: String,
+        type: Class<T>
+    ): Flow<List<T>> = callbackFlow {
+        // "collectionGroup" sucht in ALLEN Pfaden nach dieser Collection-ID
+        val query = firestore.collectionGroup(collectionId)
+
+        val listenerRegistration = query.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                close(error)
+                return@addSnapshotListener
+            }
+            if (snapshot != null) {
+                val data = snapshot.toObjects(type)
+                trySend(data)
+            }
+        }
+
+        awaitClose {
+            listenerRegistration.remove()
+        }
     }
 }
