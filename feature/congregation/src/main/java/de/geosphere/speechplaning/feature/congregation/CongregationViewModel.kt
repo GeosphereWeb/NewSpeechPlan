@@ -19,8 +19,8 @@ import kotlinx.coroutines.launch
 class CongregationViewModel(
     private val saveCongregationUseCase: SaveCongregationUseCase,
     private val deleteCongregationUseCase: DeleteCongregationUseCase,
-    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val getAllCongregationsUseCase: GetAllCongregationsUseCase,
+    private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val permissionPolicy: CongregationPermissionPolicy
 ) : ViewModel() {
 
@@ -29,7 +29,7 @@ class CongregationViewModel(
 
     // Wenn wir speichern, brauchen wir aber zwingend noch einen District.
     // Wenn die Congregation neu ist, setzen wir hier deinen Default-District.
-    private val defaultDistrictId = "555"
+    private val defaultDistrictId = "777"
 
     /**
      * Der UI-Status ist eine Kombination aus drei Datenströmen:
