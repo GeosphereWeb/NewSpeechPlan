@@ -4,8 +4,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.FolderShared
+import de.geosphere.speechplaning.core.navigation.BottomNavigationItem
 import de.geosphere.speechplaning.core.navigation.Screen
-import de.geosphere.speechplaning.ui.BottomNavigationItem
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 

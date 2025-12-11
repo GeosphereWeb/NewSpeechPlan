@@ -81,4 +81,8 @@ class SpeakerRepositoryImpl(
     fun getSpeakersForCongregationFlow(speakerId: String): Flow<List<Speaker>> {
         return getAllFlow(speakerId)
     }
+
+    fun getAllSpeakersGlobalFlow(): Flow<List<Speaker>> {
+        return firestoreService.getCollectionGroupFlow(SPEAKERS_SUBCOLLECTION, Speaker::class.java)
+    }
 }
