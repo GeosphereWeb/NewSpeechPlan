@@ -24,7 +24,7 @@ class GetSpeakersUseCase(private val repository: SpeakerRepositoryImpl) {
         return flow
             .map { list ->
                 // Sortieren (z.B. nach Nachname)
-                Result.success(list.sortedBy { it.nameLast })
+                Result.success(list.sortedBy { it.lastName })
             }
             .catch { exception ->
                 emit(Result.failure(exception))

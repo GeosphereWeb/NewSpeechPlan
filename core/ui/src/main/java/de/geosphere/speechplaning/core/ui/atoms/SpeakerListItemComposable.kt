@@ -29,7 +29,7 @@ fun SpeakerListItemComposable(
         ) {
             Column {
                 Text(
-                    text = "${speaker.nameFirst} ${speaker.nameLast}",
+                    text = "${speaker.firstName} ${speaker.lastName}",
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(

@@ -140,11 +140,11 @@ fun SpeakerEditDialog(
 ) {
     // State initialisieren
     var number by remember(speaker.id) { mutableStateOf(speaker.id) }
-    var nameLast by remember(speaker.id) { mutableStateOf(speaker.nameLast) }
-    var nameFirst by remember(speaker.id) { mutableStateOf(speaker.nameFirst) }
+    var nameLast by remember(speaker.id) { mutableStateOf(speaker.lastName) }
+    var nameFirst by remember(speaker.id) { mutableStateOf(speaker.firstName) }
     var congregationId by remember(speaker.id) { mutableStateOf(speaker.congregationId) }
     var districtId by remember(speaker.id) { mutableStateOf(speaker.districtId) }
-    var active by remember(speaker.id) { mutableStateOf(speaker.isActive) }
+    var active by remember(speaker.id) { mutableStateOf(speaker.active) }
 
     // StateList für die IDs.
     // Wir initialisieren sie einmalig beim ersten Aufruf oder ID-Wechsel.
@@ -176,7 +176,7 @@ fun SpeakerEditDialog(
         onLastNameChange = { nameLast = it },
         onCongregationSelected = { selectedCongregation ->
             congregationId = selectedCongregation.id
-            districtId = selectedCongregation.district
+            districtId = selectedCongregation.districtId
         },
         onActiveChange = { active = it },
         onAddSpeechClick = { showSpeechSelectionDialog = true },
@@ -186,11 +186,11 @@ fun SpeakerEditDialog(
         onDismiss = onDismiss,
         onSave = {
             val updatedSpeech = speaker.copy(
-                nameFirst = nameFirst,
-                nameLast = nameLast,
+                firstName = nameFirst,
+                lastName = nameLast,
                 congregationId = congregationId,
                 districtId = districtId,
-                isActive = active,
+                active = active,
                 speechNumberIds = selectedSpeechIds.toList()
             )
             onSave(updatedSpeech)
@@ -440,8 +440,8 @@ fun SpeakerListItem(speaker: Speaker, onClick: () -> Unit, onLongClick: (() -> U
             onLongClick = onLongClick
         ),
         number = "",
-        subject = "${speaker.nameLast}, ${speaker.nameFirst}",
-        enabled = speaker.isActive
+        subject = "${speaker.lastName}, ${speaker.firstName}",
+        enabled = speaker.active
     )
 }
 
@@ -470,8 +470,8 @@ fun SpeakerEditDialog_AddNew_Preview() {
         SpeakerEditDialog(
             speaker = Speaker(),
             allCongregations = listOf(
-                Congregation(id = "1", name = "Musterversammlung", district = "D1"),
-                Congregation(id = "2", name = "Zweite Versammlung", district = "D1")
+                Congregation(id = "1", name = "Musterversammlung", districtId = "D1"),
+                Congregation(id = "2", name = "Zweite Versammlung", districtId = "D1")
             ),
             allSpeeches = emptyList(),
             onDismiss = {},
@@ -488,13 +488,13 @@ fun SpeakerEditDialog_Edit_Preview() {
         SpeakerEditDialog(
             speaker = Speaker(
                 id = "123",
-                nameFirst = "Max",
-                nameLast = "Mustermann",
-                isActive = true,
+                firstName = "Max",
+                lastName = "Mustermann",
+                active = true,
                 congregationId = "1"
             ),
             allCongregations = listOf(
-                Congregation(id = "1", name = "Musterversammlung", district = "D1")
+                Congregation(id = "1", name = "Musterversammlung", districtId = "D1")
             ),
             allSpeeches = listOf(
                 Speech(id = "1", number = "1", subject = "Wie gut kennst du Gott?")
@@ -513,9 +513,9 @@ fun SpeakerListItemPreview() {
         SpeakerListItem(
             speaker = Speaker(
                 id = "123",
-                nameFirst = "Max",
-                nameLast = "Mustermann",
-                isActive = true
+                firstName = "Max",
+                lastName = "Mustermann",
+                active = true
             ),
             onClick = {},
             onLongClick = {}

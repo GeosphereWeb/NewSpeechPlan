@@ -25,7 +25,7 @@ class GetSpeakersUseCaseTest : BehaviorSpec({
 
         `when`("the repository returns a list of speakers") {
             then("it should return a success result with the speaker list") {
-                val speakers = listOf(Speaker(id = "1", nameFirst = "John"))
+                val speakers = listOf(Speaker(id = "1", firstName = "John"))
                 coEvery { repository.getSpeakersForCongregation(districtId, congregationId) } returns speakers
 
                 val result = useCase(districtId, congregationId)
