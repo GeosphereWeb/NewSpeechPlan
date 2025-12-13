@@ -1,5 +1,6 @@
 package de.geosphere.speechplaning.feature.speaker.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -92,8 +93,9 @@ fun SpeakerListScreen(viewModel: SpeakerViewModel = koinViewModel()) {
                         .padding(padding)
                         .fillMaxSize()
                 ) {
-                    SpeechListContent(
+                    SpeakerListContent(
                         speaker = state.speakers,
+                        allCongregations = state.allCongregations,
                         onSelectSpeaker = viewModel::selectSpeaker
                     )
 
@@ -147,7 +149,7 @@ fun SpeakerEditDialog(
     // StateList für die IDs.
     // Wir initialisieren sie einmalig beim ersten Aufruf oder ID-Wechsel.
     val selectedSpeechIds = remember(speaker.id) { speaker.speechNumberIds.toMutableStateList() }
-    
+
     // WICHTIG: Synchronisation bei Updates von Firestore!
     // Wenn 'speaker.speechNumberIds' sich ändert (z.B. durch Firestore-Update im Hintergrund),
     // müssen wir unsere lokale Arbeitsliste 'selectedSpeechIds' aktualisieren, damit der User das sieht.
@@ -213,7 +215,7 @@ fun SpeakerEditDialog(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LongMethod")
 private fun SpeechEditDialogContent(
     isEditMode: Boolean,
     firstName: String,
@@ -395,17 +397,37 @@ fun SpeechSelectionDialog(
 }
 
 @Composable
-fun SpeechListContent(
+fun SpeakerListContent(
     speaker: List<Speaker>,
+    allCongregations: List<Congregation>,
     onSelectSpeaker: (Speaker) -> Unit
 ) {
+    val grouped = remember(speaker) {
+        speaker
+            .groupBy { speaker ->
+                allCongregations.find { it.id == speaker.congregationId }?.name
+                    ?: if (speaker.congregationId.isBlank()) {
+                        "Keine Versammlung"
+                    } else {
+                        "Unbekannte ID: " +
+                            speaker.congregationId
+                    }
+            }.toSortedMap()
+    }
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items(speaker, key = { it.id.ifBlank { it.hashCode() } }) { speaker ->
-            SpeakerListItem(
-                speaker = speaker,
-                onClick = { },
-                onLongClick = { onSelectSpeaker(speaker) }
-            )
+        grouped.forEach { (congregationName, speakersInGroup) ->
+// 2. Der Sticky Header (Name der Versammlung)
+            stickyHeader {
+                SpeakerGroupHeader(title = congregationName)
+            }
+
+            items(speakersInGroup, key = { it.id.ifBlank { it.hashCode() } }) { speaker ->
+                SpeakerListItem(
+                    speaker = speaker,
+                    onClick = { },
+                    onLongClick = { onSelectSpeaker(speaker) }
+                )
+            }
         }
     }
 }
@@ -421,6 +443,24 @@ fun SpeakerListItem(speaker: Speaker, onClick: () -> Unit, onLongClick: (() -> U
         subject = "${speaker.nameLast}, ${speaker.nameFirst}",
         enabled = speaker.isActive
     )
+}
+
+@Composable
+fun SpeakerGroupHeader(title: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(vertical = 8.dp, horizontal = 16.dp)
+    ) {
+        Text(
+            // Fallback, falls mal kein Versammlungsname eingetragen ist
+            text = if (title.isBlank()) "Keine Versammlung zugeordnet" else title,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+        )
+    }
 }
 
 @ThemePreviews
