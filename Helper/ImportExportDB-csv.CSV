@@ -1,0 +1,2 @@
+ID_Kreis;tblKreis.Name;ID_Versammlung;tblVersammlung.Name;Strasse;Hausnummer;Hausnummer Zusatz;PLZ;Ort;Kreis_ID;Vortragskoordinator;tblVersammlung.Aktiv;ID_Redner;Nachname;Vorname;Telefon;Telefon2;E-Mail;Versammlung_ID;Stand_ID;tblRedner.Aktiv;Ranking;Anmerkung;Nummer;Titel;NEU_tblVortaege.Aktiv
+-DUMMY- DATEI --

@@ -59,7 +59,7 @@ class DistrictRepositoryImpl(
     }
 
     suspend fun saveDistrict(district: District) {
-        save(district.copy(id = district.id))
+        save(district)
     }
 
     fun getAllDistrictFlow(): Flow<List<District>> = callbackFlow {

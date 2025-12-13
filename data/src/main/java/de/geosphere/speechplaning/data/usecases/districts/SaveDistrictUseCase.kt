@@ -9,15 +9,9 @@ class SaveDistrictUseCase(private val repository: DistrictRepositoryImpl) {
         if (district.name.isBlank()) {
             return Result.failure(IllegalArgumentException("District name cannot be blank."))
         }
+
         return try {
-            val districtWithId = district.let {
-                if (it.id.isBlank()) {
-                    it.copy(id = it.name)
-                } else {
-                    it
-                }
-            }
-            repository.saveDistrict(districtWithId)
+            repository.saveDistrict(district)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
