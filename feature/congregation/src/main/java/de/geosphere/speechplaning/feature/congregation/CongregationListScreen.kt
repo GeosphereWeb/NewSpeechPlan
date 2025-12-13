@@ -1,5 +1,6 @@
 package de.geosphere.speechplaning.feature.congregation
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -128,16 +129,40 @@ fun CongregationListContent(
     congregations: List<Congregation>,
     onSelectCongregation: (Congregation) -> Unit
 ) {
+    val grouped = remember(congregations) {
+        congregations.groupBy { it.district }.toSortedMap()
+    }
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items(congregations, key = { it.id.ifBlank { it.hashCode() } }) { congregation ->
-            CongregationListItem(
-                congregation = congregation,
-                onClick = {
-                    // Optional: Klick Verhalten definieren
-                },
-                onLongClick = { onSelectCongregation(congregation) }
-            )
+        grouped.forEach { (district, congregationsInDistrict) ->
+            stickyHeader { CongregationDistrictHeader(district = district) }
+
+            items(congregationsInDistrict, key = { it.id.ifBlank { it.hashCode() } }) { congregation ->
+                CongregationListItem(
+                    congregation = congregation,
+                    onClick = {
+                        // Optional: Klick Verhalten definieren
+                    },
+                    onLongClick = { onSelectCongregation(congregation) }
+                )
+            }
         }
+    }
+}
+
+@Composable
+fun CongregationDistrictHeader(district: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant) // Hintergrundfarbe zur Abhebung
+            .padding(vertical = 8.dp, horizontal = 16.dp)
+    ) {
+        Text(
+            text = if (district.isBlank()) "Ohne Kreiszuordnung" else "Kreis $district",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+        )
     }
 }
 
