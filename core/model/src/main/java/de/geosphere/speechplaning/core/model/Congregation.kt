@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
  * Congregation.
  *
  * @property id
- * @property district
+ * @property districtId
  * @property name
  * @property address
  * @property meetingTime
@@ -17,7 +17,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Congregation(
     @DocumentId val id: String = "",
-    val district: String = "",
+    val districtId: String = "",
     val name: String = "",
     val address: String = "",
     val meetingTime: String = "",

@@ -1,12 +1,6 @@
 pluginManagement {
     repositories {
-        google {
-            content {
-                includeGroupByRegex("com\\.android.*")
-                includeGroupByRegex("com\\.google.*")
-                includeGroupByRegex("androidx.*")
-            }
-        }
+        google()
         mavenCentral()
         gradlePluginPortal()
     }
@@ -21,19 +15,19 @@ dependencyResolutionManagement {
 
 rootProject.name = "New Speech Plan"
 include(":app")
-include(":feature:home")
-include(":feature:settings")
-include(":feature:profile")
 include(":data")
-include(":core:ui")
-include(":core:model")
-include(":core:navigation")
-include(":mocking")
 include(":theme")
+include(":core:model")
+include(":core:ui")
 include(":feature:login")
+include(":feature:home")
+include(":core:navigation")
+include(":feature:congregation")
+include(":feature:profile")
 include(":feature:planning")
+include(":feature:settings")
 include(":feature:speaker")
 include(":feature:speeches")
-include(":feature:congregation")
 include(":feature:districts")
-include(":feature:districts")
+include(":mocking")
+include(":tools:importer")

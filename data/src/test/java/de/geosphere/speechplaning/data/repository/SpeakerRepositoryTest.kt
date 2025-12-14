@@ -20,8 +20,8 @@ internal class SpeakerRepositoryTest : BehaviorSpec({
     val speakerId = "testSpeakerId"
     val testSpeaker = Speaker(
         id = speakerId,
-        nameFirst = "Max",
-        nameLast = "Mustermann",
+        firstName = "Max",
+        lastName = "Mustermann",
         // Weitere Felder hier initialisieren, falls für Tests relevant
     )
 

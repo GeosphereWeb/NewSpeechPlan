@@ -3,10 +3,12 @@ package de.geosphere.speechplaning.feature.congregation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.geosphere.speechplaning.core.model.Congregation
+import de.geosphere.speechplaning.core.model.District
 import de.geosphere.speechplaning.data.authentication.permission.CongregationPermissionPolicy
 import de.geosphere.speechplaning.data.usecases.congregation.DeleteCongregationUseCase
 import de.geosphere.speechplaning.data.usecases.congregation.GetAllCongregationsUseCase
 import de.geosphere.speechplaning.data.usecases.congregation.SaveCongregationUseCase
+import de.geosphere.speechplaning.data.usecases.districts.GetAllDistrictsUseCase
 import de.geosphere.speechplaning.data.usecases.user.ObserveCurrentUserUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,10 +18,37 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+sealed interface CongregationUiState {
+    // Zustand 1: Initiales Laden der Liste
+    data object LoadingUIState : CongregationUiState
+
+    // Zustand 2: Fehler beim Laden
+    data class ErrorUIState(val message: String) : CongregationUiState
+
+    // Zustand 3: Daten erfolgreich geladen
+    // Hier packen wir alles rein, was wir sehen, wenn die Liste da ist.
+    // 'isActionInProgress' nutzen wir, um z.B. beim Speichern einen Ladebalken
+    // ÜBER der Liste anzuzeigen, ohne die Liste verschwinden zu lassen.
+    data class SuccessUIState(
+        val congregations: List<Congregation> = emptyList(),
+        val selectedCongregation: Congregation? = null,
+        val isActionInProgress: Boolean = false,
+        val allDistricts: List<District> = emptyList(),
+        val actionError: String? = null,
+
+        // --- HIER KOMMEN DIE NEUEN FELDER HIN ---
+        // Statt nur 'canEdit', splitten wir das auf:
+        val canCreateCongregation: Boolean = false, // Darf neue anlegen
+        val canEditCongregation: Boolean = false, // Darf existierende ändern
+        val canDeleteCongregation: Boolean = false, // Darf löschen (nur Admin)
+    ) : CongregationUiState
+}
+
 class CongregationViewModel(
     private val saveCongregationUseCase: SaveCongregationUseCase,
     private val deleteCongregationUseCase: DeleteCongregationUseCase,
     private val getAllCongregationsUseCase: GetAllCongregationsUseCase,
+    private val getAllDistrictsUseCase: GetAllDistrictsUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val permissionPolicy: CongregationPermissionPolicy
 ) : ViewModel() {
@@ -36,16 +65,19 @@ class CongregationViewModel(
      * 1. Die Liste der Versammlungen aus der Datenbank (GetCongregationUseCase)
      * 2. Der aktuelle User und seine Rechte (ObserveCurrentUserUseCase)
      * 3. Der lokale View-Status (Selektion, Fehlertexte, Lade-Spinner)
+     * 4. Die Liste aller Districts (GetAllDistrictsUseCase)
      */
     val uiState: StateFlow<CongregationUiState> = combine(
         getAllCongregationsUseCase(),
         observeCurrentUserUseCase(),
+        getAllDistrictsUseCase(),
         _viewState
-    ) { allCongregations, appUser, viewState ->
+    ) { allCongregations, appUser, allDistrictsResult, viewState ->
         allCongregations.onFailure { exception ->
             android.util.Log.e("CongregationViewModel", "Fehler beim Laden aller Versammlungen", exception)
         }
         val congregationsList = allCongregations.getOrElse { emptyList() }
+        val districtsList = allDistrictsResult.getOrElse { emptyList() }
 
         // / 1. BERECHTIGUNGEN PRÜFEN MIT POLICY
         var canCreate = false
@@ -69,6 +101,7 @@ class CongregationViewModel(
             selectedCongregation = viewState.selectedCongregation,
             isActionInProgress = viewState.isActionInProgress,
             actionError = viewState.actionError,
+            allDistricts = districtsList,
             // Zuweisung der berechneten Werte an den State
             canCreateCongregation = canCreate,
             canEditCongregation = canEdit,
@@ -127,7 +160,7 @@ class CongregationViewModel(
             // Beim SPEICHERN muss die Congregation aber wissen, wohin sie gehört.
             // Entweder hat das Congregation-Objekt selbst eine districtId gespeichert,
             // oder wir nutzen (wie in deinem Code vorher) den Hardcode/Default District.
-            val targetDistrict = congregation.district.ifBlank { defaultDistrictId }
+            val targetDistrict = congregation.districtId.ifBlank { defaultDistrictId }
 
             saveCongregationUseCase(targetDistrict, congregation)
                 .onSuccess {
@@ -179,7 +212,7 @@ class CongregationViewModel(
             _viewState.value = _viewState.value.copy(isActionInProgress = true, actionError = null)
 
             // 5. Löschen ausführen
-            deleteCongregationUseCase(congregationToDelete.id, congregationToDelete.district)
+            deleteCongregationUseCase(congregationToDelete.id, congregationToDelete.districtId)
                 .onSuccess {
                     _viewState.value = _viewState.value.copy(
                         isActionInProgress = false,

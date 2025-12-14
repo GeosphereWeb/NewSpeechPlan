@@ -20,11 +20,16 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -40,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.geosphere.speechplaning.core.model.Congregation
+import de.geosphere.speechplaning.core.model.District
 import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
 import org.koin.androidx.compose.koinViewModel
@@ -90,6 +96,7 @@ fun CongregationListScreen(viewModel: CongregationViewModel = koinViewModel()) {
                     // 1. Die Liste der Versammlungen
                     CongregationListContent(
                         congregations = state.congregations,
+                        allDistricts = state.allDistricts,
                         onSelectCongregation = viewModel::selectCongregation
                     )
 
@@ -113,6 +120,7 @@ fun CongregationListScreen(viewModel: CongregationViewModel = koinViewModel()) {
                     state.selectedCongregation?.let { congregation ->
                         CongregationEditDialog(
                             congregation = congregation,
+                            allDistricts = state.allDistricts,
                             onDismiss = viewModel::clearSelection,
                             onSave = viewModel::saveCongregation,
                             onDelete = viewModel::deleteCongregation
@@ -127,18 +135,28 @@ fun CongregationListScreen(viewModel: CongregationViewModel = koinViewModel()) {
 @Composable
 fun CongregationListContent(
     congregations: List<Congregation>,
+    allDistricts: List<District>,
     onSelectCongregation: (Congregation) -> Unit
 ) {
-    val grouped = remember(congregations) {
-        congregations.groupBy { it.district }.toSortedMap()
+    // Gruppieren nach ID, aber Sortieren nach Namen
+    val grouped = remember(congregations, allDistricts) {
+        congregations.groupBy { it.districtId }
+            .toList()
+            .sortedBy { (districtId, _) ->
+                allDistricts.find { it.id == districtId }?.name ?: districtId
+            }
     }
+
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-        grouped.forEach { (district, congregationsInDistrict) ->
-            stickyHeader { CongregationDistrictHeader(district = district) }
+        grouped.forEach { (districtId, congregationsInDistrict) ->
+            val districtName = allDistricts.find { it.id == districtId }?.name ?: districtId
+
+            stickyHeader { CongregationDistrictHeader(districtName = districtName) }
 
             items(congregationsInDistrict, key = { it.id.ifBlank { it.hashCode() } }) { congregation ->
                 CongregationListItem(
                     congregation = congregation,
+                    districtName = districtName,
                     onClick = {
                         // Optional: Klick Verhalten definieren
                     },
@@ -150,7 +168,7 @@ fun CongregationListContent(
 }
 
 @Composable
-fun CongregationDistrictHeader(district: String) {
+fun CongregationDistrictHeader(districtName: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -158,7 +176,7 @@ fun CongregationDistrictHeader(district: String) {
             .padding(vertical = 8.dp, horizontal = 16.dp)
     ) {
         Text(
-            text = if (district.isBlank()) "Ohne Kreiszuordnung" else "Kreis $district",
+            text = if (districtName.isBlank()) "Ohne Kreiszuordnung" else "Kreis $districtName",
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
@@ -167,7 +185,12 @@ fun CongregationDistrictHeader(district: String) {
 }
 
 @Composable
-fun CongregationListItem(congregation: Congregation, onClick: () -> Unit, onLongClick: (() -> Unit)?) {
+fun CongregationListItem(
+    congregation: Congregation,
+    districtName: String,
+    onClick: () -> Unit,
+    onLongClick: (() -> Unit)?
+) {
     ListItem(
         modifier = Modifier.combinedClickable(
             onClick = onClick,
@@ -175,8 +198,13 @@ fun CongregationListItem(congregation: Congregation, onClick: () -> Unit, onLong
         ),
         headlineContent = { Text(congregation.name) },
         supportingContent = {
-            if (congregation.district.isNotBlank() || congregation.address.isNotBlank()) {
-                Text("${congregation.district} - ${congregation.address}")
+            val displayDistrict = districtName.ifBlank { congregation.districtId }
+            if (displayDistrict.isNotBlank() || congregation.address.isNotBlank()) {
+                val sb = StringBuilder()
+                if (displayDistrict.isNotBlank()) sb.append(displayDistrict)
+                if (displayDistrict.isNotBlank() && congregation.address.isNotBlank()) sb.append(" - ")
+                if (congregation.address.isNotBlank()) sb.append(congregation.address)
+                Text(sb.toString())
             }
         },
         trailingContent = {
@@ -190,26 +218,30 @@ fun CongregationListItem(congregation: Congregation, onClick: () -> Unit, onLong
 @Composable
 fun CongregationEditDialog(
     congregation: Congregation,
+    allDistricts: List<District>,
     onDismiss: () -> Unit,
     onSave: (Congregation) -> Unit,
     onDelete: (String) -> Unit
 ) {
     // Lokaler State für das Formular
     var name by remember(congregation.id) { mutableStateOf(congregation.name) }
-    var district by remember(congregation.id) { mutableStateOf(congregation.district) }
     var address by remember(congregation.id) { mutableStateOf(congregation.address) }
+    var districtId by remember(congregation.id) { mutableStateOf(congregation.districtId) }
     var meetingTime by remember(congregation.id) { mutableStateOf(congregation.meetingTime) }
     var active by remember(congregation.id) { mutableStateOf(congregation.active) }
 
     CongregationEditDialogContent(
         isEditMode = congregation.id.isNotBlank(),
         name = name,
-        district = district,
+        districtId = districtId,
+        allDistricts = allDistricts,
         address = address,
         meetingTime = meetingTime,
         active = active,
         onNameChange = { name = it },
-        onDistrictChange = { district = it },
+        onDistrictSelected = { selectedDistrict ->
+            districtId = selectedDistrict.id
+        },
         onAddressChange = { address = it },
         onMeetingTimeChange = { meetingTime = it },
         onActiveChange = { active = it },
@@ -217,7 +249,7 @@ fun CongregationEditDialog(
         onSave = {
             val updatedCongregation = congregation.copy(
                 name = name.trim(),
-                district = district.trim(),
+                districtId = districtId.trim(),
                 address = address.trim(),
                 meetingTime = meetingTime.trim(),
                 active = active
@@ -228,18 +260,20 @@ fun CongregationEditDialog(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LongMethod")
 private fun CongregationEditDialogContent(
     isEditMode: Boolean,
     name: String,
-    district: String,
+    districtId: String,
+    allDistricts: List<District>,
     address: String,
     meetingTime: String,
     active: Boolean,
     onNameChange: (String) -> Unit,
-    onDistrictChange: (String) -> Unit,
     onAddressChange: (String) -> Unit,
+    onDistrictSelected: (District) -> Unit,
     onMeetingTimeChange: (String) -> Unit,
     onActiveChange: (Boolean) -> Unit,
     onDismiss: () -> Unit,
@@ -265,13 +299,41 @@ private fun CongregationEditDialogContent(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                OutlinedTextField(
-                    value = district,
-                    onValueChange = onDistrictChange,
-                    label = { Text("Kreis (District)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
+                var expanded by remember { mutableStateOf(false) }
+                val selectedDistrictName =
+                    allDistricts.find { it.id == districtId }?.name ?: districtId
+
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = it }
+                ) {
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable, true)
+                            .fillMaxWidth(),
+                        readOnly = true,
+                        value = selectedDistrictName,
+                        onValueChange = {},
+                        label = { Text("Kreis") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        allDistricts.forEach { district ->
+                            DropdownMenuItem(
+                                text = { Text(district.name) },
+                                onClick = {
+                                    onDistrictSelected(district)
+                                    expanded = false
+                                },
+                                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                            )
+                        }
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -333,6 +395,10 @@ fun CongregationEditDialog_AddNew_Preview() {
     SpeechPlaningTheme {
         CongregationEditDialog(
             congregation = Congregation(),
+            allDistricts = listOf(
+                District(id = "1", name = "Kreis 1"),
+                District(id = "2", name = "Kreis 2")
+            ),
             onDismiss = {},
             onSave = {},
             onDelete = {}
@@ -348,10 +414,11 @@ fun CongregationListItemPreview() {
             congregation = Congregation(
                 id = "123",
                 name = "Musterstadt-Nord",
-                district = "12",
+                districtId = "12",
                 address = "Musterstraße 1, 12345 Musterstadt",
                 active = true
             ),
+            districtName = "Kreis 12",
             onClick = {},
             onLongClick = {}
         )

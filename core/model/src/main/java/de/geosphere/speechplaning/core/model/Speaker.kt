@@ -11,8 +11,8 @@ import kotlinx.serialization.Serializable
  *
  * @property id The unique identifier for the speaker. This is typically assigned by Firestore.
  * @property districtId The unique identifier of the district the speaker belongs to.
- * @property nameFirst The first name of the speaker.
- * @property nameLast The last name of the speaker.
+ * @property firstName The first name of the speaker.
+ * @property lastName The last name of the speaker.
  * @property mobile The mobile phone number of the speaker.
  * @property phone The landline phone number of the speaker.
  * @property email The email address of the speaker.
@@ -25,13 +25,13 @@ import kotlinx.serialization.Serializable
 data class Speaker(
     @DocumentId val id: String = "",
     val districtId: String = "",
-    val nameFirst: String = "",
-    val nameLast: String = "",
+    val firstName: String = "",
+    val lastName: String = "",
     val mobile: String = "",
     val phone: String = "",
     val email: String = "",
     val spiritualStatus: SpiritualStatus = SpiritualStatus.UNKNOWN,
     val speechNumberIds: List<Int> = emptyList(),
     val congregationId: String = "",
-    val isActive: Boolean = true,
+    val active: Boolean = true,
 ) : SavableDataClass()
