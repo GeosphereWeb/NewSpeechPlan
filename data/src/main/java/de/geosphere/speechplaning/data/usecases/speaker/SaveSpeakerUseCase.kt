@@ -12,7 +12,7 @@ class SaveSpeakerUseCase(private val repository: SpeakerRepositoryImpl) {
      * Nur für Updates am SELBEN Ort geeignet.
      */
     suspend operator fun invoke(speaker: Speaker): Result<Unit> {
-        if (speaker.nameLast.isBlank()) {
+        if (speaker.lastName.isBlank()) {
             return Result.failure(IllegalArgumentException("Speaker name cannot be blank."))
         }
         if (speaker.districtId.isBlank() || speaker.congregationId.isBlank()) {
@@ -42,7 +42,7 @@ class SaveSpeakerUseCase(private val repository: SpeakerRepositoryImpl) {
      */
     suspend operator fun invoke(speaker: Speaker, congregation: Congregation): Result<Unit> {
         val updatedSpeaker = speaker.copy(
-            districtId = congregation.district,
+            districtId = congregation.districtId,
             congregationId = congregation.id
         )
         return this.invoke(updatedSpeaker)

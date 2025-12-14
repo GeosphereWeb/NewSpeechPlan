@@ -48,7 +48,7 @@ class SpeakerViewModelTest : BehaviorSpec({
         `when`("it is initialized") {
             then("it should load speakers successfully") {
                 runTest {
-                    val speakers = listOf(Speaker(id = "1", nameFirst = "John"))
+                    val speakers = listOf(Speaker(id = "1", firstName = "John"))
                     coEvery { getSpeakersUseCase(districtId, congregationId) } returns Result.success(speakers)
 
                     viewModel = SpeakerViewModel(
@@ -83,7 +83,7 @@ class SpeakerViewModelTest : BehaviorSpec({
         `when`("saveSpeaker is called") {
             then("it should save the speaker and reload the list") {
                 runTest {
-                    val speakerToSave = Speaker(id = "2", nameFirst = "Jane")
+                    val speakerToSave = Speaker(id = "2", firstName = "Jane")
                     coEvery {
                         getSpeakersUseCase(districtId, congregationId)
                     } returns Result.success(emptyList()) andThen Result.success(listOf(speakerToSave))

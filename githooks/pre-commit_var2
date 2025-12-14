@@ -4,7 +4,7 @@
 	echo " ===== google-services.json ====== " >&2
 
 # Der relative Pfad zur Datei, die ausgeschlossen werden soll
-FILE_TO_EXCLUDE="app/google-services.json"
+FILE_TO_EXCLUDE="app/google-services.json serviceAccountKey.json"
 
 # Prüft, ob die Datei zum Commit hinzugefügt ("staged") wurde
 if git diff --cached --name-only | grep -q "$FILE_TO_EXCLUDE"; then

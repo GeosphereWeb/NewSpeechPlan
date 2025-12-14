@@ -7,3 +7,6 @@
 # Project exclude paths
 **/build/
 /google-services.json
+/serviceAccountKey.json
+serviceAccountKey.json
+google-services.json

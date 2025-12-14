@@ -8,7 +8,7 @@
 
 # Path to the google-services.json file, relative to the repository root.
 # Make sure this path is correct for your project structure.
-TARGET_FILE_PATH="app/google-services.json"
+FILE_TO_EXCLUDE="app/google-services.json serviceAccountKey.json"
 
 # Dummy content for google-services.json
 # Using a heredoc for multiline JSON content

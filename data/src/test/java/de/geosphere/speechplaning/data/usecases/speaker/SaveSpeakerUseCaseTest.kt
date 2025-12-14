@@ -22,7 +22,7 @@ class SaveSpeakerUseCaseTest : BehaviorSpec({
     given("a request to save a speaker") {
         val districtId = "district1"
         val congregationId = "congregation1"
-        val speakerToSave = Speaker(nameFirst = "Jane", nameLast = "Doe")
+        val speakerToSave = Speaker(firstName = "Jane", lastName = "Doe")
         val newSpeakerId = "new_speaker_123"
 
         `when`("the repository saves the speaker successfully") {

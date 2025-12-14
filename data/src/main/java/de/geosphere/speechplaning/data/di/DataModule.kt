@@ -23,6 +23,7 @@ import de.geosphere.speechplaning.data.usecases.congregation.GetCongregationUseC
 import de.geosphere.speechplaning.data.usecases.congregation.ObserveAllCongregationsUseCase
 import de.geosphere.speechplaning.data.usecases.congregation.SaveCongregationUseCase
 import de.geosphere.speechplaning.data.usecases.districts.DeleteDistrictUseCase
+import de.geosphere.speechplaning.data.usecases.districts.GetAllDistrictsUseCase
 import de.geosphere.speechplaning.data.usecases.districts.GetDistrictUseCase
 import de.geosphere.speechplaning.data.usecases.districts.SaveDistrictUseCase
 import de.geosphere.speechplaning.data.usecases.login.CreateUserWithEmailAndPasswordUseCase
@@ -88,6 +89,7 @@ val dataModule = module {
     factoryOf(::GetDistrictUseCase)
     factoryOf(::DeleteDistrictUseCase)
     factoryOf(::SaveDistrictUseCase)
+    factoryOf(::GetAllDistrictsUseCase)
 
     factoryOf(::GetCongregationUseCase)
     factoryOf(::DeleteCongregationUseCase)
