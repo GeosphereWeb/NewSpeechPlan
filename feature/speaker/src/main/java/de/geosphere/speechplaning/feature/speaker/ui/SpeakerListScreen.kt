@@ -1,5 +1,6 @@
 package de.geosphere.speechplaning.feature.speaker.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,10 +12,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -129,6 +132,7 @@ fun SpeakerListScreen(viewModel: SpeakerViewModel = koinViewModel()) {
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 fun SpeakerEditDialog(
     speaker: Speaker,
@@ -396,37 +400,108 @@ fun SpeechSelectionDialog(
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 fun SpeakerListContent(
     speaker: List<Speaker>,
     allCongregations: List<Congregation>,
     onSelectSpeaker: (Speaker) -> Unit
 ) {
-    val grouped = remember(speaker) {
-        speaker
-            .groupBy { speaker ->
-                allCongregations.find { it.id == speaker.congregationId }?.name
-                    ?: if (speaker.congregationId.isBlank()) {
+    // State für die Filter
+    var congregationFilter by remember { mutableStateOf("") }
+    var speakerNameFilter by remember { mutableStateOf("") }
+    var visibleFilter by remember { mutableStateOf(false) }
+
+    // Gefilterte Liste
+    val filteredSpeakers = remember(speaker, allCongregations, congregationFilter, speakerNameFilter) {
+        speaker.filter { s ->
+            // Filter nach Redner Name (Vor-, Nachname)
+            // Wir zerlegen den Suchtext in Wörter (Tokens) und prüfen, ob ALLE Tokens
+            // im Namen des Redners (Vor- und Nachname kombiniert) vorkommen.
+            val matchesName = if (speakerNameFilter.isBlank()) {
+                true
+            } else {
+                val searchTerms = speakerNameFilter.trim().split("\\s+".toRegex())
+                val speakerFullName = "${s.firstName} ${s.lastName}"
+
+                searchTerms.all { term ->
+                    speakerFullName.contains(term, ignoreCase = true)
+                }
+            }
+
+            // Filter nach Versammlung Name
+            val matchesCongregation = if (congregationFilter.isBlank()) {
+                true
+            } else {
+                val congName = allCongregations.find { it.id == s.congregationId }?.name ?: ""
+                congName.contains(congregationFilter, ignoreCase = true)
+            }
+
+            matchesName && matchesCongregation
+        }
+    }
+
+    // Gruppieren
+    val grouped = remember(filteredSpeakers, allCongregations) {
+        filteredSpeakers
+            .groupBy { s ->
+                allCongregations.find { it.id == s.congregationId }?.name
+                    ?: if (s.congregationId.isBlank()) {
                         "Keine Versammlung"
                     } else {
                         "Unbekannte ID: " +
-                            speaker.congregationId
+                            s.congregationId
                     }
             }.toSortedMap()
     }
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        grouped.forEach { (congregationName, speakersInGroup) ->
-// 2. Der Sticky Header (Name der Versammlung)
-            stickyHeader {
-                SpeakerGroupHeader(title = congregationName)
-            }
 
-            items(speakersInGroup, key = { it.id.ifBlank { it.hashCode() } }) { speaker ->
-                SpeakerListItem(
-                    speaker = speaker,
-                    onClick = { },
-                    onLongClick = { onSelectSpeaker(speaker) }
-                )
+    Column(modifier = Modifier.fillMaxSize()) {
+        // --- Filter Bereich ---
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+        ) {
+            Button(onClick = { visibleFilter = visibleFilter.not() }) {
+                Icon(Icons.Default.FilterList, contentDescription = "Filter")
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Filter")
+            }
+            AnimatedVisibility(visibleFilter) {
+                Column(modifier = Modifier.padding(8.dp)) {
+                    OutlinedTextField(
+                        value = congregationFilter,
+                        onValueChange = { congregationFilter = it },
+                        label = { Text("Filter: Versammlung") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = speakerNameFilter,
+                        onValueChange = { speakerNameFilter = it },
+                        label = { Text("Filter: Redner Name (Vor- und Nachname)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                }
+            }
+        }
+
+        // --- Liste ---
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            grouped.forEach { (congregationName, speakersInGroup) ->
+                stickyHeader {
+                    SpeakerGroupHeader(title = congregationName)
+                }
+
+                items(speakersInGroup, key = { it.id.ifBlank { it.hashCode() } }) { speaker ->
+                    SpeakerListItem(
+                        speaker = speaker,
+                        onClick = { },
+                        onLongClick = { onSelectSpeaker(speaker) }
+                    )
+                }
             }
         }
     }
