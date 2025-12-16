@@ -1,5 +1,6 @@
 package de.geosphere.speechplaning.feature.speeches.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,11 +11,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -134,17 +137,63 @@ fun SpeechListContent(
     speeches: List<Speech>,
     onSelectSpeech: (Speech) -> Unit
 ) {
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items(speeches, key = { it.id.ifBlank { it.hashCode() } }) { speech ->
-            SpeechListItem(
-                speech = speech,
-                onClick = {
-                    // Optional: Klick Verhalten definieren (z.B. Details anzeigen)
-                    // Aktuell leer, da Editieren über LongClick passiert?
-                    // Falls Editieren bei Click passieren soll: onSelectSpeech(speech)
-                },
-                onLongClick = { onSelectSpeech(speech) }
-            )
+    // Lokaler State für den Filter
+    var filterQuery by remember { mutableStateOf("") }
+    var visibleFilter by remember { mutableStateOf(false) }
+
+    // Gefilterte Liste
+    val filteredSpeeches = remember(speeches, filterQuery) {
+        if (filterQuery.isBlank()) {
+            speeches
+        } else {
+            speeches.filter { speech ->
+                speech.number.contains(filterQuery, ignoreCase = true) ||
+                    speech.subject.contains(filterQuery, ignoreCase = true)
+            }
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        // --- Filter Bereich ---
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+        ) {
+            Button(onClick = { visibleFilter = visibleFilter.not() }) {
+                Icon(Icons.Default.FilterList, contentDescription = "Filter")
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Filter")
+            }
+            AnimatedVisibility(visibleFilter) {
+                Column(modifier = Modifier.padding(8.dp)) {
+                    OutlinedTextField(
+                        value = filterQuery,
+                        onValueChange = { filterQuery = it },
+                        label = { Text("Suche (Nummer oder Thema)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        leadingIcon = {
+                            // Optional: Lupe als Icon, falls gewünscht
+                            // Icon(Icons.Default.Search, contentDescription = "Search")
+                        }
+                    )
+                }
+            }
+        }
+
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            items(filteredSpeeches, key = { it.id.ifBlank { it.hashCode() } }) { speech ->
+                SpeechListItem(
+                    speech = speech,
+                    onClick = {
+                        // Optional: Klick Verhalten definieren (z.B. Details anzeigen)
+                        // Aktuell leer, da Editieren über LongClick passiert?
+                        // Falls Editieren bei Click passieren soll: onSelectSpeech(speech)
+                    },
+                    onLongClick = { onSelectSpeech(speech) }
+                )
+            }
         }
     }
 }
