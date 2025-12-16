@@ -1,5 +1,6 @@
 package de.geosphere.speechplaning.feature.congregation
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,10 +12,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -93,7 +96,7 @@ fun CongregationListScreen(viewModel: CongregationViewModel = koinViewModel()) {
                         .padding(padding)
                         .fillMaxSize()
                 ) {
-                    // 1. Die Liste der Versammlungen
+                    // 1. Die Liste der Versammlungen mit Filter
                     CongregationListContent(
                         congregations = state.congregations,
                         allDistricts = state.allDistricts,
@@ -138,30 +141,92 @@ fun CongregationListContent(
     allDistricts: List<District>,
     onSelectCongregation: (Congregation) -> Unit
 ) {
-    // Gruppieren nach ID, aber Sortieren nach Namen
-    val grouped = remember(congregations, allDistricts) {
-        congregations.groupBy { it.districtId }
+    // State für die Filter
+    var districtFilter by remember { mutableStateOf("") }
+    var congregationNameFilter by remember { mutableStateOf("") }
+    var visibleFilter by remember { mutableStateOf(false) }
+
+    // Gefilterte Liste
+    val filteredCongregations = remember(congregations, allDistricts, districtFilter, congregationNameFilter) {
+        congregations.filter { cong ->
+            // Filter nach Versammlung Name
+            val matchesCongName = if (congregationNameFilter.isBlank()) {
+                true
+            } else {
+                cong.name.contains(congregationNameFilter, ignoreCase = true)
+            }
+
+            // Filter nach District Name
+            val matchesDistrict = if (districtFilter.isBlank()) {
+                true
+            } else {
+                val distName = allDistricts.find { it.id == cong.districtId }?.name ?: ""
+                distName.contains(districtFilter, ignoreCase = true)
+            }
+
+            matchesCongName && matchesDistrict
+        }
+    }
+
+    // Gruppieren
+    val grouped = remember(filteredCongregations, allDistricts) {
+        filteredCongregations
+            .groupBy { it.districtId }
             .toList()
             .sortedBy { (districtId, _) ->
                 allDistricts.find { it.id == districtId }?.name ?: districtId
             }
     }
 
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        grouped.forEach { (districtId, congregationsInDistrict) ->
-            val districtName = allDistricts.find { it.id == districtId }?.name ?: districtId
+    Column(modifier = Modifier.fillMaxSize()) {
+        // --- Filter Bereich ---
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+        ) {
+            Button(onClick = { visibleFilter = visibleFilter.not() }) {
+                Icon(Icons.Default.FilterList, contentDescription = "Filter")
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Filter")
+            }
+            AnimatedVisibility(visibleFilter) {
+                Column(modifier = Modifier.padding(8.dp)) {
+                    OutlinedTextField(
+                        value = districtFilter,
+                        onValueChange = { districtFilter = it },
+                        label = { Text("Filter: Kreis") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = congregationNameFilter,
+                        onValueChange = { congregationNameFilter = it },
+                        label = { Text("Filter: Versammlung") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                }
+            }
+        }
 
-            stickyHeader { CongregationDistrictHeader(districtName = districtName) }
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            grouped.forEach { (districtId, congregationsInDistrict) ->
+                val districtName = allDistricts.find { it.id == districtId }?.name ?: districtId
 
-            items(congregationsInDistrict, key = { it.id.ifBlank { it.hashCode() } }) { congregation ->
-                CongregationListItem(
-                    congregation = congregation,
-                    districtName = districtName,
-                    onClick = {
-                        // Optional: Klick Verhalten definieren
-                    },
-                    onLongClick = { onSelectCongregation(congregation) }
-                )
+                stickyHeader { CongregationDistrictHeader(districtName = districtName) }
+
+                items(congregationsInDistrict, key = { it.id.ifBlank { it.hashCode() } }) { congregation ->
+                    CongregationListItem(
+                        congregation = congregation,
+                        districtName = districtName,
+                        onClick = {
+                            // Optional: Klick Verhalten definieren
+                        },
+                        onLongClick = { onSelectCongregation(congregation) }
+                    )
+                }
             }
         }
     }
