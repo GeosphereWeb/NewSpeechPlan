@@ -46,7 +46,7 @@ data class Speaker(
     val mobile: String = "",
     val phone: String = "",
     val email: String = "",
-    val spiritualStatus: SpiritualStatus = SpiritualStatus.UNKNOWN,
+    val spiritualStatus: SpiritualStatus,
     val speechNumberIds: List<Int> = emptyList(),
     val congregationId: String = "",
     val active: Boolean = true,
@@ -126,15 +126,23 @@ class CsvImporter {
             val congregationId = columns.getOrElse(2) { "" }.trim()
             if (congregationId.isNotBlank() && !congregations.containsKey(congregationId)) {
                 val address =
-                    "${columns.getOrElse(
-                        4
-                    ) { "" }.trim()} ${columns.getOrElse(
-                        5
-                    ) { "" }.trim()} ${columns.getOrElse(
-                        6
-                    ) { "" }.trim()}, ${columns.getOrElse(
-                        7
-                    ) { "" }.trim()} ${columns.getOrElse(8) { "" }.trim()}".trim()
+                    "${
+                        columns.getOrElse(
+                            4
+                        ) { "" }.trim()
+                    } ${
+                        columns.getOrElse(
+                            5
+                        ) { "" }.trim()
+                    } ${
+                        columns.getOrElse(
+                            6
+                        ) { "" }.trim()
+                    }, ${
+                        columns.getOrElse(
+                            7
+                        ) { "" }.trim()
+                    } ${columns.getOrElse(8) { "" }.trim()}".trim()
                 congregations[congregationId] = Congregation(
                     id = congregationId,
                     name = columns.getOrElse(3) { "" }.trim(),
@@ -154,6 +162,11 @@ class CsvImporter {
                     phone = columns.getOrElse(15) { "" }.trim(),
                     email = columns.getOrElse(17) { "" }.trim(),
                     congregationId = columns.getOrElse(18) { "" }.trim(),
+                    spiritualStatus = when (columns.getOrElse(19) { "" }.trim().toIntOrNull()) {
+                        1 -> SpiritualStatus.ELDER
+                        2 -> SpiritualStatus.MINISTERIAL_SERVANT
+                        else -> SpiritualStatus.UNKNOWN
+                    },
                     active = columns.getOrElse(20) { "" }.trim().equals("WAHR", ignoreCase = true),
                 )
             }
