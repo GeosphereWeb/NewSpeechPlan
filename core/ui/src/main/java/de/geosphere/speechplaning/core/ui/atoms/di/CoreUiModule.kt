@@ -1,5 +1,6 @@
 package de.geosphere.speechplaning.core.ui.atoms.di
 
+import de.geosphere.speechplaning.core.ui.atoms.AppAvatarResourceProvider
 import de.geosphere.speechplaning.core.ui.atoms.AvatarProvider
 import de.geosphere.speechplaning.core.ui.atoms.EventMapper
 import de.geosphere.speechplaning.core.ui.atoms.SpiritualStatusMapper
@@ -12,4 +13,5 @@ val coreUiModule = module {
     singleOf(::SpiritualStatusMapper)
     factoryOf(::EventMapper)
     factoryOf(::AvatarProvider)
+    singleOf(::AppAvatarResourceProvider)
 }

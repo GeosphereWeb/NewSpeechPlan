@@ -1,8 +1,7 @@
-package de.geosphere.speechplaning.provider
+package de.geosphere.speechplaning.core.ui.atoms
 
 import androidx.annotation.DrawableRes
 import de.geosphere.speechplaning.core.model.data.SpiritualStatus
-import de.geosphere.speechplaning.core.ui.atoms.AvatarResourceProvider
 import de.geosphere.speechplaning.theme.R
 
 /**

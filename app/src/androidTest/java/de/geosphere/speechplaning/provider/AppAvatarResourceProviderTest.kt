@@ -1,6 +1,7 @@
 package de.geosphere.speechplaning.provider
 
 import de.geosphere.speechplaning.core.model.data.SpiritualStatus
+import de.geosphere.speechplaning.core.ui.atoms.AppAvatarResourceProvider
 import de.geosphere.speechplaning.theme.R
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
