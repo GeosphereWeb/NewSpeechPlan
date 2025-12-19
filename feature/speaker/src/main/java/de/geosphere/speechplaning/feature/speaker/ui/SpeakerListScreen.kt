@@ -2,11 +2,8 @@ package de.geosphere.speechplaning.feature.speaker.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,39 +18,29 @@ import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.geosphere.speechplaning.core.model.Congregation
 import de.geosphere.speechplaning.core.model.Speaker
-import de.geosphere.speechplaning.core.model.Speech
-import de.geosphere.speechplaning.core.ui.atoms.SpeechListItemComposable
+import de.geosphere.speechplaning.core.ui.atoms.SpeakerListItemComposable
 import de.geosphere.speechplaning.theme.SpeechPlaningTheme
-import de.geosphere.speechplaning.theme.ThemePreviews
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -97,7 +84,7 @@ fun SpeakerListScreen(viewModel: SpeakerViewModel = koinViewModel()) {
                         .fillMaxSize()
                 ) {
                     SpeakerListContent(
-                        speaker = state.speakers,
+                        speakers = state.speakers,
                         allCongregations = state.allCongregations,
                         onSelectSpeaker = viewModel::selectSpeaker
                     )
@@ -132,346 +119,104 @@ fun SpeakerListScreen(viewModel: SpeakerViewModel = koinViewModel()) {
     }
 }
 
-@Suppress("LongParameterList")
 @Composable
-fun SpeakerEditDialog(
-    speaker: Speaker,
-    allCongregations: List<Congregation>,
-    allSpeeches: List<Speech>,
-    onDismiss: () -> Unit,
-    onSave: (Speaker) -> Unit,
-    onDelete: (String) -> Unit
-) {
-    // State initialisieren
-    var number by remember(speaker.id) { mutableStateOf(speaker.id) }
-    var nameLast by remember(speaker.id) { mutableStateOf(speaker.lastName) }
-    var nameFirst by remember(speaker.id) { mutableStateOf(speaker.firstName) }
-    var congregationId by remember(speaker.id) { mutableStateOf(speaker.congregationId) }
-    var districtId by remember(speaker.id) { mutableStateOf(speaker.districtId) }
-    var active by remember(speaker.id) { mutableStateOf(speaker.active) }
-
-    // StateList für die IDs.
-    // Wir initialisieren sie einmalig beim ersten Aufruf oder ID-Wechsel.
-    val selectedSpeechIds = remember(speaker.id) { speaker.speechNumberIds.toMutableStateList() }
-
-    // WICHTIG: Synchronisation bei Updates von Firestore!
-    // Wenn 'speaker.speechNumberIds' sich ändert (z.B. durch Firestore-Update im Hintergrund),
-    // müssen wir unsere lokale Arbeitsliste 'selectedSpeechIds' aktualisieren, damit der User das sieht.
-    LaunchedEffect(speaker.speechNumberIds) {
-        // Wir vergleichen, um unnötige UI-Updates zu vermeiden
-        if (selectedSpeechIds.toList() != speaker.speechNumberIds) {
-            selectedSpeechIds.clear()
-            selectedSpeechIds.addAll(speaker.speechNumberIds)
-        }
-    }
-
-    var showSpeechSelectionDialog by remember { mutableStateOf(false) }
-
-    SpeechEditDialogContent(
-        isEditMode = speaker.id.isNotBlank(),
-        firstName = nameFirst,
-        lastName = nameLast,
-        congregationId = congregationId,
-        allCongregations = allCongregations,
-        selectedSpeechIds = selectedSpeechIds,
-        allSpeeches = allSpeeches,
-        active = active,
-        onFirstNameChange = { nameFirst = it },
-        onLastNameChange = { nameLast = it },
-        onCongregationSelected = { selectedCongregation ->
-            congregationId = selectedCongregation.id
-            districtId = selectedCongregation.districtId
-        },
-        onActiveChange = { active = it },
-        onAddSpeechClick = { showSpeechSelectionDialog = true },
-        onRemoveSpeechClick = { idToRemove ->
-            selectedSpeechIds.remove(idToRemove)
-        },
-        onDismiss = onDismiss,
-        onSave = {
-            val updatedSpeech = speaker.copy(
-                firstName = nameFirst,
-                lastName = nameLast,
-                congregationId = congregationId,
-                districtId = districtId,
-                active = active,
-                speechNumberIds = selectedSpeechIds.toList()
-            )
-            onSave(updatedSpeech)
-        },
-        onDelete = { onDelete(speaker.id) }
-    )
-
-    if (showSpeechSelectionDialog) {
-        SpeechSelectionDialog(
-            allSpeeches = allSpeeches,
-            alreadySelectedIds = selectedSpeechIds,
-            onSpeechSelected = { speech ->
-                val speechNum = speech.number.toIntOrNull()
-                if (speechNum != null && !selectedSpeechIds.contains(speechNum)) {
-                    selectedSpeechIds.add(speechNum)
-                }
-            },
-            onDismiss = { showSpeechSelectionDialog = false }
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-@Suppress("LongParameterList", "LongMethod")
-private fun SpeechEditDialogContent(
-    isEditMode: Boolean,
-    firstName: String,
-    lastName: String,
-    congregationId: String,
-    allCongregations: List<Congregation>,
-    selectedSpeechIds: List<Int>,
-    allSpeeches: List<Speech>,
-    active: Boolean,
-    onFirstNameChange: (String) -> Unit,
-    onLastNameChange: (String) -> Unit,
-    onCongregationSelected: (Congregation) -> Unit,
-    onActiveChange: (Boolean) -> Unit,
-    onAddSpeechClick: () -> Unit,
-    onRemoveSpeechClick: (Int) -> Unit,
-    onDismiss: () -> Unit,
-    onSave: () -> Unit,
-    onDelete: () -> Unit
-) {
-    Dialog(onDismissRequest = onDismiss) {
-        Card {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = if (isEditMode) "Redner bearbeiten" else "Neuer Redner",
-                    style = MaterialTheme.typography.titleLarge
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-
-                OutlinedTextField(
-                    value = firstName,
-                    onValueChange = onFirstNameChange,
-                    label = { Text("Vorname") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = lastName,
-                    onValueChange = onLastNameChange,
-                    label = { Text("Nachname") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                var expanded by remember { mutableStateOf(false) }
-                val selectedCongregationName =
-                    allCongregations.find { it.id == congregationId }?.name ?: congregationId
-
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = it }
-                ) {
-                    OutlinedTextField(
-                        modifier = Modifier
-                            .menuAnchor(MenuAnchorType.PrimaryEditable, true)
-                            .fillMaxWidth(),
-                        readOnly = true,
-                        value = selectedCongregationName,
-                        onValueChange = {},
-                        label = { Text("Versammlung") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
-                    )
-                    ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        allCongregations.forEach { congregation ->
-                            DropdownMenuItem(
-                                text = { Text(congregation.name) },
-                                onClick = {
-                                    onCongregationSelected(congregation)
-                                    expanded = false
-                                },
-                                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text("Zugewiesene Vorträge:", style = MaterialTheme.typography.labelLarge)
-                if (selectedSpeechIds.isEmpty()) {
-                    Text("- Keine -", style = MaterialTheme.typography.bodySmall)
-                } else {
-                    Column {
-                        selectedSpeechIds.sorted().forEach { id ->
-                            val speechName =
-                                allSpeeches.find { it.number.toIntOrNull() == id }?.subject
-                                    ?: "Unbekannter Vortrag"
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(
-                                    text = "$id: $speechName",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                TextButton(onClick = { onRemoveSpeechClick(id) }) {
-                                    Text("X")
-                                }
-                            }
-                        }
-                    }
-                }
-                TextButton(onClick = onAddSpeechClick) {
-                    Text("Vortrag hinzufügen")
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = active, onCheckedChange = onActiveChange)
-                    Text("Aktiv")
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                    if (isEditMode) {
-                        TextButton(
-                            onClick = onDelete,
-                            colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
-                                contentColor = MaterialTheme.colorScheme.error
-                            )
-                        ) {
-                            Text("Löschen")
-                        }
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
-                    TextButton(onClick = onDismiss) {
-                        Text("Abbrechen")
-                    }
-                    Button(onClick = onSave) {
-                        Text("Speichern")
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun SpeechSelectionDialog(
-    allSpeeches: List<Speech>,
-    alreadySelectedIds: List<Int>,
-    onSpeechSelected: (Speech) -> Unit,
-    onDismiss: () -> Unit
-) {
-    Dialog(onDismissRequest = onDismiss) {
-        Card(modifier = Modifier.height(400.dp)) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("Vortrag auswählen", style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.height(8.dp))
-                LazyColumn(modifier = Modifier.weight(1f)) {
-                    items(allSpeeches) { speech ->
-                        val isAlreadySelected = speech.number.toIntOrNull() in alreadySelectedIds
-                        if (!isAlreadySelected) {
-                            DropdownMenuItem(
-                                text = { Text("${speech.number}: ${speech.subject}") },
-                                onClick = { onSpeechSelected(speech) }
-                            )
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) {
-                    Text("Schließen")
-                }
-            }
-        }
-    }
-}
-
-@Suppress("LongMethod")
-@Composable
-fun SpeakerListContent(
-    speaker: List<Speaker>,
+private fun SpeakerListContent(
+    speakers: List<Speaker>,
     allCongregations: List<Congregation>,
     onSelectSpeaker: (Speaker) -> Unit
 ) {
-    // State für die Filter
     var congregationFilter by remember { mutableStateOf("") }
     var speakerNameFilter by remember { mutableStateOf("") }
-    var visibleFilter by remember { mutableStateOf(false) }
+    var expandedSpeakerId by remember { mutableStateOf<String?>(null) }
 
-    // Gefilterte Liste
-    val filteredSpeakers = remember(speaker, allCongregations, congregationFilter, speakerNameFilter) {
-        speaker.filter { s ->
-            // Filter nach Redner Name (Vor-, Nachname)
-            // Wir zerlegen den Suchtext in Wörter (Tokens) und prüfen, ob ALLE Tokens
-            // im Namen des Redners (Vor- und Nachname kombiniert) vorkommen.
+    val filteredSpeakers = remember(speakers, allCongregations, congregationFilter, speakerNameFilter) {
+        speakers.filter {
             val matchesName = if (speakerNameFilter.isBlank()) {
                 true
             } else {
                 val searchTerms = speakerNameFilter.trim().split("\\s+".toRegex())
-                val speakerFullName = "${s.firstName} ${s.lastName}"
-
-                searchTerms.all { term ->
-                    speakerFullName.contains(term, ignoreCase = true)
-                }
+                val speakerFullName = "${it.firstName} ${it.lastName}"
+                searchTerms.all { term -> speakerFullName.contains(term, ignoreCase = true) }
             }
-
-            // Filter nach Versammlung Name
             val matchesCongregation = if (congregationFilter.isBlank()) {
                 true
             } else {
-                val congName = allCongregations.find { it.id == s.congregationId }?.name ?: ""
+                val congName = allCongregations.find { c -> c.id == it.congregationId }?.name ?: ""
                 congName.contains(congregationFilter, ignoreCase = true)
             }
-
             matchesName && matchesCongregation
         }
     }
 
-    // Gruppieren
-    val grouped = remember(filteredSpeakers, allCongregations) {
-        filteredSpeakers
-            .groupBy { s ->
-                allCongregations.find { it.id == s.congregationId }?.name
-                    ?: if (s.congregationId.isBlank()) {
-                        "Keine Versammlung"
-                    } else {
-                        "Unbekannte ID: " +
-                            s.congregationId
-                    }
-            }.toSortedMap()
+    val groupedSpeakers = remember(filteredSpeakers, allCongregations) {
+        filteredSpeakers.groupBy {
+            allCongregations.find { c -> c.id == it.congregationId }?.name ?: "Unbekannt"
+        }.toSortedMap()
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // --- Filter Bereich ---
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-        ) {
-            Button(onClick = { visibleFilter = visibleFilter.not() }) {
+        SpeakerListFilter(
+            congregationFilter = congregationFilter,
+            onCongregationFilterChange = { congregationFilter = it },
+            speakerNameFilter = speakerNameFilter,
+            onSpeakerNameFilterChange = { speakerNameFilter = it }
+        )
+
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            if (groupedSpeakers.isEmpty()) {
+                item {
+                    Text(
+                        text = "Keine Redner gefunden",
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            } else {
+                groupedSpeakers.forEach { (congregationName, speakersInGroup) ->
+                    stickyHeader {
+                        SpeakerGroupHeader(title = congregationName)
+                    }
+                    items(speakersInGroup, key = { it.id }) {
+                        SpeakerListItem(
+                            speaker = it,
+                            isExpanded = it.id == expandedSpeakerId,
+                            onClick = { expandedSpeakerId = if (it.id == expandedSpeakerId) null else it.id },
+                            onLongClick = { onSelectSpeaker(it) },
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SpeakerListFilter(
+    congregationFilter: String,
+    onCongregationFilterChange: (String) -> Unit,
+    speakerNameFilter: String,
+    onSpeakerNameFilterChange: (String) -> Unit,
+) {
+    var filtersVisible by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        Column(modifier = Modifier.padding(8.dp)) {
+            Button(onClick = { filtersVisible = !filtersVisible }) {
                 Icon(Icons.Default.FilterList, contentDescription = "Filter")
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Filter")
+                Text(text = if (filtersVisible) "Filter ausblenden" else "Filter anzeigen")
             }
-            AnimatedVisibility(visibleFilter) {
-                Column(modifier = Modifier.padding(8.dp)) {
+
+            AnimatedVisibility(visible = filtersVisible) {
+                Column {
+                    Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = congregationFilter,
-                        onValueChange = { congregationFilter = it },
+                        onValueChange = onCongregationFilterChange,
                         label = { Text("Filter: Versammlung") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
@@ -479,27 +224,10 @@ fun SpeakerListContent(
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = speakerNameFilter,
-                        onValueChange = { speakerNameFilter = it },
-                        label = { Text("Filter: Redner Name (Vor- und Nachname)") },
+                        onValueChange = onSpeakerNameFilterChange,
+                        label = { Text("Filter: Redner (Vor- & Nachname)") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
-                    )
-                }
-            }
-        }
-
-        // --- Liste ---
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            grouped.forEach { (congregationName, speakersInGroup) ->
-                stickyHeader {
-                    SpeakerGroupHeader(title = congregationName)
-                }
-
-                items(speakersInGroup, key = { it.id.ifBlank { it.hashCode() } }) { speaker ->
-                    SpeakerListItem(
-                        speaker = speaker,
-                        onClick = { },
-                        onLongClick = { onSelectSpeaker(speaker) }
                     )
                 }
             }
@@ -508,20 +236,22 @@ fun SpeakerListContent(
 }
 
 @Composable
-fun SpeakerListItem(speaker: Speaker, onClick: () -> Unit, onLongClick: (() -> Unit)?) {
-    SpeechListItemComposable(
-        modifier = Modifier.combinedClickable(
-            onClick = onClick,
-            onLongClick = onLongClick
-        ),
-        number = "",
-        subject = "${speaker.lastName}, ${speaker.firstName}",
-        enabled = speaker.active
+private fun SpeakerListItem(
+    speaker: Speaker,
+    isExpanded: Boolean,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
+) {
+    SpeakerListItemComposable(
+        speaker = speaker,
+        isExpanded = isExpanded,
+        onClick = onClick,
+        onLongClick = onLongClick
     )
 }
 
 @Composable
-fun SpeakerGroupHeader(title: String) {
+private fun SpeakerGroupHeader(title: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -529,71 +259,32 @@ fun SpeakerGroupHeader(title: String) {
             .padding(vertical = 8.dp, horizontal = 16.dp)
     ) {
         Text(
-            // Fallback, falls mal kein Versammlungsname eingetragen ist
-            text = if (title.isBlank()) "Keine Versammlung zugeordnet" else title,
+            text = title,
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+            fontWeight = FontWeight.Bold
         )
     }
 }
 
-@ThemePreviews
+@Preview(showBackground = true)
 @Composable
-fun SpeakerEditDialog_AddNew_Preview() {
+private fun SpeakerListContentPreview() {
+    val allCongregations = listOf(
+        Congregation(id = "c1", name = "Musterstadt"),
+        Congregation(id = "c2", name = "Beispielburg")
+    )
+    val speakers = listOf(
+        Speaker(id = "s1", firstName = "Max", lastName = "Mustermann", congregationId = "c1"),
+        Speaker(id = "s2", firstName = "Erika", lastName = "Mustermann", congregationId = "c1"),
+        Speaker(id = "s3", firstName = "John", lastName = "Doe", congregationId = "c2"),
+        Speaker(id = "s4", firstName = "Jane", lastName = "Doe", congregationId = "")
+    )
     SpeechPlaningTheme {
-        SpeakerEditDialog(
-            speaker = Speaker(),
-            allCongregations = listOf(
-                Congregation(id = "1", name = "Musterversammlung", districtId = "D1"),
-                Congregation(id = "2", name = "Zweite Versammlung", districtId = "D1")
-            ),
-            allSpeeches = emptyList(),
-            onDismiss = {},
-            onSave = {},
-            onDelete = {}
-        )
-    }
-}
-
-@ThemePreviews
-@Composable
-fun SpeakerEditDialog_Edit_Preview() {
-    SpeechPlaningTheme {
-        SpeakerEditDialog(
-            speaker = Speaker(
-                id = "123",
-                firstName = "Max",
-                lastName = "Mustermann",
-                active = true,
-                congregationId = "1"
-            ),
-            allCongregations = listOf(
-                Congregation(id = "1", name = "Musterversammlung", districtId = "D1")
-            ),
-            allSpeeches = listOf(
-                Speech(id = "1", number = "1", subject = "Wie gut kennst du Gott?")
-            ),
-            onDismiss = {},
-            onSave = {},
-            onDelete = {}
-        )
-    }
-}
-
-@ThemePreviews
-@Composable
-fun SpeakerListItemPreview() {
-    SpeechPlaningTheme {
-        SpeakerListItem(
-            speaker = Speaker(
-                id = "123",
-                firstName = "Max",
-                lastName = "Mustermann",
-                active = true
-            ),
-            onClick = {},
-            onLongClick = {}
+        SpeakerListContent(
+            speakers = speakers,
+            allCongregations = allCongregations,
+            onSelectSpeaker = {}
         )
     }
 }
