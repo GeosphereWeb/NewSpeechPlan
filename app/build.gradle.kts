@@ -75,7 +75,7 @@ dependencies {
     implementation(project(":feature:settings"))
     implementation(project(":feature:profile"))
     implementation(project(":feature:login"))
-    implementation(project(":feature:planning"))
+    implementation(project(":feature:congregationEvent"))
     implementation(project(":feature:speeches"))
     implementation(project(":feature:districts"))
     implementation(project(":feature:congregation"))

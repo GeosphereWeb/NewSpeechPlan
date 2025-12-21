@@ -1,8 +1,9 @@
-package de.geosphere.speechplaning.data.usecases.planning
+package de.geosphere.speechplaning.data.usecases.congregationEvent
 
 import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.data.repository.CongregationEventRepositoryImpl
 
+@Suppress("TooGenericExceptionCaught")
 class GetCongregationEventsUseCase(private val repository: CongregationEventRepositoryImpl) {
     suspend operator fun invoke(districtId: String, congregationId: String): Result<List<CongregationEvent>> {
         return try {
@@ -13,3 +14,4 @@ class GetCongregationEventsUseCase(private val repository: CongregationEventRepo
         }
     }
 }
+

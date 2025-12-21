@@ -13,17 +13,6 @@ interface IFirestoreService {
     suspend fun <T : SavableDataClass> saveDocument(collection: String, document: T): String
     fun <T> getCollection(clazz: Class<T>): CollectionReference
 
-    // // Ist spezifisch, überlegen ob generischer
-    // fun getSpeakersSubcollection(congregationId: String): CollectionReference
-    //
-    // /**
-    //  * Gibt eine Referenz auf die 'congregations'-Subcollection für einen bestimmten District zurück.
-    //  *
-    //  * @param districtId Die ID des übergeordneten District-Dokuments.
-    //  * @return Eine CollectionReference zur Subcollection.
-    //  */
-    // fun getCongregationsSubcollection(districtId: String): CollectionReference
-
     /**
      * Gibt eine Referenz auf eine beliebige Subcollection zurück.
      *
@@ -79,4 +68,7 @@ interface IFirestoreService {
     )
 
     fun <T : Any> getCollectionGroupFlow(collectionId: String, type: Class<T>): Flow<List<T>>
+
+    // Neu: Delete eines Dokuments in einer Top-Level-Collection
+    suspend fun deleteDocument(collection: String, documentId: String)
 }

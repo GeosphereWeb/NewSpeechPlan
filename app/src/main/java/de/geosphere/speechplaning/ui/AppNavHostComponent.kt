@@ -2,7 +2,6 @@ package de.geosphere.speechplaning.ui
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -12,6 +11,7 @@ import androidx.navigation.compose.composable
 import de.geosphere.speechplaning.core.navigation.BottomNavigationItem
 import de.geosphere.speechplaning.core.navigation.Screen
 import de.geosphere.speechplaning.feature.congregation.CongregationListScreen
+import de.geosphere.speechplaning.feature.congregationEvent.CongregationEventListScreen
 import de.geosphere.speechplaning.feature.districts.ui.DistrictListScreen
 import de.geosphere.speechplaning.feature.speaker.ui.SpeakerListScreen
 import de.geosphere.speechplaning.feature.speeches.ui.SpeechListScreen
@@ -29,7 +29,7 @@ fun AppNavHostComponent(
             .padding(innerPadding)
     ) {
         composable<Screen.PlaningRoute> {
-            HorizontalDivider()
+            CongregationEventListScreen()
         }
         composable<Screen.SpeakerRoute> {
             SpeakerListScreen()

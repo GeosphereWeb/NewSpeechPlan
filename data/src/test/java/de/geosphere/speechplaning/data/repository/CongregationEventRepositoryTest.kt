@@ -38,20 +38,19 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
 
         testEvent = CongregationEvent(
             id = testEventId,
-            congregationId = testCongregationId,
-            date = LocalDate.now(),
+            dateString = LocalDate.now().toString(),
             eventType = Event.MEMORIAL,
             speechId = "speechXYZ",
             speakerId = "speakerABC",
-            chairmanId = "chairman123",
+            speakerCongregationId = testCongregationId,
             notes = "Wichtige Notizen für das Test-Event"
         )
 
         newEventWithoutId = CongregationEvent(
             id = "",
-            congregationId = testCongregationId,
-            date = LocalDate.now().plusDays(7),
+            dateString = LocalDate.now().plusDays(7).toString(),
             eventType = Event.MEMORIAL,
+            speakerCongregationId = testCongregationId,
             notes = "Notizen für ein brandneues Event"
         )
     }

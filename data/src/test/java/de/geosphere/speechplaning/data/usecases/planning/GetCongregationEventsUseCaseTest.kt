@@ -14,11 +14,9 @@ import java.time.LocalDate
 class GetCongregationEventsUseCaseTest : BehaviorSpec({
 
     lateinit var repository: CongregationEventRepositoryImpl
-    lateinit var useCase: GetCongregationEventsUseCase
 
     beforeTest {
         repository = mockk()
-        useCase = GetCongregationEventsUseCase(repository)
     }
 
     given("a request to get all congregation events") {
@@ -30,18 +28,20 @@ class GetCongregationEventsUseCaseTest : BehaviorSpec({
                 val events = listOf(
                     CongregationEvent(
                         id = "event1",
-                        congregationId = congregationId,
-                        date = LocalDate.now(),
-                        eventType = Event.CONVENTION
+                        dateString = LocalDate.now().toString(),
+                        eventType = Event.CONVENTION,
+                        speakerCongregationId = congregationId
                     ),
                     CongregationEvent(
                         id = "event2",
-                        congregationId = congregationId,
-                        date = LocalDate.now().plusDays(1),
-                        eventType = Event.CONVENTION
+                        dateString = LocalDate.now().plusDays(1).toString(),
+                        eventType = Event.CONVENTION,
+                        speakerCongregationId = congregationId
                     )
                 )
                 coEvery { repository.getAllEventsForCongregation(districtId, congregationId) } returns events
+
+                val useCase = de.geosphere.speechplaning.data.usecases.congregationEvent.GetCongregationEventsUseCase(repository)
 
                 val result = useCase(districtId, congregationId)
 
@@ -54,6 +54,8 @@ class GetCongregationEventsUseCaseTest : BehaviorSpec({
             then("it should return failure") {
                 val exception = RuntimeException("Test exception")
                 coEvery { repository.getAllEventsForCongregation(districtId, congregationId) } throws exception
+
+                val useCase = de.geosphere.speechplaning.data.usecases.congregationEvent.GetCongregationEventsUseCase(repository)
 
                 val result = useCase(districtId, congregationId)
 

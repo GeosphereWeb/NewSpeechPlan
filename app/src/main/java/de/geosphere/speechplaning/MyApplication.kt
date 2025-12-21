@@ -6,9 +6,9 @@ import de.geosphere.speechplaning.core.ui.atoms.di.coreUiModule
 import de.geosphere.speechplaning.data.di.dataModule
 import de.geosphere.speechplaning.di.appModule
 import de.geosphere.speechplaning.feature.congregation.di.congregationModule
+import de.geosphere.speechplaning.feature.congregationEvent.di.congregationEventModule
 import de.geosphere.speechplaning.feature.districts.di.districtModule
 import de.geosphere.speechplaning.feature.login.di.loginModule
-import de.geosphere.speechplaning.feature.planning.di.planningModule
 import de.geosphere.speechplaning.feature.speaker.di.speakerModule
 import de.geosphere.speechplaning.feature.speeches.di.speechModule
 import de.geosphere.speechplaning.mocking.di.mockingModule
@@ -34,11 +34,11 @@ class MyApplication : Application() {
                 mockingModule,
                 loginModule,
                 coreUiModule,
-                planningModule,
                 speechModule,
                 districtModule,
                 congregationModule,
-                speakerModule
+                speakerModule,
+                congregationEventModule
             )
         }
     }
