@@ -5,7 +5,7 @@ plugins {
     id("jacoco")
 }
 android {
-    namespace = "de.geosphere.speechplaning.feature.planning"
+    namespace = "de.geosphere.speechplaning.feature.congregationEvent"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {

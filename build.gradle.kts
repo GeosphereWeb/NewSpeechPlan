@@ -173,7 +173,7 @@ dependencies {
     kover(project(":feature:congregation"))
     kover(project(":feature:home"))
     kover(project(":feature:login"))
-    kover(project(":feature:planning"))
+    "kover"(project(":feature:congregationEvent"))
     kover(project(":feature:profile"))
     kover(project(":feature:settings"))
     kover(project(":feature:speaker"))
