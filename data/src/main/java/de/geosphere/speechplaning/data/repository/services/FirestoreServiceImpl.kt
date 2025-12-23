@@ -326,8 +326,31 @@ class IFirestoreServiceImpl(private val firestore: FirebaseFirestore) : IFiresto
             if (snapshot != null) {
                 val objects = snapshot.toObjects(type)
                 trySend(objects)
+                // Debug-Logging: Anzahl der Dokumente und Beispiel-IDs (falls vorhanden)
+                try {
+                    val ids = snapshot.documents.mapNotNull { it.id }.take(5)
+                    Log.d(TAG, "collectionGroup('$collectionId') snapshot received: size=${objects.size}, ids=$ids")
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to log collectionGroup snapshot details", e)
+                }
             }
         }
         awaitClose { registration.remove() }
+    }
+
+    // Neu: Implementierung für Top-Level-Delete
+    override suspend fun deleteDocument(collection: String, documentId: String) {
+        try {
+            require(documentId.isNotBlank()) { "Document ID cannot be blank when deleting a document." }
+            firestore.collection(collection).document(documentId).delete().await()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: FirebaseFirestoreException) {
+            Log.e(TAG, "deleteDocument failed for '$collection/$documentId'", e)
+            throw RuntimeException("Failed to delete document '$documentId' in collection '$collection'", e)
+        } catch (e: Exception) {
+            Log.e(TAG, "Unexpected error deleting document '$documentId' in collection '$collection'", e)
+            throw RuntimeException("Unexpected error deleting document '$documentId' in collection '$collection'", e)
+        }
     }
 }

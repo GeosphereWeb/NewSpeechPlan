@@ -6,6 +6,7 @@ import de.geosphere.speechplaning.data.authentication.AuthRepository
 import de.geosphere.speechplaning.data.authentication.AuthRepositoryImpl
 import de.geosphere.speechplaning.data.authentication.UserRepository
 import de.geosphere.speechplaning.data.authentication.UserRepositoryImpl
+import de.geosphere.speechplaning.data.authentication.permission.CongregationEventPermissionPolicy
 import de.geosphere.speechplaning.data.authentication.permission.CongregationPermissionPolicy
 import de.geosphere.speechplaning.data.authentication.permission.DistrictPermissionPolicy
 import de.geosphere.speechplaning.data.authentication.permission.SpeakerPermissionPolicy
@@ -22,6 +23,10 @@ import de.geosphere.speechplaning.data.usecases.congregation.GetAllCongregations
 import de.geosphere.speechplaning.data.usecases.congregation.GetCongregationUseCase
 import de.geosphere.speechplaning.data.usecases.congregation.ObserveAllCongregationsUseCase
 import de.geosphere.speechplaning.data.usecases.congregation.SaveCongregationUseCase
+import de.geosphere.speechplaning.data.usecases.congregationEvent.DeleteCongregationEventUseCase
+import de.geosphere.speechplaning.data.usecases.congregationEvent.GetAllCongregationEventUseCase
+import de.geosphere.speechplaning.data.usecases.congregationEvent.GetCongregationEventUseCase
+import de.geosphere.speechplaning.data.usecases.congregationEvent.SaveCongregationEventUseCase
 import de.geosphere.speechplaning.data.usecases.districts.DeleteDistrictUseCase
 import de.geosphere.speechplaning.data.usecases.districts.GetAllDistrictsUseCase
 import de.geosphere.speechplaning.data.usecases.districts.GetDistrictUseCase
@@ -62,9 +67,11 @@ val dataModule = module {
     singleOf(::SpeakerRepositoryImpl)
     singleOf(::SpeechRepositoryImpl)
 
+    // Permissions
     singleOf(::SpeechPermissionPolicy)
     singleOf(::DistrictPermissionPolicy)
     singleOf(::CongregationPermissionPolicy)
+    singleOf(::CongregationEventPermissionPolicy)
     singleOf(::SpeakerPermissionPolicy)
 
     singleOf(::UserRepositoryImpl) { bind<UserRepository>() }
@@ -96,6 +103,11 @@ val dataModule = module {
     factoryOf(::SaveCongregationUseCase)
     factoryOf(::GetAllCongregationsUseCase)
     factoryOf(::ObserveAllCongregationsUseCase)
+
+    factoryOf(::DeleteCongregationEventUseCase)
+    factoryOf(::GetAllCongregationEventUseCase)
+    factoryOf(::GetCongregationEventUseCase)
+    factoryOf(::SaveCongregationEventUseCase)
 
     // factoryOf(::SignInWithEmailAndPasswordUseCase)
     factoryOf(::SignOutUseCase)

@@ -1,28 +1,30 @@
 package de.geosphere.speechplaning.core.model
 
 import com.google.firebase.firestore.DocumentId
+import com.google.firebase.firestore.Exclude
 import de.geosphere.speechplaning.core.model.data.Event
-import java.time.LocalDate // Using java.time.LocalDate as discussed
+import kotlinx.serialization.Serializable
+import java.time.LocalDate
 
-/**
- * Represents a specific event within a congregation's schedule.
- *
- * @property id The unique ID of the event.
- * @property congregationId The ID of the congregation this event belongs to.
- * @property date The date of the event.
- * @property eventType The type of the event (e.g., Public Talk, Watchtower Study).
- * @property speechId The ID of the speech given at this event (nullable).
- * @property speakerId The ID of the speaker for this event (nullable).
- * @property chairmanId The ID of the chairman for this event (optional).
- * @property notes Additional notes for the event.
- */
+@Serializable
 data class CongregationEvent(
     @DocumentId val id: String = "",
-    val congregationId: String = "",
-    val date: LocalDate,
-    val eventType: Event,
+    val dateString: String? = null, // For Firestore
+    val eventType: Event = Event.CONVENTION,
+
     val speechId: String? = null,
+    val speechNumber: String? = null,
+    val speechSubject: String? = null,
+
     val speakerId: String? = null,
-    val chairmanId: String? = null,
-    val notes: String? = null
-) : SavableDataClass() // Assuming SavableDataClass is a suitable base class
+    val speakerName: String? = null,
+
+    val speakerCongregationId: String? = null,
+    val speakerCongregationName: String? = null,
+
+    val notes: String? = null,
+) : SavableDataClass() {
+    @get:Exclude
+    val date: LocalDate?
+        get() = dateString?.let { LocalDate.parse(it) }
+}
