@@ -41,7 +41,9 @@ class GetCongregationEventsUseCaseTest : BehaviorSpec({
                 )
                 coEvery { repository.getAllEventsForCongregation(districtId, congregationId) } returns events
 
-                val useCase = de.geosphere.speechplaning.data.usecases.congregationEvent.GetCongregationEventsUseCase(repository)
+                val useCase = de.geosphere.speechplaning.data.usecases.congregationEvent.GetCongregationEventsUseCase(
+                    repository
+                )
 
                 val result = useCase(districtId, congregationId)
 
@@ -55,7 +57,9 @@ class GetCongregationEventsUseCaseTest : BehaviorSpec({
                 val exception = RuntimeException("Test exception")
                 coEvery { repository.getAllEventsForCongregation(districtId, congregationId) } throws exception
 
-                val useCase = de.geosphere.speechplaning.data.usecases.congregationEvent.GetCongregationEventsUseCase(repository)
+                val useCase = de.geosphere.speechplaning.data.usecases.congregationEvent.GetCongregationEventsUseCase(
+                    repository
+                )
 
                 val result = useCase(districtId, congregationId)
 

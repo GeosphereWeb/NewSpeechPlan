@@ -109,7 +109,6 @@ val dataModule = module {
     factoryOf(::GetCongregationEventUseCase)
     factoryOf(::SaveCongregationEventUseCase)
 
-    // factoryOf(::SignInWithEmailAndPasswordUseCase)
     factoryOf(::SignOutUseCase)
 
     factoryOf(::ObserveCurrentUserUseCase)
