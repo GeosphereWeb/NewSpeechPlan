@@ -1,6 +1,6 @@
 package de.geosphere.speechplaning.data.repository
 
-import de.geosphere.speechplaning.data.repository.base.FirestoreSubcollectionRepositoryImpl
+import de.geosphere.speechplaning.data.repository.base.FirestoreSubcollectionRepository
 import de.geosphere.speechplaning.data.repository.services.IFirestoreService
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -20,7 +20,7 @@ internal data class TestData(val id: String, val data: String)
 internal class TestRepositoryIImpl(
     firestoreService: IFirestoreService,
     subcollectionName: String
-) : FirestoreSubcollectionRepositoryImpl<TestData>(
+) : FirestoreSubcollectionRepository<TestData>(
     firestoreService,
     subcollectionName,
     TestData::class.java
