@@ -6,7 +6,7 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
-import de.geosphere.speechplaning.data.repository.base.FirestoreRepositoryImpl
+import de.geosphere.speechplaning.data.repository.base.FirestoreRepository
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
@@ -28,7 +28,7 @@ import kotlinx.coroutines.test.setMain
 internal data class TestEntity(val id: String = "", val name: String = "")
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class TestIFirestoreRepositoryImpl(firestore: FirebaseFirestore) : FirestoreRepositoryImpl<TestEntity>(
+internal class TestIFirestoreRepositoryImpl(firestore: FirebaseFirestore) : FirestoreRepository<TestEntity>(
     firestore = firestore,
     collectionPath = "test-collection",
     clazz = TestEntity::class.java

@@ -1,7 +1,7 @@
 package de.geosphere.speechplaning.data.repository
 
 import de.geosphere.speechplaning.core.model.Speaker
-import de.geosphere.speechplaning.data.repository.base.FirestoreSubcollectionRepositoryImpl
+import de.geosphere.speechplaning.data.repository.base.FirestoreSubcollectionRepository
 import de.geosphere.speechplaning.data.repository.services.IFirestoreService
 import kotlinx.coroutines.flow.Flow
 
@@ -12,7 +12,7 @@ private const val CONGREGATIONS_SUBCOLLECTION = "congregations"
 @Suppress("TooGenericExceptionCaught", "TooGenericExceptionThrown")
 class SpeakerRepositoryImpl(
     firestoreService: IFirestoreService
-) : FirestoreSubcollectionRepositoryImpl<Speaker>(
+) : FirestoreSubcollectionRepository<Speaker>(
     firestoreService = firestoreService,
     subcollectionName = SPEAKERS_SUBCOLLECTION,
     clazz = Speaker::class.java
