@@ -2,7 +2,7 @@ package de.geosphere.speechplaning.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
 import de.geosphere.speechplaning.core.model.District
-import de.geosphere.speechplaning.data.repository.base.FirestoreRepositoryImpl
+import de.geosphere.speechplaning.data.repository.base.FirestoreRepository
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -13,7 +13,7 @@ private const val DISTRICT_COLLECTION = "districts"
 @Suppress("TooGenericExceptionCaught", "TooGenericExceptionThrown")
 class DistrictRepositoryImpl(
     firestore: FirebaseFirestore
-) : FirestoreRepositoryImpl<District>(
+) : FirestoreRepository<District>(
     firestore = firestore,
     collectionPath = DISTRICT_COLLECTION,
     clazz = District::class.java

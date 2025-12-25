@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.callbackFlow
  * @param clazz Die Klassenreferenz der Entität (z.B. MyEntity::class.java).
  */
 @Suppress("TooGenericExceptionCaught", "TooGenericExceptionThrown")
-abstract class FirestoreSubcollectionRepositoryImpl<T : Any>(
+abstract class FirestoreSubcollectionRepository<T : Any>(
     protected val firestoreService: IFirestoreService,
     private val subcollectionName: String,
     private val clazz: Class<T>

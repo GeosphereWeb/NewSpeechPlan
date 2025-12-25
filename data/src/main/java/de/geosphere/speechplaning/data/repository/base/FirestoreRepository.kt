@@ -12,7 +12,7 @@ import kotlinx.coroutines.tasks.await
  * @param clazz Die Klassenreferenz der Entität (z.B. MyEntity::class.java).
  */
 @Suppress("TooGenericExceptionCaught", "TooGenericExceptionThrown")
-abstract class FirestoreRepositoryImpl<T : Any>(
+abstract class FirestoreRepository<T : Any>(
     protected val firestore: FirebaseFirestore,
     private val collectionPath: String,
     private val clazz: Class<T>
