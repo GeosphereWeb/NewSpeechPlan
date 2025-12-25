@@ -8,19 +8,27 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 
+private const val SAMPLE_IDS_LIMIT = 5
+
 @Suppress("TooGenericExceptionCaught")
 class GetCongregationEventUseCase(private val repository: CongregationEventRepositoryImpl) {
-    private val TAG = "GetCongregationEventUseCase"
+    private val tag = "GetCongregationEventUseCase"
 
-    // WICHTIG: Kein 'suspend' mehr, da ein Flow direkt zurückgegeben wird
-    operator fun invoke(): Flow<Result<List<CongregationEvent>>> {
-        return repository.getAllEventsFlow()
+    // Akzeptiert optional parentIds: wenn leer -> collection-group-flow (global), ansonsten Subcollection-Flow
+    operator fun invoke(vararg parentIds: String): Flow<Result<List<CongregationEvent>>> {
+        val flow = if (parentIds.isEmpty()) {
+            repository.getAllEventsFlow()
+        } else {
+            repository.getAllFlow(*parentIds)
+        }
+
+        return flow
             .onEach { list ->
                 try {
-                    val ids = list.mapNotNull { it.id }.take(5)
-                    Log.d(TAG, "received ${list.size} congregationEvents, sampleIds=$ids")
+                    val ids = list.mapNotNull { it.id }.take(SAMPLE_IDS_LIMIT)
+                    Log.d(tag, "received ${'$'}{list.size} congregationEvents, sampleIds=${'$'}ids")
                 } catch (e: Exception) {
-                    Log.w(TAG, "Failed to log incoming list", e)
+                    Log.w(tag, "Failed to log incoming list", e)
                 }
             }
             .map { list -> // Sortierung und Success-Wrapper
@@ -29,7 +37,7 @@ class GetCongregationEventUseCase(private val repository: CongregationEventRepos
             }
             .catch { e ->
                 // Fehler abfangen und als Result.failure senden
-                Log.e(TAG, "Flow error", e)
+                Log.e(tag, "Flow error", e)
                 emit(Result.failure(e))
             }
     }
