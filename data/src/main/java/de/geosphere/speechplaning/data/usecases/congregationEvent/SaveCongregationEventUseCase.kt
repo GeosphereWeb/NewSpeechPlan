@@ -6,15 +6,19 @@ import de.geosphere.speechplaning.data.repository.CongregationEventRepositoryImp
 @Suppress("TooGenericExceptionCaught")
 class SaveCongregationEventUseCase(private val repository: CongregationEventRepositoryImpl) {
     suspend operator fun invoke(congregationEvent: CongregationEvent): Result<Unit> {
-        // Basic validation
-        if (congregationEvent.date == null) {
-            return Result.failure(IllegalArgumentException("CongregationEvent date cannot be null."))
+        // Wichtige Validierung: Ein Event muss immer einer Versammlung zugeordnet sein.
+        // Ohne diese ID können die Sicherheitsregeln nicht funktionieren.
+        if (congregationEvent.congregationId.isBlank()) {
+            return Result.failure(IllegalArgumentException("CongregationEvent must have a valid congregationId to be saved."))
         }
 
         return try {
-            repository.saveEvent(congregationEvent)
+            // Aufruf der korrekten 'save'-Methode aus dem Basis-Repository.
+            // Diese Methode kann zwischen "neu erstellen" und "aktualisieren" unterscheiden.
+            repository.save(congregationEvent)
             Result.success(Unit)
         } catch (e: Exception) {
+            // Das Repository wirft bei Fehlern bereits eine detaillierte RuntimeException
             Result.failure(e)
         }
     }

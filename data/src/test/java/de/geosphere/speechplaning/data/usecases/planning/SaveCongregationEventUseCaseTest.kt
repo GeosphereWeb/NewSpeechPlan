@@ -10,8 +10,8 @@ import io.kotest.matchers.result.shouldBeSuccess
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import java.time.LocalDate
 import kotlinx.coroutines.runBlocking
+import java.time.LocalDate
 
 class SaveCongregationEventUseCaseTest : BehaviorSpec({
 
