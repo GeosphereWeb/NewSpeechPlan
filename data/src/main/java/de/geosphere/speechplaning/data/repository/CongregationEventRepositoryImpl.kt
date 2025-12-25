@@ -1,129 +1,67 @@
 package de.geosphere.speechplaning.data.repository
 
 import de.geosphere.speechplaning.core.model.CongregationEvent
+import de.geosphere.speechplaning.data.repository.base.FirestoreSubcollectionRepository
 import de.geosphere.speechplaning.data.repository.services.IFirestoreService
 import kotlinx.coroutines.flow.Flow
 
 private const val CONGREGATION_EVENTS_COLLECTION = "congregationEvents"
+private const val DISTRICTS_COLLECTION = "districts"
+private const val CONGREGATIONS_SUBCOLLECTION = "congregations"
 
-@Suppress("TooGenericExceptionCaught", "TooGenericExceptionThrown")
+@Suppress("TooGenericExceptionCaught", "TooGenericExceptionThrown", "TooManyFunctions")
 class CongregationEventRepositoryImpl(
-    private val firestoreService: IFirestoreService
+    firestoreService: IFirestoreService
+) : FirestoreSubcollectionRepository<CongregationEvent>(
+    firestoreService = firestoreService,
+    subcollectionName = CONGREGATION_EVENTS_COLLECTION,
+    clazz = CongregationEvent::class.java
 ) {
 
-    // Implementierung der abstrakten Methode(n) für Tests
-    internal fun extractIdFromEntity(entity: CongregationEvent): String {
+    // Implementierung der abstrakten Methode aus FirestoreSubcollectionRepository
+    override fun extractIdFromEntity(entity: CongregationEvent): String {
         return entity.id
     }
 
-    // --------------------------------------------------
-    // Subcollection-spezifische Methoden (für Districts/Congregations/...)
-    // --------------------------------------------------
+    /**
+     * Erwartet districtId als parentIds[0] und congregationId als parentIds[1].
+     */
+    override fun buildParentCollectionPath(vararg parentIds: String): String {
+        require(parentIds.size == 2) { "Expected districtId and congregationId as parentIds" }
+        val districtId = parentIds[0]
+        return "$DISTRICTS_COLLECTION/$districtId/$CONGREGATIONS_SUBCOLLECTION"
+    }
 
+    /**
+     * Erwartet districtId als parentIds[0] und congregationId als parentIds[1].
+     */
+    override fun getParentDocumentId(vararg parentIds: String): String {
+        require(parentIds.size == 2) { "Expected districtId and congregationId as parentIds" }
+        return parentIds[1]
+    }
+
+    // ------------------------- Convenience wrapper methods -------------------------
     suspend fun saveEvent(districtId: String, congregationId: String, event: CongregationEvent): String {
-        val parentCollectionPath = buildParentCollectionPath(districtId, congregationId)
-        val parentDocumentId = getParentDocumentId(districtId, congregationId)
-
-        return try {
-            if (event.id.isBlank()) {
-                firestoreService.addDocumentToSubcollection(
-                    parentCollection = parentCollectionPath,
-                    parentId = parentDocumentId,
-                    subcollection = CONGREGATION_EVENTS_COLLECTION,
-                    data = event
-                )
-            } else {
-                firestoreService.setDocumentInSubcollection(
-                    parentCollection = parentCollectionPath,
-                    parentId = parentDocumentId,
-                    subcollection = CONGREGATION_EVENTS_COLLECTION,
-                    documentId = event.id,
-                    data = event
-                )
-                event.id
-            }
-        } catch (e: Exception) {
-            val idForMessage = if (event.id.isBlank()) "[new]" else event.id
-            throw RuntimeException(
-                "Failed to save entity '$idForMessage' in subcollection '$CONGREGATION_EVENTS_COLLECTION' " +
-                    "under parent '$parentDocumentId' in '$parentCollectionPath'",
-                e
-            )
-        }
+        return super.save(event, districtId, congregationId)
     }
 
     suspend fun getEventById(districtId: String, congregationId: String, eventId: String): CongregationEvent? {
-        val parentCollectionPath = buildParentCollectionPath(districtId, congregationId)
-        val parentDocumentId = getParentDocumentId(districtId, congregationId)
-
-        return try {
-            if (eventId.isBlank()) return null
-            firestoreService.getDocumentFromSubcollection(
-                parentCollectionPath = parentCollectionPath,
-                parentDocumentId = parentDocumentId,
-                subcollectionName = CONGREGATION_EVENTS_COLLECTION,
-                documentId = eventId,
-                objectClass = CongregationEvent::class.java
-            )
-        } catch (e: Exception) {
-            throw RuntimeException(
-                "Failed to get entity '$eventId' from subcollection '$CONGREGATION_EVENTS_COLLECTION' " +
-                    "under parent '$parentDocumentId' in '$parentCollectionPath'",
-                e
-            )
-        }
+        return super.getById(eventId, districtId, congregationId)
     }
 
     suspend fun getAllEventsForCongregation(districtId: String, congregationId: String): List<CongregationEvent> {
-        val parentCollectionPath = buildParentCollectionPath(districtId, congregationId)
-        val parentDocumentId = getParentDocumentId(districtId, congregationId)
-
-        return try {
-            firestoreService.getDocumentsFromSubcollection(
-                parentCollection = parentCollectionPath,
-                parentId = parentDocumentId,
-                subcollection = CONGREGATION_EVENTS_COLLECTION,
-                objectClass = CongregationEvent::class.java
-            )
-        } catch (e: Exception) {
-            throw RuntimeException(
-                "Failed to get all entities from subcollection '$CONGREGATION_EVENTS_COLLECTION' " +
-                    "under parent '$parentDocumentId' in '$parentCollectionPath'",
-                e
-            )
-        }
+        return super.getAll(districtId, congregationId)
     }
 
     suspend fun deleteEvent(districtId: String, congregationId: String, eventId: String) {
-        val parentCollectionPath = buildParentCollectionPath(districtId, congregationId)
-        val parentDocumentId = getParentDocumentId(districtId, congregationId)
-
-        try {
-            require(eventId.isNotBlank()) { "Document ID cannot be blank for deletion." }
-            firestoreService.deleteDocumentFromSubcollection(
-                parentCollection = parentCollectionPath,
-                parentId = parentDocumentId,
-                subcollection = CONGREGATION_EVENTS_COLLECTION,
-                documentId = eventId
-            )
-        } catch (e: IllegalArgumentException) {
-            throw e
-        } catch (e: Exception) {
-            throw RuntimeException(
-                "Failed to delete entity '$eventId' from subcollection '$CONGREGATION_EVENTS_COLLECTION' " +
-                    "under parent '$parentDocumentId' in '$parentCollectionPath'",
-                e
-            )
-        }
+        super.delete(eventId, districtId, congregationId)
     }
 
-    // --------------------------------------------------
-    // Allgemeine (Collection-level) Methoden
-    // --------------------------------------------------
-
+    // ------------------------- Collection-group / top-level helpers -------------------------
     suspend fun getAllEvents(): List<CongregationEvent> {
+        // Delegiert an den Service (CollectionGroup)
         return firestoreService.getDocumentsFromSubcollection(
-            parentCollection = "", // nicht verwendet hier, aber Tests greifen normalerweise auf subcollection-Methoden
+            parentCollection = "",
             parentId = "",
             subcollection = CONGREGATION_EVENTS_COLLECTION,
             objectClass = CongregationEvent::class.java
@@ -135,39 +73,16 @@ class CongregationEventRepositoryImpl(
     }
 
     suspend fun saveEvent(event: CongregationEvent): String {
-        // delegiert auf SaveDocument wenn top-level gewünscht
-        return firestoreService.saveDocument(CONGREGATION_EVENTS_COLLECTION, event)
-    }
-
-    suspend fun deleteEvent(eventId: String) {
-        // Top-level Löschung eines CongregationEvent-Dokuments
-        try {
-            require(eventId.isNotBlank()) { "Document ID cannot be blank for deletion." }
-            firestoreService.deleteDocument(CONGREGATION_EVENTS_COLLECTION, eventId)
-        } catch (e: IllegalArgumentException) {
-            throw e
-        } catch (e: Exception) {
-            throw RuntimeException(
-                "Failed to delete top-level entity '$eventId' from collection '$CONGREGATION_EVENTS_COLLECTION'",
-                e
-            )
+        // Top-level save: wenn ID vorhanden -> set(documentId), sonst add()
+        return if (event.id.isBlank()) {
+            firestoreService.saveDocument(CONGREGATION_EVENTS_COLLECTION, event)
+        } else {
+            val success = firestoreService.saveDocumentWithId(CONGREGATION_EVENTS_COLLECTION, event.id, event)
+            if (success) event.id else throw RuntimeException("Failed to save document with id ${event.id}")
         }
     }
 
-    // --------------------------------------------------
-    // Hilfsfunktionen
-    // --------------------------------------------------
-
-    internal fun buildParentCollectionPath(vararg parentIds: String): String {
-        // Erwartet (districtId, congregationId) und liefert "districts/{districtId}/congregations"
-        if (parentIds.size != 2) throw IllegalArgumentException("Expected districtId and congregationId as parentIds")
-        val districtCollection = "districts"
-        val congregationsSubcollection = "congregations"
-        return "$districtCollection/${parentIds[0]}/$congregationsSubcollection"
-    }
-
-    internal fun getParentDocumentId(vararg parentIds: String): String {
-        if (parentIds.size != 2) throw IllegalArgumentException("Expected districtId and congregationId as parentIds")
-        return parentIds[1]
+    suspend fun deleteEvent(eventId: String) {
+        super.delete(eventId)
     }
 }

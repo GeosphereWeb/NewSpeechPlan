@@ -6,11 +6,7 @@ import de.geosphere.speechplaning.data.repository.CongregationEventRepositoryImp
 @Suppress("TooGenericExceptionCaught")
 class SaveCongregationEventUseCase(private val repository: CongregationEventRepositoryImpl) {
     suspend operator fun invoke(congregationEvent: CongregationEvent): Result<Unit> {
-        // Basic validation
-        if (congregationEvent.date == null) {
-            return Result.failure(IllegalArgumentException("CongregationEvent date cannot be null."))
-        }
-
+        // Optional: validate minimal fields
         return try {
             repository.saveEvent(congregationEvent)
             Result.success(Unit)

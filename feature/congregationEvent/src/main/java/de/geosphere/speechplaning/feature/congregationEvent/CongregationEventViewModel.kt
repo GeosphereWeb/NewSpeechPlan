@@ -146,7 +146,10 @@ class CongregationEventViewModel(
             val hasPermission = currentUser != null && permissionPolicy.canDelete(currentUser, eventToDelete)
 
             if (!hasPermission) {
-                _viewState.value = _viewState.value.copy(actionError = "Keine Berechtigung zum Löschen dieses Ereignisses!")
+                _viewState.value = _viewState.value.copy(
+                    actionError =
+                    "Keine Berechtigung zum Löschen dieses Ereignisses!"
+                )
                 return@launch
             }
 
