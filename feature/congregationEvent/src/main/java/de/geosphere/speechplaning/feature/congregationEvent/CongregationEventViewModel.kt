@@ -11,6 +11,7 @@ import de.geosphere.speechplaning.data.usecases.congregationEvent.SaveCongregati
 import de.geosphere.speechplaning.data.usecases.speaker.GetSpeakersUseCase
 import de.geosphere.speechplaning.data.usecases.speeches.GetSpeechesUseCase
 import de.geosphere.speechplaning.data.usecases.user.ObserveCurrentUserUseCase
+import de.geosphere.speechplaning.data.usecases.congregation.GetAllCongregationsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,6 +26,7 @@ class CongregationEventViewModel(
     private val deleteCongregationEventUseCase: DeleteCongregationEventUseCase,
     private val getSpeakersUseCase: GetSpeakersUseCase,
     private val getSpeechesUseCase: GetSpeechesUseCase,
+    private val getAllCongregationsUseCase: GetAllCongregationsUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
     private val permissionPolicy: CongregationEventPermissionPolicy
 ) : ViewModel() {
@@ -41,8 +43,11 @@ class CongregationEventViewModel(
             _viewState
         ) { congregationEventResult, speechesResult, speakersResult, appUser, viewState ->
 
+            // Lade zusätzlich die Congregations (combine hat nur 5-Parameter-Overloads)
+            val congregationsResult = getAllCongregationsUseCase().firstOrNull()
+
             try {
-                val size = congregationEventResult.getOrElse { emptyList() }.size
+                val size = congregationEventResult.getOrElse { emptyList<CongregationEvent>() }.size
                 Log.d(TAG, "combine: received congregationEventResult size=$size")
             } catch (e: Exception) {
                 Log.w(TAG, "combine: failed to log congregationEventResult", e)
@@ -50,6 +55,7 @@ class CongregationEventViewModel(
 
             val congregationEvents = congregationEventResult.getOrElse { emptyList() }
             val allSpeakers = speakersResult.getOrElse { emptyList() }
+            val allCongregations = congregationsResult?.getOrElse { emptyList() } ?: emptyList()
             val allSpeeches = speechesResult.getOrElse { emptyList() }
 
             var canCreate = false
@@ -65,6 +71,7 @@ class CongregationEventViewModel(
             CongregationEventUiState.SuccessUiState(
                 congregationEvents = congregationEvents,
                 allSpeakers = allSpeakers,
+                allCongregations = allCongregations,
                 allSpeeches = allSpeeches,
                 selectedCongregationEvent = viewState.selectedCongregationEvent,
                 showEditDialog = viewState.showEditDialog,
@@ -117,8 +124,50 @@ class CongregationEventViewModel(
             }
 
             _viewState.value = _viewState.value.copy(isActionInProgress = true, actionError = null)
+
+            // Fülle fehlende abgeleitete Felder, falls speakerId oder speechId vorhanden ist
+            var filledEvent = congregationEvent
+
+            // Wenn speakerId vorhanden, hole Speaker und setze speakerName + speakerCongregationId/Name
+            congregationEvent.speakerId?.let { sId ->
+                try {
+                    val speakers = getSpeakersUseCase().firstOrNull()?.getOrNull() ?: emptyList()
+                    val speaker = speakers.find { it.id == sId }
+                    if (speaker != null) {
+                        val speakerName = "${speaker.firstName} ${speaker.lastName}"
+                        val speakerCongId = speaker.congregationId
+                        val congregations = getAllCongregationsUseCase().firstOrNull()?.getOrNull() ?: emptyList()
+                        val congName = congregations.find { it.id == speakerCongId }?.name
+
+                        filledEvent = filledEvent.copy(
+                            speakerName = filledEvent.speakerName ?: speakerName,
+                            speakerCongregationId = filledEvent.speakerCongregationId ?: speakerCongId,
+                            speakerCongregationName = filledEvent.speakerCongregationName ?: congName
+                        )
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "saveCongregationEvent: failed to enrich speaker details", e)
+                }
+            }
+
+            // Wenn speechId vorhanden, hole Rede und setze Nummer + Subject
+            congregationEvent.speechId?.let { spId ->
+                try {
+                    val speeches = getSpeechesUseCase().firstOrNull()?.getOrNull() ?: emptyList()
+                    val speech = speeches.find { it.id == spId }
+                    if (speech != null) {
+                        filledEvent = filledEvent.copy(
+                            speechNumber = filledEvent.speechNumber ?: speech.number,
+                            speechSubject = filledEvent.speechSubject ?: speech.subject
+                        )
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "saveCongregationEvent: failed to enrich speech details", e)
+                }
+            }
+
             // Aufruf der nun suspendenden UseCase
-            val result = saveCongregationEventUseCase(congregationEvent)
+            val result = saveCongregationEventUseCase(filledEvent)
             result
                 .onSuccess {
                     clearSelection()
