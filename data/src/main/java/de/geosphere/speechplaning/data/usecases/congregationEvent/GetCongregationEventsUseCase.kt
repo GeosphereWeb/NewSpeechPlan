@@ -14,4 +14,3 @@ class GetCongregationEventsUseCase(private val repository: CongregationEventRepo
         }
     }
 }
-

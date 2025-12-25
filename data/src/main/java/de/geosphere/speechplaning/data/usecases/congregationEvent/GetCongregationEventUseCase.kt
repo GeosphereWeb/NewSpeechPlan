@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.onEach
 @Suppress("TooGenericExceptionCaught")
 class GetCongregationEventUseCase(private val repository: CongregationEventRepositoryImpl) {
     private val TAG = "GetCongregationEventUseCase"
+
     // WICHTIG: Kein 'suspend' mehr, da ein Flow direkt zurückgegeben wird
     operator fun invoke(): Flow<Result<List<CongregationEvent>>> {
         return repository.getAllEventsFlow()

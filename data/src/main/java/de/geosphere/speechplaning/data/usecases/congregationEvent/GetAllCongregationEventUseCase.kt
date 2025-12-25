@@ -12,6 +12,7 @@ class GetAllCongregationEventUseCase(
     private val congregationEventRepository: CongregationEventRepositoryImpl
 ) {
     private val TAG = "GetAllCongregationEventUseCase"
+
     /**
      * @return Ein Flow, der eine Liste von Versammlungen emittiert, verpackt in ein Result.
      */

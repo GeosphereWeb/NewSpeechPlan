@@ -181,7 +181,10 @@ fun CongregationEventEditDialog(
     onDelete: (String) -> Unit
 ) {
     val isEditMode = congregationEvent != null
-    val initialEvent = congregationEvent ?: CongregationEvent(dateString = LocalDate.now().toString(), eventType = Event.CONVENTION)
+    val initialEvent = congregationEvent ?: CongregationEvent(
+        dateString = LocalDate.now().toString(),
+        eventType = Event.CONVENTION
+    )
 
     var date by remember(initialEvent.id) { mutableStateOf(initialEvent.date) }
     var eventType by remember(initialEvent.id) { mutableStateOf(initialEvent.eventType) }
@@ -229,7 +232,12 @@ fun CongregationEventEditDialog(
                         .combinedClickable { showDatePicker = true }
                 )
                 if (showDatePicker) {
-                    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = date?.atStartOfDay(ZoneId.systemDefault())?.toInstant()?.toEpochMilli())
+                    val datePickerState =
+                        rememberDatePickerState(
+                            initialSelectedDateMillis = date?.atStartOfDay(
+                                ZoneId.systemDefault()
+                            )?.toInstant()?.toEpochMilli()
+                        )
                     DatePickerDialog(
                         onDismissRequest = { showDatePicker = false },
                         confirmButton = {
@@ -266,7 +274,8 @@ fun CongregationEventEditDialog(
                                 text = { Text("${speaker.lastName}, ${speaker.firstName}") },
                                 onClick = {
                                     speakerId = speaker.id
-                                    // Wenn der Redner gewechselt wird, prüfen wir, ob die aktuell gewählte Rede noch gültig ist
+                                    // Wenn der Redner gewechselt wird, prüfen wir, ob die aktuell gewählte Rede noch
+                                    // gültig ist
                                     val allowedSpeechNumbers = speaker.speechNumberIds.map { it.toString() }
                                     if (allSpeeches.find { s -> s.id == speechId }?.number !in allowedSpeechNumbers) {
                                         speechId = null // Rede zurücksetzen
