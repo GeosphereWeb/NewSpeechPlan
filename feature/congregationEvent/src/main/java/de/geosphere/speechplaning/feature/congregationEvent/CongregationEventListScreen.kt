@@ -1,6 +1,7 @@
 package de.geosphere.speechplaning.feature.congregationEvent
 
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,18 +16,19 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -35,8 +37,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,18 +47,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.core.model.Speaker
 import de.geosphere.speechplaning.core.model.Speech
+import de.geosphere.speechplaning.core.model.Congregation
 import de.geosphere.speechplaning.core.model.data.Event
 import org.koin.androidx.compose.koinViewModel
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import android.app.DatePickerDialog
 
 @Composable
 fun CongregationEventListScreen(viewModel: CongregationEventViewModel = koinViewModel()) {
@@ -120,6 +123,7 @@ fun CongregationEventListScreen(viewModel: CongregationEventViewModel = koinView
                         CongregationEventEditDialog(
                             congregationEvent = state.selectedCongregationEvent,
                             allSpeakers = state.allSpeakers,
+                            allCongregations = state.allCongregations,
                             allSpeeches = state.allSpeeches,
                             onDismiss = viewModel::clearSelection,
                             onSave = viewModel::saveCongregationEvent,
@@ -175,6 +179,7 @@ fun CongregationEventListItem(
 fun CongregationEventEditDialog(
     congregationEvent: CongregationEvent?,
     allSpeakers: List<Speaker>,
+    allCongregations: List<Congregation>,
     allSpeeches: List<Speech>,
     onDismiss: () -> Unit,
     onSave: (CongregationEvent) -> Unit,
@@ -190,7 +195,6 @@ fun CongregationEventEditDialog(
     var eventType by remember(initialEvent.id) { mutableStateOf(initialEvent.eventType) }
     var speakerId by remember(initialEvent.id) { mutableStateOf(initialEvent.speakerId) }
     var speechId by remember(initialEvent.id) { mutableStateOf(initialEvent.speechId) }
-    var chairmanId by remember(initialEvent.id) { mutableStateOf<String?>(null) } // Simplified
     var notes by remember(initialEvent.id) { mutableStateOf(initialEvent.notes ?: "") }
 
     var showDatePicker by remember { mutableStateOf(false) }
@@ -229,28 +233,24 @@ fun CongregationEventEditDialog(
                     label = { Text("Datum") },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .combinedClickable { showDatePicker = true }
+                        .clickable { showDatePicker = true },
+                    trailingIcon = { IconButton(onClick = { showDatePicker = true }) { Icon(Icons.Default.CalendarToday, contentDescription = "Datum wählen") } }
                 )
                 if (showDatePicker) {
-                    val datePickerState =
-                        rememberDatePickerState(
-                            initialSelectedDateMillis = date?.atStartOfDay(
-                                ZoneId.systemDefault()
-                            )?.toInstant()?.toEpochMilli()
+                    val context = LocalContext.current
+                    val initial = date ?: LocalDate.now()
+                    LaunchedEffect(key1 = showDatePicker) {
+                        val dp = DatePickerDialog(
+                            context,
+                            { _, year, month, dayOfMonth ->
+                                date = LocalDate.of(year, month + 1, dayOfMonth)
+                            },
+                            initial.year,
+                            initial.monthValue - 1,
+                            initial.dayOfMonth
                         )
-                    DatePickerDialog(
-                        onDismissRequest = { showDatePicker = false },
-                        confirmButton = {
-                            TextButton(onClick = {
-                                datePickerState.selectedDateMillis?.let {
-                                    date = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
-                                }
-                                showDatePicker = false
-                            }) { Text("OK") }
-                        },
-                        dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("Abbrechen") } }
-                    ) {
-                        DatePicker(state = datePickerState)
+                        dp.setOnDismissListener { showDatePicker = false }
+                        dp.show()
                     }
                 }
 
@@ -268,7 +268,7 @@ fun CongregationEventEditDialog(
                         label = { Text("Redner") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = speakerExpanded) }
                     )
-                    ExposedDropdownMenu(expanded = speakerExpanded, onDismissRequest = { speakerExpanded = false }) {
+                    DropdownMenu(expanded = speakerExpanded, onDismissRequest = { speakerExpanded = false }) {
                         allSpeakers.forEach { speaker ->
                             DropdownMenuItem(
                                 text = { Text("${speaker.lastName}, ${speaker.firstName}") },
@@ -302,7 +302,7 @@ fun CongregationEventEditDialog(
                         label = { Text("Rede") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = speechExpanded) }
                     )
-                    ExposedDropdownMenu(expanded = speechExpanded, onDismissRequest = { speechExpanded = false }) {
+                    DropdownMenu(expanded = speechExpanded, onDismissRequest = { speechExpanded = false }) {
                         filteredSpeeches.forEach { speech ->
                             DropdownMenuItem(
                                 text = { Text("${speech.number}: ${speech.subject}") },
@@ -343,11 +343,25 @@ fun CongregationEventEditDialog(
                         Text("Abbrechen")
                     }
                     Button(onClick = {
+                        // Erzeuge finalen Event mit vollständigen Feldern
+                        val selectedSpeaker = allSpeakers.find { it.id == speakerId }
+                        val selectedSpeech = allSpeeches.find { it.id == speechId }
+                        val speakerName = selectedSpeaker?.let { "${it.firstName} ${it.lastName}" }
+                        val speechNumber = selectedSpeech?.number
+                        val speechSubject = selectedSpeech?.subject
+                        val speakerCongregationId = selectedSpeaker?.congregationId
+                        val speakerCongregationName = allCongregations.find { it.id == speakerCongregationId }?.name
+
                         val finalEvent = initialEvent.copy(
                             dateString = date?.toString(),
                             eventType = eventType,
                             speakerId = speakerId,
+                            speakerName = speakerName,
+                            speakerCongregationId = speakerCongregationId,
+                            speakerCongregationName = speakerCongregationName,
                             speechId = speechId,
+                            speechNumber = speechNumber,
+                            speechSubject = speechSubject,
                             notes = notes
                         )
                         onSave(finalEvent)
