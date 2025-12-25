@@ -7,7 +7,7 @@ import de.geosphere.speechplaning.data.repository.CongregationEventRepositoryImp
 class GetCongregationEventsUseCase(private val repository: CongregationEventRepositoryImpl) {
     suspend operator fun invoke(districtId: String, congregationId: String): Result<List<CongregationEvent>> {
         return try {
-            val events = repository.getAllEventsForCongregation(districtId, congregationId)
+            val events = repository.getAll(districtId, congregationId)
             Result.success(events)
         } catch (e: Exception) {
             Result.failure(e)
