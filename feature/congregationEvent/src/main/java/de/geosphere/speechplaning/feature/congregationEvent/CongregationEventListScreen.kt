@@ -39,12 +39,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -59,6 +59,9 @@ import org.koin.androidx.compose.koinViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import android.app.DatePickerDialog
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 
 @Composable
 fun CongregationEventListScreen(viewModel: CongregationEventViewModel = koinViewModel()) {
@@ -86,50 +89,75 @@ fun CongregationEventListScreen(viewModel: CongregationEventViewModel = koinView
         }
 
         is CongregationEventUiState.SuccessUiState -> {
-            Scaffold(
-                floatingActionButton = {
-                    if (state.canCreateCongregationEvent) {
-                        FloatingActionButton(onClick = { viewModel.selectCongregationEvent(null) }) {
-                            Icon(Icons.Default.Add, contentDescription = "Neues Ereignis")
+            // NavController für Liste <-> Detail
+            val navController = rememberNavController()
+
+            NavHost(navController = navController, startDestination = "list") {
+                composable("list") {
+                    Scaffold(
+                        floatingActionButton = {
+                            if (state.canCreateCongregationEvent) {
+                                FloatingActionButton(onClick = { viewModel.selectCongregationEvent(null) }) {
+                                    Icon(Icons.Default.Add, contentDescription = "Neues Ereignis")
+                                }
+                            }
+                        }
+                    ) { padding ->
+                        Box(
+                            modifier = Modifier
+                                .padding(padding)
+                                .fillMaxSize()
+                        ) {
+                            CongregationEventListContent(
+                                congregationEvents = state.congregationEvents,
+                                onSelectCongregationEvent = { event ->
+                                    // Klick auf Eintrag -> Detailansicht öffnen
+                                    navController.navigate("details/${event.id}")
+                                }
+                            )
+
+                            if (state.isActionInProgress) {
+                                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                            }
+
+                            state.actionError?.let {
+                                Text(
+                                    text = it,
+                                    color = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier
+                                        .align(Alignment.BottomCenter)
+                                        .padding(16.dp)
+                                )
+                            }
+
+                            if (state.showEditDialog) {
+                                CongregationEventEditDialog(
+                                    congregationEvent = state.selectedCongregationEvent,
+                                    allSpeakers = state.allSpeakers,
+                                    allCongregations = state.allCongregations,
+                                    allSpeeches = state.allSpeeches,
+                                    onDismiss = viewModel::clearSelection,
+                                    onSave = viewModel::saveCongregationEvent,
+                                    onDelete = viewModel::deleteCongregationEvent
+                                )
+                            }
                         }
                     }
                 }
-            ) { padding ->
-                Box(
-                    modifier = Modifier
-                        .padding(padding)
-                        .fillMaxSize()
-                ) {
-                    CongregationEventListContent(
-                        congregationEvents = state.congregationEvents,
-                        onSelectCongregationEvent = viewModel::selectCongregationEvent
+
+                composable("details/{id}") { backStackEntry ->
+                    val id = backStackEntry.arguments?.getString("id") ?: ""
+                    val event = state.congregationEvents.find { it.id == id }
+                    CongregationEventDetailsScreen(
+                        congregationEvent = event,
+                        onBack = { navController.popBackStack() },
+                        onEdit = { ev ->
+                            // Öffne Edit-Dialog über ViewModel und navigiere zurück zur Liste,
+                            // dort wird der Edit-Dialog auf Basis von state.showEditDialog gerendert.
+                            viewModel.selectCongregationEvent(ev)
+                            navController.navigate("list")
+                        }
                     )
-
-                    if (state.isActionInProgress) {
-                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                    }
-
-                    state.actionError?.let {
-                        Text(
-                            text = it,
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(16.dp)
-                        )
-                    }
-
-                    if (state.showEditDialog) {
-                        CongregationEventEditDialog(
-                            congregationEvent = state.selectedCongregationEvent,
-                            allSpeakers = state.allSpeakers,
-                            allCongregations = state.allCongregations,
-                            allSpeeches = state.allSpeeches,
-                            onDismiss = viewModel::clearSelection,
-                            onSave = viewModel::saveCongregationEvent,
-                            onDelete = viewModel::deleteCongregationEvent
-                        )
-                    }
                 }
             }
         }
@@ -145,8 +173,8 @@ fun CongregationEventListContent(
         items(congregationEvents, key = { it.id.ifBlank { it.hashCode() } }) { event ->
             CongregationEventListItem(
                 congregationEvent = event,
-                onClick = { onSelectCongregationEvent(event) }, // Edit on short click
-                onLongClick = { onSelectCongregationEvent(event) }
+                onClick = { onSelectCongregationEvent(event) }, // Öffnet Details
+                onLongClick = null
             )
         }
     }
@@ -236,10 +264,12 @@ fun CongregationEventEditDialog(
                         .clickable { showDatePicker = true },
                     trailingIcon = { IconButton(onClick = { showDatePicker = true }) { Icon(Icons.Default.CalendarToday, contentDescription = "Datum wählen") } }
                 )
+
                 if (showDatePicker) {
                     val context = LocalContext.current
                     val initial = date ?: LocalDate.now()
-                    LaunchedEffect(key1 = showDatePicker) {
+                    // DisposableEffect stellt sicher, dass der Dialog korrekt angezeigt und wieder geschlossen wird
+                    DisposableEffect(key1 = showDatePicker) {
                         val dp = DatePickerDialog(
                             context,
                             { _, year, month, dayOfMonth ->
@@ -251,6 +281,14 @@ fun CongregationEventEditDialog(
                         )
                         dp.setOnDismissListener { showDatePicker = false }
                         dp.show()
+
+                        onDispose {
+                            try {
+                                dp.dismiss()
+                            } catch (_: Exception) {
+                                // ignore
+                            }
+                        }
                     }
                 }
 
@@ -369,6 +407,43 @@ fun CongregationEventEditDialog(
                         Text("Speichern")
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun CongregationEventDetailsScreen(
+    congregationEvent: CongregationEvent?,
+    onBack: () -> Unit,
+    onEdit: (CongregationEvent?) -> Unit
+) {
+    Card(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(text = "Ereignis-Details", style = MaterialTheme.typography.titleLarge)
+            Spacer(modifier = Modifier.height(8.dp))
+            if (congregationEvent == null) {
+                Text("Ereignis nicht gefunden")
+                Spacer(modifier = Modifier.height(8.dp))
+                TextButton(onClick = onBack) { Text("Zurück") }
+                return@Column
+            }
+
+            val formatter = remember { DateTimeFormatter.ofPattern("dd. MMMM yyyy") }
+            Text("Datum: ${congregationEvent.date?.format(formatter) ?: congregationEvent.dateString}")
+            Text("Typ: ${congregationEvent.eventType}")
+            Text("Redner: ${congregationEvent.speakerName ?: "-"}")
+            Text("Gemeinde: ${congregationEvent.speakerCongregationName ?: "-"}")
+            Text("Rede: ${congregationEvent.speechNumber ?: "-"} ${congregationEvent.speechSubject ?: ""}")
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Notizen:")
+            Text(congregationEvent.notes ?: "")
+
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                TextButton(onClick = onBack) { Text("Zurück") }
+                Spacer(modifier = Modifier.weight(1f))
+                TextButton(onClick = { onEdit(congregationEvent) }) { Text("Bearbeiten") }
             }
         }
     }
