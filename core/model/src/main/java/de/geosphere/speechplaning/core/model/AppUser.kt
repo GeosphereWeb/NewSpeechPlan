@@ -1,5 +1,6 @@
 package de.geosphere.speechplaning.core.model
 
+import androidx.annotation.Keep
 import com.google.firebase.firestore.DocumentId
 import de.geosphere.speechplaning.core.model.data.UserRole
 
@@ -11,6 +12,7 @@ import de.geosphere.speechplaning.core.model.data.UserRole
  * @param displayName Der Anzeigename des Nutzers.
  * @param approved Ein Flag, das angibt, ob der Nutzer für die App-Nutzung freigeschaltet ist.
  */
+@Keep
 data class AppUser(
     @DocumentId
     val uid: String = "",
