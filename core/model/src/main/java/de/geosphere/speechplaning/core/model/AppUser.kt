@@ -19,5 +19,10 @@ data class AppUser(
     val email: String? = null,
     val displayName: String? = null,
     val approved: Boolean = false,
-    val role: UserRole = UserRole.SPEAKING_ASSISTANT
+    val role: UserRole = UserRole.SPEAKING_ASSISTANT,
+    val districtId: String? = null,
+    val congregationId: String? = null,
+    val isDistrictLeader: Boolean = false,
+    val isCongregationLeader: Boolean = false,
+    val isCircuitOverseer: Boolean = false,
 )
