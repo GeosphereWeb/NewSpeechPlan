@@ -1,5 +1,6 @@
 package de.geosphere.speechplaning.core.model
 
+import androidx.annotation.Keep
 import com.google.firebase.firestore.DocumentId
 import kotlinx.serialization.Serializable
 
@@ -17,6 +18,7 @@ import kotlinx.serialization.Serializable
  *                  Defaults to `true`, meaning speeches are active by default.
  */
 @Serializable
+@Keep
 data class Speech(
     @DocumentId val id: String = "",
     val number: String = "",

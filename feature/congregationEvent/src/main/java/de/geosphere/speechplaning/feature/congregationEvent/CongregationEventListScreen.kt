@@ -1,7 +1,8 @@
 package de.geosphere.speechplaning.feature.congregationEvent
 
-import androidx.compose.foundation.combinedClickable
+import android.app.DatePickerDialog
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,15 +16,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
@@ -37,31 +38,30 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import de.geosphere.speechplaning.core.model.Congregation
 import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.core.model.Speaker
 import de.geosphere.speechplaning.core.model.Speech
-import de.geosphere.speechplaning.core.model.Congregation
 import de.geosphere.speechplaning.core.model.data.Event
 import org.koin.androidx.compose.koinViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import android.app.DatePickerDialog
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 
 @Composable
 fun CongregationEventListScreen(viewModel: CongregationEventViewModel = koinViewModel()) {
@@ -262,7 +262,11 @@ fun CongregationEventEditDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { showDatePicker = true },
-                    trailingIcon = { IconButton(onClick = { showDatePicker = true }) { Icon(Icons.Default.CalendarToday, contentDescription = "Datum wählen") } }
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            showDatePicker = true
+                        }) { Icon(Icons.Default.CalendarToday, contentDescription = "Datum wählen") }
+                    }
                 )
 
                 if (showDatePicker) {

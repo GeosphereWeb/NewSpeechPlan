@@ -1,5 +1,6 @@
 package de.geosphere.speechplaning.core.model
 
+import androidx.annotation.Keep
 import com.google.firebase.firestore.DocumentId
 import kotlinx.serialization.Serializable
 
@@ -15,6 +16,7 @@ import kotlinx.serialization.Serializable
  * @constructor Create empty Congregation
  */
 @Serializable
+@Keep
 data class Congregation(
     @DocumentId val id: String = "",
     val districtId: String = "",
