@@ -67,7 +67,7 @@ fun main() = runBlocking {
     val serviceAccountPath = "C:/Users/werne/AndroidStudioProjects/NewSpeechPlan/serviceAccountKey.json"
 
     // Pfad zur CSV Datei - BITTE ANPASSEN!
-    val csvFilePath = "C:/Users/werne/AndroidStudioProjects/NewSpeechPlan/Helper/ImportExportDB-csv.CSV"
+    val csvFilePath = "C:/Users/werne/AndroidStudioProjects/NewSpeechPlan/import_src/Export_Kreis-Versl-Redner-Vortraege.CSV"
 
     importer.importData(serviceAccountPath, csvFilePath)
 }
@@ -160,6 +160,7 @@ class CsvImporter {
                     lastName = columns.getOrElse(13) { "" }.trim(),
                     firstName = columns.getOrElse(14) { "" }.trim(),
                     phone = columns.getOrElse(15) { "" }.trim(),
+                    mobile = columns.getOrElse(16) { "" }.trim(),
                     email = columns.getOrElse(17) { "" }.trim(),
                     congregationId = columns.getOrElse(18) { "" }.trim(),
                     spiritualStatus = when (columns.getOrElse(19) { "" }.trim().toIntOrNull()) {
