@@ -1,5 +1,6 @@
 package de.geosphere.speechplaning.core.model
 
+import androidx.annotation.Keep
 import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.Exclude
 import de.geosphere.speechplaning.core.model.data.Event
@@ -7,6 +8,7 @@ import kotlinx.serialization.Serializable
 import java.time.LocalDate
 
 @Serializable
+@Keep
 data class CongregationEvent(
     @DocumentId val id: String = "",
     val dateString: String? = null, // For Firestore

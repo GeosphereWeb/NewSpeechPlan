@@ -1,5 +1,6 @@
 package de.geosphere.speechplaning.core.model
 
+import androidx.annotation.Keep
 import com.google.firebase.firestore.DocumentId
 
 /**
@@ -17,6 +18,7 @@ import com.google.firebase.firestore.DocumentId
  * @property active A boolean flag indicating whether the Chairman is currently active.
  *                  Defaults to `true`, meaning a newly created Chairman is active by default.
  */
+@Keep
 data class Chairman(
     // Firestore document id
     @DocumentId val chairmanId: String = "",

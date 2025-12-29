@@ -5,13 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.data.authentication.permission.CongregationEventPermissionPolicy
+import de.geosphere.speechplaning.data.usecases.congregation.GetAllCongregationsUseCase
 import de.geosphere.speechplaning.data.usecases.congregationEvent.DeleteCongregationEventUseCase
 import de.geosphere.speechplaning.data.usecases.congregationEvent.GetCongregationEventUseCase
 import de.geosphere.speechplaning.data.usecases.congregationEvent.SaveCongregationEventUseCase
 import de.geosphere.speechplaning.data.usecases.speaker.GetSpeakersUseCase
 import de.geosphere.speechplaning.data.usecases.speeches.GetSpeechesUseCase
 import de.geosphere.speechplaning.data.usecases.user.ObserveCurrentUserUseCase
-import de.geosphere.speechplaning.data.usecases.congregation.GetAllCongregationsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

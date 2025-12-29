@@ -1,9 +1,9 @@
 package de.geosphere.speechplaning.feature.congregationEvent
 
+import de.geosphere.speechplaning.core.model.Congregation
 import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.core.model.Speaker
 import de.geosphere.speechplaning.core.model.Speech
-import de.geosphere.speechplaning.core.model.Congregation
 
 sealed interface CongregationEventUiState {
     data object LoadingUiState : CongregationEventUiState
