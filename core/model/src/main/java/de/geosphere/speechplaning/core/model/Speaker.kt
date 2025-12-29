@@ -2,6 +2,7 @@
 
 package de.geosphere.speechplaning.core.model
 
+import androidx.annotation.Keep
 import com.google.firebase.firestore.DocumentId
 import de.geosphere.speechplaning.core.model.data.SpiritualStatus
 import kotlinx.serialization.Serializable
@@ -22,6 +23,7 @@ import kotlinx.serialization.Serializable
  * @property active Indicates whether the speaker is currently active and available for assignments.
  */
 @Serializable
+@Keep
 data class Speaker(
     @DocumentId val id: String = "",
     val districtId: String = "",
