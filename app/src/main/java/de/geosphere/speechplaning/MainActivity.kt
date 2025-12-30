@@ -9,7 +9,6 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -17,21 +16,14 @@ import de.geosphere.speechplaning.core.navigation.Screen
 import de.geosphere.speechplaning.data.authentication.AuthUiState
 import de.geosphere.speechplaning.feature.login.ui.AuthViewModel
 import de.geosphere.speechplaning.feature.login.ui.LoginScreen
-import de.geosphere.speechplaning.mocking.BuildDummyDBConnection
 import de.geosphere.speechplaning.ui.MainScreenComponent
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import org.koin.core.parameter.parametersOf
 
 @Suppress("UnusedPrivateProperty")
 class MainActivity :
     ComponentActivity(),
     KoinComponent {
-
-    private val dummyDbBuilder: BuildDummyDBConnection by inject {
-        parametersOf(lifecycleScope)
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,7 +31,6 @@ class MainActivity :
 
         WindowCompat.getInsetsController(window, window.decorView).hidestSystemBars()
 
-        // dummyDbBuilder()
         setContent {
             val authViewModel: AuthViewModel = koinViewModel()
             val authState by authViewModel.getAuthUiState()

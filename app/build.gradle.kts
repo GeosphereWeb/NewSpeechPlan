@@ -1,5 +1,4 @@
 
-
 import java.util.Locale
 
 plugins {
@@ -44,10 +43,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-        freeCompilerArgs = listOf("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
-    }
 
     buildFeatures {
         compose = true
@@ -70,6 +65,12 @@ android {
     }
 }
 
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
+    }
+}
+
 dependencies {
     implementation(project(":feature:home"))
     implementation(project(":feature:settings"))
@@ -83,7 +84,6 @@ dependencies {
     implementation(project(":core:ui"))
     implementation(project(":core:model"))
     implementation(project(":core:navigation"))
-    implementation(project(":mocking"))
     implementation(project(":data"))
     implementation(project(":theme"))
 
@@ -239,41 +239,41 @@ val restoreDummyGoogleServicesTask = tasks.register("restoreDummyGoogleServicesI
     }
 }
 
-// NEUER, KORREKTER BLOCK mit der androidComponents API
+// WICHTIG: Stelle sicher, dass diese Imports am Anfang deiner build.gradle.kts-Datei stehen.
+// Sie sind bereits in deiner Datei vorhanden, dies dient nur zur Überprüfung.
+// import com.android.build.api.variant.AndroidTest
+// import com.android.build.api.variant.UnitTest
+// import java.util.Locale
+
 androidComponents {
+    // 1. Konfiguriere die App-Varianten (z.B. debug, release)
     onVariants { variant ->
-        // Macht aus "debug" -> "Debug", "release" -> "Release"
+        // Macht aus "debug" -> "Debug"
         val capitalName = variant.name.replaceFirstChar { it.titlecase(Locale.getDefault()) }
 
         // --- Application Tasks ---
-        // z.B. processDebugGoogleServices
         tasks.findByName("process${capitalName}GoogleServices")?.dependsOn(useRealGoogleServicesTask)
+        tasks.findByName("assemble${capitalName}")?.finalizedBy(restoreDummyGoogleServicesTask)
+    }
 
-        // z.B. assembleDebug
-        tasks.findByName("assemble$capitalName")?.finalizedBy(restoreDummyGoogleServicesTask)
+    // 2. Konfiguriere die Unit-Test-Komponenten
+    onVariants { variant ->
+        val capitalName = variant.name.replaceFirstChar { it.titlecase(Locale.getDefault()) }
 
-        // --- Unit Test Tasks ---
-        variant.unitTest?.let { unitTest ->
-            // Macht aus "debugUnitTest" -> "DebugUnitTest"
-            val unitTestCapitalName = unitTest.name.replaceFirstChar { it.titlecase(Locale.getDefault()) }
-
-            // z.B. testDebugUnitTest
-            tasks.findByName("test$unitTestCapitalName")?.let { testTask ->
-                testTask.finalizedBy(restoreDummyGoogleServicesTask)
-                testTask.dependsOn(useRealGoogleServicesTask)
-            }
+        // Finde den passenden Test-Task (z.B. "testDebugUnitTest")
+        tasks.findByName("test${capitalName}UnitTest")?.let { testTask ->
+            testTask.finalizedBy(restoreDummyGoogleServicesTask)
+            testTask.dependsOn(useRealGoogleServicesTask)
         }
+    }
 
-        // --- Android Test Tasks ---
-        variant.androidTest?.let { androidTest ->
-            // Macht aus "debugAndroidTest" -> "DebugAndroidTest"
-            val androidTestCapitalName = androidTest.name.replaceFirstChar { it.titlecase(Locale.getDefault()) }
+    // 3. Konfiguriere die Android-Test-Komponenten (Instrumented Tests)
+    onVariants { variant ->
+        val capitalName = variant.name.replaceFirstChar { it.titlecase(Locale.getDefault()) }
 
-            // z.B. processDebugAndroidTestGoogleServices
-            tasks.findByName("process${androidTestCapitalName}GoogleServices")?.dependsOn(useRealGoogleServicesTask)
-
-            // z.B. assembleDebugAndroidTest
-            tasks.findByName("assemble$androidTestCapitalName")?.finalizedBy(restoreDummyGoogleServicesTask)
-        }
+        // Task für Google-Services des Instrumented Tests
+        tasks.findByName("process${capitalName}AndroidTestGoogleServices")?.dependsOn(useRealGoogleServicesTask)
+        // Task zum Zusammenbauen des Instrumented Tests
+        tasks.findByName("assemble${capitalName}AndroidTest")?.finalizedBy(restoreDummyGoogleServicesTask)
     }
 }

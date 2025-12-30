@@ -1,90 +1,51 @@
 package de.geosphere.speechplaning.data.repository
 
-import com.google.firebase.firestore.FirebaseFirestore
 import de.geosphere.speechplaning.core.model.Speech
-import de.geosphere.speechplaning.data.repository.base.FirestoreRepository
-import kotlinx.coroutines.channels.awaitClose
+import de.geosphere.speechplaning.data.repository.services.IFirestoreService
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.tasks.await
 
 private const val SPEECHES_COLLECTION = "speeches"
 
 @Suppress("TooGenericExceptionCaught", "TooGenericExceptionThrown")
 class SpeechRepositoryImpl(
-    firestore: FirebaseFirestore
-) : FirestoreRepository<Speech>(
-    firestore = firestore,
-    collectionPath = SPEECHES_COLLECTION,
-    clazz = Speech::class.java
+    private val firestoreService: IFirestoreService
 ) {
-
-    // Implementierung der abstrakten Methode aus BaseFirestoreRepository
-    override fun extractIdFromEntity(entity: Speech): String {
-        return entity.id
-    }
 
     /**
      * Ruft alle aktiven Reden ab.
-     * Dies verwendet eine serverseitige Query.
-     * Diese Methode ist spezifisch für SpeechRepository und nicht Teil der Basisklasse.
+     * Dies filtert die Reden auf Client-Seite.
+     * Für eine bessere Performance sollte dies eine serverseitige Query sein.
      *
      * @return Eine Liste von aktiven Speech-Objekten.
      */
     suspend fun getActiveSpeeches(): List<Speech> {
         return try {
-            val querySnapshot = firestore.collection(SPEECHES_COLLECTION)
-                .whereEqualTo("active", true)
-                .get()
-                .await()
-            querySnapshot.toObjects(Speech::class.java)
+            firestoreService.getDocuments(SPEECHES_COLLECTION, Speech::class.java)
+                .filter { it.active }
         } catch (e: Exception) {
             throw RuntimeException("Failed to get active speech from $SPEECHES_COLLECTION", e)
         }
     }
 
     suspend fun deleteSpeech(speechId: String) {
-        delete(speechId)
+        firestoreService.deleteDocument(SPEECHES_COLLECTION, speechId)
     }
 
     suspend fun getAllSpeeches(): List<Speech> {
         return try {
-            val querySnapshot = firestore.collection(SPEECHES_COLLECTION)
-                .get()
-                .await()
-            querySnapshot.toObjects(Speech::class.java)
+            firestoreService.getDocuments(SPEECHES_COLLECTION, Speech::class.java)
         } catch (e: Exception) {
             throw RuntimeException("Failed to get all speech from $SPEECHES_COLLECTION", e)
         }
     }
 
     suspend fun saveSpeech(speech: Speech) {
-        save(speech.copy(id = speech.number))
+        // Die Redenummer wird als Dokumenten-ID verwendet
+        val speechToSave = speech.copy(id = speech.number)
+        firestoreService.setDocument(SPEECHES_COLLECTION, speechToSave.id, speechToSave)
     }
 
-    fun getAllSpeechesFlow(): Flow<List<Speech>> = callbackFlow {
-        // 1. Listener bei Firestore registrieren
-        val listenerRegistration = firestore.collection(SPEECHES_COLLECTION)
-            .addSnapshotListener { snapshot, error ->
-
-                // Fehlerbehandlung: Wenn Firestore einen Fehler meldet, den Flow schließen
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
-                }
-
-                // Erfolgsfall: Daten mappen und emittieren
-                if (snapshot != null) {
-                    val speeches = snapshot.toObjects(Speech::class.java)
-                    // trySend versucht, den Wert in den Flow zu schieben (thread-safe)
-                    trySend(speeches)
-                }
-            }
-
-        // 2. Cleanup: Wird aufgerufen, wenn der Flow cancelled wird (z.B. ViewModel cleared)
-        // Das verhindert Memory Leaks, weil der Listener entfernt wird.
-        awaitClose {
-            listenerRegistration.remove()
-        }
+    fun getAllSpeechesFlow(): Flow<List<Speech>> {
+        return firestoreService.getCollectionFlow(SPEECHES_COLLECTION, Speech::class.java)
     }
 }

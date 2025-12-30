@@ -16,8 +16,8 @@ import de.geosphere.speechplaning.data.repository.CongregationRepositoryImpl
 import de.geosphere.speechplaning.data.repository.DistrictRepositoryImpl
 import de.geosphere.speechplaning.data.repository.SpeakerRepositoryImpl
 import de.geosphere.speechplaning.data.repository.SpeechRepositoryImpl
+import de.geosphere.speechplaning.data.repository.services.FirestoreServiceImpl
 import de.geosphere.speechplaning.data.repository.services.IFirestoreService
-import de.geosphere.speechplaning.data.repository.services.IFirestoreServiceImpl
 import de.geosphere.speechplaning.data.usecases.congregation.DeleteCongregationUseCase
 import de.geosphere.speechplaning.data.usecases.congregation.GetAllCongregationsUseCase
 import de.geosphere.speechplaning.data.usecases.congregation.GetCongregationUseCase
@@ -55,7 +55,7 @@ val dataModule = module {
     // Database
     single<FirebaseFirestore> { FirebaseFirestore.getInstance() }
     single<FirebaseAuth> { FirebaseAuth.getInstance() }
-    singleOf(::IFirestoreServiceImpl) { bind<IFirestoreService>() }
+    singleOf(::FirestoreServiceImpl) { bind<IFirestoreService>() }
 
     // Coroutine Scope für Repositories
     single { CoroutineScope(Dispatchers.IO) } // oder SupervisorJob() + Dispatchers.Default
