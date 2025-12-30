@@ -11,11 +11,11 @@ import de.geosphere.speechplaning.data.authentication.permission.CongregationPer
 import de.geosphere.speechplaning.data.authentication.permission.DistrictPermissionPolicy
 import de.geosphere.speechplaning.data.authentication.permission.SpeakerPermissionPolicy
 import de.geosphere.speechplaning.data.authentication.permission.SpeechPermissionPolicy
-import de.geosphere.speechplaning.data.repository.CongregationEventRepositoryImpl
-import de.geosphere.speechplaning.data.repository.CongregationRepositoryImpl
-import de.geosphere.speechplaning.data.repository.DistrictRepositoryImpl
-import de.geosphere.speechplaning.data.repository.SpeakerRepositoryImpl
-import de.geosphere.speechplaning.data.repository.SpeechRepositoryImpl
+import de.geosphere.speechplaning.data.repository.CongregationEventRepository
+import de.geosphere.speechplaning.data.repository.CongregationRepository
+import de.geosphere.speechplaning.data.repository.DistrictRepository
+import de.geosphere.speechplaning.data.repository.SpeakerRepository
+import de.geosphere.speechplaning.data.repository.SpeechRepository
 import de.geosphere.speechplaning.data.repository.services.FirestoreServiceImpl
 import de.geosphere.speechplaning.data.repository.services.ICollectionActions
 import de.geosphere.speechplaning.data.repository.services.IFlowActions
@@ -67,11 +67,11 @@ val dataModule = module {
     single { CoroutineScope(Dispatchers.IO) } // oder SupervisorJob() + Dispatchers.Default
 
     // Repositories
-    singleOf(::CongregationRepositoryImpl)
-    singleOf(::CongregationEventRepositoryImpl)
-    singleOf(::DistrictRepositoryImpl)
-    singleOf(::SpeakerRepositoryImpl)
-    singleOf(::SpeechRepositoryImpl)
+    singleOf(::CongregationRepository)
+    singleOf(::CongregationEventRepository)
+    singleOf(::DistrictRepository)
+    singleOf(::SpeakerRepository)
+    singleOf(::SpeechRepository)
     singleOf(::UserRepositoryImpl) { bind<UserRepository>() }
     singleOf(::AuthRepositoryImpl) { bind<AuthRepository>() }
 

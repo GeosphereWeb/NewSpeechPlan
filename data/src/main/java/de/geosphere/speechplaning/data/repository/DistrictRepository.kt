@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 private const val DISTRICT_COLLECTION = "districts"
 
 @Suppress("TooGenericExceptionCaught", "TooGenericExceptionThrown")
-class DistrictRepositoryImpl(
+class DistrictRepository(
     private val collectionActions: ICollectionActions,
     private val flowActions: IFlowActions
 ) {

@@ -1,6 +1,6 @@
 package de.geosphere.speechplaning.data.usecases.speeches
 
-import de.geosphere.speechplaning.data.repository.SpeechRepositoryImpl
+import de.geosphere.speechplaning.data.repository.SpeechRepository
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.result.shouldBeFailure
@@ -17,7 +17,7 @@ class DeleteSpeechUseCaseTest : BehaviorSpec({
     // Damit ist das 'repository' Mock für jeden Test frisch und leer.
     isolationMode = IsolationMode.InstancePerLeaf
 
-    val repository = mockk<SpeechRepositoryImpl>(relaxed = true)
+    val repository = mockk<SpeechRepository>(relaxed = true)
     val useCase = DeleteSpeechUseCase(repository)
 
     Given("A valid speech ID") {

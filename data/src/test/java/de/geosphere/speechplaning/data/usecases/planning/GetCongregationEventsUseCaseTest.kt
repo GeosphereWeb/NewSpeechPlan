@@ -2,7 +2,7 @@ package de.geosphere.speechplaning.data.usecases.planning
 
 import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.core.model.data.Event
-import de.geosphere.speechplaning.data.repository.CongregationEventRepositoryImpl
+import de.geosphere.speechplaning.data.repository.CongregationEventRepository
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.result.shouldBeSuccess
@@ -13,7 +13,7 @@ import java.time.LocalDate
 
 class GetCongregationEventsUseCaseTest : BehaviorSpec({
 
-    lateinit var repository: CongregationEventRepositoryImpl
+    lateinit var repository: CongregationEventRepository
 
     beforeTest {
         repository = mockk()

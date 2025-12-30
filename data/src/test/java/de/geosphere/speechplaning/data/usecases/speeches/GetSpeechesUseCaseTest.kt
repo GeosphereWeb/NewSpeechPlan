@@ -2,7 +2,7 @@ package de.geosphere.speechplaning.data.usecases.speeches
 
 import app.cash.turbine.test
 import de.geosphere.speechplaning.core.model.Speech
-import de.geosphere.speechplaning.data.repository.SpeechRepositoryImpl
+import de.geosphere.speechplaning.data.repository.SpeechRepository
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.result.shouldBeSuccess
@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.flowOf
 
 class GetSpeechesUseCaseTest : BehaviorSpec({
 
-    val repository = mockk<SpeechRepositoryImpl>()
+    val repository = mockk<SpeechRepository>()
     val useCase = GetSpeechesUseCase(repository)
 
     Given("A list of speeches in the repository") {

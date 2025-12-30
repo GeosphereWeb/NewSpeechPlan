@@ -1,6 +1,6 @@
 package de.geosphere.speechplaning.data.usecases.planning
 
-import de.geosphere.speechplaning.data.repository.CongregationEventRepositoryImpl
+import de.geosphere.speechplaning.data.repository.CongregationEventRepository
 import de.geosphere.speechplaning.data.usecases.congregationEvent.DeleteCongregationEventUseCase
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.result.shouldBeFailure
@@ -12,7 +12,7 @@ import kotlinx.coroutines.runBlocking
 
 class DeleteCongregationEventUseCaseTest : BehaviorSpec({
 
-    lateinit var repository: CongregationEventRepositoryImpl
+    lateinit var repository: CongregationEventRepository
     lateinit var useCase: DeleteCongregationEventUseCase
 
     beforeTest {

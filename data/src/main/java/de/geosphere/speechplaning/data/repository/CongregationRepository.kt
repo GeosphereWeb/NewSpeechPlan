@@ -10,10 +10,10 @@ private const val CONGREGATIONS_SUBCOLLECTION = "congregations"
 private const val DISTRICTS_COLLECTION = "districts"
 
 @Suppress("TooGenericExceptionCaught", "TooGenericExceptionThrown")
-class CongregationRepositoryImpl(
+class CongregationRepository(
     subcollectionActions: ISubcollectionActions,
     private val flowActions: IFlowActions
-) : FirestoreSubcollectionRepository<Congregation>(
+) : FirestoreSubcollectionRepository<Congregation, String, String>(
     subcollectionActions = subcollectionActions,
     flowActions = flowActions,
     subcollectionName = CONGREGATIONS_SUBCOLLECTION,
@@ -62,9 +62,9 @@ class CongregationRepositoryImpl(
      * @param districtId Die ID des Districts, dessen Versammlungen abgerufen werden sollen.
      * @return Eine Liste von Congregation-Objekten.
      */
-    suspend fun getCongregationsForDistrict(districtId: String): List<Congregation> {
+    fun getCongregationsForDistrict(districtId: String): Flow<List<Congregation>> {
         // Ruft die getAll-Methode der Basisklasse auf und übergibt die districtId als parentId.
-        return super.getAll(districtId)
+        return super.getAllFlow(districtId)
     }
 
     /**
