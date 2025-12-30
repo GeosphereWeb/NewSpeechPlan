@@ -2,10 +2,10 @@ package de.geosphere.speechplaning.data.usecases.speaker
 
 import de.geosphere.speechplaning.core.model.Congregation
 import de.geosphere.speechplaning.core.model.Speaker
-import de.geosphere.speechplaning.data.repository.SpeakerRepositoryImpl
+import de.geosphere.speechplaning.data.repository.SpeakerRepository
 
 @Suppress("ReturnCount")
-class SaveSpeakerUseCase(private val repository: SpeakerRepositoryImpl) {
+class SaveSpeakerUseCase(private val repository: SpeakerRepository) {
 
     /**
      * Variante 1: Speichert einen Speaker basierend auf den IDs im Objekt.

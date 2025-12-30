@@ -13,7 +13,7 @@ import io.mockk.mockk
 internal class SpeakerRepositoryTest : BehaviorSpec({
 
     lateinit var firestoreService: IFirestoreService
-    lateinit var speakerRepository: SpeakerRepositoryImpl
+    lateinit var speakerRepository: SpeakerRepository
 
     val districtId = "testDistrictId"
     val congregationId = "testCongregationId"
@@ -30,7 +30,7 @@ internal class SpeakerRepositoryTest : BehaviorSpec({
 
     beforeEach {
         firestoreService = mockk(relaxed = true)
-        speakerRepository = SpeakerRepositoryImpl(firestoreService)
+        speakerRepository = SpeakerRepository(firestoreService)
     }
 
     given("SaveSpeaker") {

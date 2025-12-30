@@ -1,5 +1,7 @@
 package de.geosphere.speechplaning.data.repository.base
 
+import kotlinx.coroutines.flow.Flow
+
 /**
  * Generisches Interface für Firestore-Repositories.
  * @param T Der Typ der Entität.
@@ -25,16 +27,11 @@ interface IFirestoreRepository<T : Any, ID : Any> {
     suspend fun getById(id: ID): T?
 
     /**
-     * Ruft alle Entitäten des Typs T ab.
-     *
-     * @return Eine Liste aller Entitäten.
-     */
-    suspend fun getAll(): List<T>
-
-    /**
      * Löscht eine Entität anhand ihrer ID.
      *
      * @param id Die ID der zu löschenden Entität.
      */
     suspend fun delete(id: ID)
+
+    fun getAllFlow(): Flow<List<T>>
 }

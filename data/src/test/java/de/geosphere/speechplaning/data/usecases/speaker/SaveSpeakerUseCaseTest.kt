@@ -1,7 +1,7 @@
 package de.geosphere.speechplaning.data.usecases.speaker
 
 import de.geosphere.speechplaning.core.model.Speaker
-import de.geosphere.speechplaning.data.repository.SpeakerRepositoryImpl
+import de.geosphere.speechplaning.data.repository.SpeakerRepository
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.result.shouldBeSuccess
@@ -11,7 +11,7 @@ import io.mockk.mockk
 
 class SaveSpeakerUseCaseTest : BehaviorSpec({
 
-    lateinit var repository: SpeakerRepositoryImpl
+    lateinit var repository: SpeakerRepository
     lateinit var useCase: SaveSpeakerUseCase
 
     beforeTest {

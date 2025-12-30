@@ -1,10 +1,10 @@
 package de.geosphere.speechplaning.data.usecases.congregationEvent
 
 import de.geosphere.speechplaning.core.model.CongregationEvent
-import de.geosphere.speechplaning.data.repository.CongregationEventRepositoryImpl
+import de.geosphere.speechplaning.data.repository.CongregationEventRepository
 
 @Suppress("TooGenericExceptionCaught")
-class SaveCongregationEventUseCase(private val repository: CongregationEventRepositoryImpl) {
+class SaveCongregationEventUseCase(private val repository: CongregationEventRepository) {
     suspend operator fun invoke(congregationEvent: CongregationEvent): Result<Unit> {
         // Optional: validate minimal fields
         return try {

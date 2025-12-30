@@ -1,9 +1,9 @@
 package de.geosphere.speechplaning.data.usecases.congregation
 
 import de.geosphere.speechplaning.core.model.Congregation
-import de.geosphere.speechplaning.data.repository.CongregationRepositoryImpl
+import de.geosphere.speechplaning.data.repository.CongregationRepository
 
-class SaveCongregationUseCase(private val repository: CongregationRepositoryImpl) {
+class SaveCongregationUseCase(private val repository: CongregationRepository) {
     suspend operator fun invoke(districtId: String, congregation: Congregation): Result<Unit> {
         // Basic validation
         if (congregation.name.isBlank()) {

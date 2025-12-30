@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 private const val SPEECHES_COLLECTION = "speeches"
 
 @Suppress("TooGenericExceptionCaught", "TooGenericExceptionThrown")
-class SpeechRepositoryImpl(
+class SpeechRepository(
     private val collectionActions: ICollectionActions,
     private val flowActions: IFlowActions
 ) {

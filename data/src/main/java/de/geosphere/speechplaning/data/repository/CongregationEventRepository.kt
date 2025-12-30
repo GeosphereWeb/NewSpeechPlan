@@ -14,11 +14,11 @@ private const val DISTRICTS_COLLECTION = "districts"
 private const val CONGREGATIONS_SUBCOLLECTION = "congregations"
 
 @Suppress("TooGenericExceptionCaught", "TooGenericExceptionThrown", "TooManyFunctions")
-class CongregationEventRepositoryImpl(
+class CongregationEventRepository(
     collectionActions: ICollectionActions,
     private val subcollectionActions: ISubcollectionActions,
     private val flowActions: IFlowActions
-) : FirestoreRepository<CongregationEvent>(
+) : FirestoreRepository<CongregationEvent, String>(
     collectionActions = collectionActions,
     flowActions = flowActions,
     collectionPath = CONGREGATION_EVENTS_COLLECTION,
@@ -37,10 +37,6 @@ class CongregationEventRepositoryImpl(
 
     suspend fun getEventById(eventId: String): CongregationEvent? {
         return getById(eventId)
-    }
-
-    suspend fun getAllEvents(): List<CongregationEvent> {
-        return getAll()
     }
 
     suspend fun deleteEvent(eventId: String) {
