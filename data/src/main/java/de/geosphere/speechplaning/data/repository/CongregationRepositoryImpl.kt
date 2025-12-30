@@ -2,7 +2,8 @@ package de.geosphere.speechplaning.data.repository
 
 import de.geosphere.speechplaning.core.model.Congregation
 import de.geosphere.speechplaning.data.repository.base.FirestoreSubcollectionRepository
-import de.geosphere.speechplaning.data.repository.services.IFirestoreService
+import de.geosphere.speechplaning.data.repository.services.IFlowActions
+import de.geosphere.speechplaning.data.repository.services.ISubcollectionActions
 import kotlinx.coroutines.flow.Flow
 
 private const val CONGREGATIONS_SUBCOLLECTION = "congregations"
@@ -10,9 +11,11 @@ private const val DISTRICTS_COLLECTION = "districts"
 
 @Suppress("TooGenericExceptionCaught", "TooGenericExceptionThrown")
 class CongregationRepositoryImpl(
-    firestoreService: IFirestoreService
+    subcollectionActions: ISubcollectionActions,
+    private val flowActions: IFlowActions
 ) : FirestoreSubcollectionRepository<Congregation>(
-    firestoreService = firestoreService,
+    subcollectionActions = subcollectionActions,
+    flowActions = flowActions,
     subcollectionName = CONGREGATIONS_SUBCOLLECTION,
     clazz = Congregation::class.java
 ) {
@@ -91,6 +94,6 @@ class CongregationRepositoryImpl(
      */
     fun getAllCongregationsGlobalFlow(): Flow<List<Congregation>> {
         // "congregations" ist der Name der Subcollection, definiert in der Konstante oben
-        return firestoreService.getCollectionGroupFlow("congregations", Congregation::class.java)
+        return flowActions.getCollectionGroupFlow("congregations", Congregation::class.java)
     }
 }

@@ -2,7 +2,8 @@ package de.geosphere.speechplaning.data.repository
 
 import de.geosphere.speechplaning.core.model.Speaker
 import de.geosphere.speechplaning.data.repository.base.FirestoreSubcollectionRepository
-import de.geosphere.speechplaning.data.repository.services.IFirestoreService
+import de.geosphere.speechplaning.data.repository.services.IFlowActions
+import de.geosphere.speechplaning.data.repository.services.ISubcollectionActions
 import kotlinx.coroutines.flow.Flow
 
 private const val SPEAKERS_SUBCOLLECTION = "speakers"
@@ -11,9 +12,11 @@ private const val CONGREGATIONS_SUBCOLLECTION = "congregations"
 
 @Suppress("TooGenericExceptionCaught", "TooGenericExceptionThrown")
 class SpeakerRepositoryImpl(
-    firestoreService: IFirestoreService
+    subcollectionActions: ISubcollectionActions,
+    private val flowActions: IFlowActions
 ) : FirestoreSubcollectionRepository<Speaker>(
-    firestoreService = firestoreService,
+    subcollectionActions = subcollectionActions,
+    flowActions = flowActions,
     subcollectionName = SPEAKERS_SUBCOLLECTION,
     clazz = Speaker::class.java
 ) {
@@ -83,6 +86,6 @@ class SpeakerRepositoryImpl(
     }
 
     fun getAllSpeakersGlobalFlow(): Flow<List<Speaker>> {
-        return firestoreService.getCollectionGroupFlow(SPEAKERS_SUBCOLLECTION, Speaker::class.java)
+        return flowActions.getCollectionGroupFlow(SPEAKERS_SUBCOLLECTION, Speaker::class.java)
     }
 }

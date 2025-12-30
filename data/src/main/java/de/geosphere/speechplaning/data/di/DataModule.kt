@@ -17,7 +17,9 @@ import de.geosphere.speechplaning.data.repository.DistrictRepositoryImpl
 import de.geosphere.speechplaning.data.repository.SpeakerRepositoryImpl
 import de.geosphere.speechplaning.data.repository.SpeechRepositoryImpl
 import de.geosphere.speechplaning.data.repository.services.FirestoreServiceImpl
-import de.geosphere.speechplaning.data.repository.services.IFirestoreService
+import de.geosphere.speechplaning.data.repository.services.ICollectionActions
+import de.geosphere.speechplaning.data.repository.services.IFlowActions
+import de.geosphere.speechplaning.data.repository.services.ISubcollectionActions
 import de.geosphere.speechplaning.data.usecases.congregation.DeleteCongregationUseCase
 import de.geosphere.speechplaning.data.usecases.congregation.GetAllCongregationsUseCase
 import de.geosphere.speechplaning.data.usecases.congregation.GetCongregationUseCase
@@ -55,7 +57,11 @@ val dataModule = module {
     // Database
     single<FirebaseFirestore> { FirebaseFirestore.getInstance() }
     single<FirebaseAuth> { FirebaseAuth.getInstance() }
-    singleOf(::FirestoreServiceImpl) { bind<IFirestoreService>() }
+    singleOf(::FirestoreServiceImpl) {
+        bind<ICollectionActions>()
+        bind<ISubcollectionActions>()
+        bind<IFlowActions>()
+    }
 
     // Coroutine Scope für Repositories
     single { CoroutineScope(Dispatchers.IO) } // oder SupervisorJob() + Dispatchers.Default
@@ -66,6 +72,8 @@ val dataModule = module {
     singleOf(::DistrictRepositoryImpl)
     singleOf(::SpeakerRepositoryImpl)
     singleOf(::SpeechRepositoryImpl)
+    singleOf(::UserRepositoryImpl) { bind<UserRepository>() }
+    singleOf(::AuthRepositoryImpl) { bind<AuthRepository>() }
 
     // Permissions
     singleOf(::SpeechPermissionPolicy)
@@ -74,9 +82,7 @@ val dataModule = module {
     singleOf(::CongregationEventPermissionPolicy)
     singleOf(::SpeakerPermissionPolicy)
 
-    singleOf(::UserRepositoryImpl) { bind<UserRepository>() }
-    singleOf(::AuthRepositoryImpl) { bind<AuthRepository>() }
-
+    // UseCases
     factoryOf(::SignInWithEmailAndPasswordUseCase)
 
     factoryOf(::CreateUserWithEmailAndPasswordUseCase)
