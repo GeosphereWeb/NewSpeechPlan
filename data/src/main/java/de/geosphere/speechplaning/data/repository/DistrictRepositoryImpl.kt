@@ -1,90 +1,44 @@
 package de.geosphere.speechplaning.data.repository
 
-import com.google.firebase.firestore.FirebaseFirestore
 import de.geosphere.speechplaning.core.model.District
-import de.geosphere.speechplaning.data.repository.base.FirestoreRepository
-import kotlinx.coroutines.channels.awaitClose
+import de.geosphere.speechplaning.data.repository.services.IFirestoreService
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.tasks.await
 
 private const val DISTRICT_COLLECTION = "districts"
 
 @Suppress("TooGenericExceptionCaught", "TooGenericExceptionThrown")
 class DistrictRepositoryImpl(
-    firestore: FirebaseFirestore
-) : FirestoreRepository<District>(
-    firestore = firestore,
-    collectionPath = DISTRICT_COLLECTION,
-    clazz = District::class.java
+    private val firestoreService: IFirestoreService
 ) {
 
-    // Implementierung der abstrakten Methode aus BaseFirestoreRepository
-    override fun extractIdFromEntity(entity: District): String {
-        return entity.id
-    }
-
-    /**
-     * Ruft alle aktiven Reden ab.
-     * Dies verwendet eine serverseitige Query.
-     * Diese Methode ist spezifisch für SpeechRepository und nicht Teil der Basisklasse.
-     *
-     * @return Eine Liste von aktiven Speech-Objekten.
-     */
     suspend fun getActiveDistricts(): List<District> {
         return try {
-            val querySnapshot = firestore.collection(DISTRICT_COLLECTION)
-                .whereEqualTo("active", true)
-                .get()
-                .await()
-            querySnapshot.toObjects(District::class.java)
+            // This assumes a method like getDocumentsWithQuery in your service.
+            // For now, let's get all and filter.
+            firestoreService.getDocuments(DISTRICT_COLLECTION, District::class.java)
+                .filter { it.active }
         } catch (e: Exception) {
-            throw RuntimeException("Failed to get active district from $DISTRICT_COLLECTION", e)
+            throw RuntimeException("Failed to get active districts from $DISTRICT_COLLECTION", e)
         }
     }
 
     suspend fun deleteDistrict(id: String) {
-        delete(id)
+        firestoreService.deleteDocument(DISTRICT_COLLECTION, id)
     }
 
     suspend fun getAllDistrict(): List<District> {
         return try {
-            val querySnapshot = firestore.collection(DISTRICT_COLLECTION)
-                .get()
-                .await()
-            querySnapshot.toObjects(District::class.java)
+            firestoreService.getDocuments(DISTRICT_COLLECTION, District::class.java)
         } catch (e: Exception) {
-            throw RuntimeException("Failed to get all district from $DISTRICT_COLLECTION", e)
+            throw RuntimeException("Failed to get all districts from $DISTRICT_COLLECTION", e)
         }
     }
 
-    suspend fun saveDistrict(district: District) {
-        save(district)
+    suspend fun saveDistrict(district: District): String {
+        return firestoreService.setDocument(DISTRICT_COLLECTION, district.id, district).let { district.id }
     }
 
-    fun getAllDistrictFlow(): Flow<List<District>> = callbackFlow {
-        // 1. Listener bei Firestore registrieren
-        val listenerRegistration = firestore.collection(DISTRICT_COLLECTION)
-            .addSnapshotListener { snapshot, error ->
-
-                // Fehlerbehandlung: Wenn Firestore einen Fehler meldet, den Flow schließen
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
-                }
-
-                // Erfolgsfall: Daten mappen und emittieren
-                if (snapshot != null) {
-                    val district = snapshot.toObjects(District::class.java)
-                    // trySend versucht, den Wert in den Flow zu schieben (thread-safe)
-                    trySend(district)
-                }
-            }
-
-        // 2. Cleanup: Wird aufgerufen, wenn der Flow cancelled wird (z.B. ViewModel cleared)
-        // Das verhindert Memory Leaks, weil der Listener entfernt wird.
-        awaitClose {
-            listenerRegistration.remove()
-        }
+    fun getAllDistrictFlow(): Flow<List<District>> {
+        return firestoreService.getCollectionFlow(DISTRICT_COLLECTION, District::class.java)
     }
 }
