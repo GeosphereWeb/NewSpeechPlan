@@ -1,0 +1,2 @@
+ID_Kreis;tblKreis_Name;ID_Versammlung;tblVersammlung_Name;Strasse;Hausnummer;Hausnummer Zusatz;PLZ;Ort;Kreis_ID;Vortragskoordinator;tblVersammlung_Aktiv;ID_Redner;Nachname;Vorname;Telefon;Telefon2;E-Mail;Versammlung_ID;Stand_ID;tblRedner_Aktiv;Ranking;Anmerkung;Nummer;Titel;NEU_tblVortaege_Aktiv
+1;609A;10;M�nchen-Giesing;Gietlstr. 3;3;;;M�nchen AU;1;3;WAHR;1;Bibl;Markus;0176/78220570;;;10;1;WAHR;2;;167;Vern�nftig handeln in einer unvern�nftigen Welt;WAHR
