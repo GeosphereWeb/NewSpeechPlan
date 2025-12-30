@@ -11,7 +11,6 @@ import de.geosphere.speechplaning.feature.districts.di.districtModule
 import de.geosphere.speechplaning.feature.login.di.loginModule
 import de.geosphere.speechplaning.feature.speaker.di.speakerModule
 import de.geosphere.speechplaning.feature.speeches.di.speechModule
-import de.geosphere.speechplaning.mocking.di.mockingModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.GlobalContext.startKoin
@@ -31,7 +30,6 @@ class MyApplication : Application() {
             modules(
                 appModule,
                 dataModule,
-                mockingModule,
                 loginModule,
                 coreUiModule,
                 speechModule,

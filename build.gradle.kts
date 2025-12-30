@@ -178,6 +178,5 @@ dependencies {
     kover(project(":feature:settings"))
     kover(project(":feature:speaker"))
     kover(project(":feature:speeches"))
-    kover(project(":mocking"))
     kover(project(":theme"))
 }
