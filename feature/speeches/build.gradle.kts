@@ -28,10 +28,6 @@ android {
             enableUnitTestCoverage = true
         }
     }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
 
     buildFeatures {
         compose = true
@@ -44,6 +40,10 @@ android {
             }
         }
     }
+}
+
+kotlin {
+    jvmToolchain(11)
 }
 
 dependencies {
