@@ -130,7 +130,7 @@ class CsvVortragsplanungImporter {
                     speechNumber = speechNumber,
                     speechSubject = columns.getOrElse(12) { "" }.trim().ifBlank { null },
                     speakerId = columns.getOrElse(4) { "" }.trim().ifBlank { null },
-                    speakerName = if(speakerName.isNotBlank()) speakerName else null,
+                    speakerName = if (speakerName.isNotBlank()) speakerName else null,
                     speakerCongregationId = columns.getOrElse(9) { "" }.trim().ifBlank { null },
                     speakerCongregationName = columns.getOrElse(10) { "" }.trim().ifBlank { null },
                     notes = null
@@ -140,7 +140,6 @@ class CsvVortragsplanungImporter {
                 db.collection("congregationEvents").add(event).get()
 
                 successCount++
-
             } catch (e: Exception) {
                 println("Error processing row: $line")
                 println("Error: ${e.message}")

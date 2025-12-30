@@ -1,35 +1,16 @@
 package de.geosphere.speechplaning.data.repository.services
 
 import com.google.firebase.firestore.CollectionReference
-import de.geosphere.speechplaning.core.model.SavableDataClass
 import kotlinx.coroutines.flow.Flow
 
-@Suppress("TooManyFunctions")
 interface IFirestoreService {
+    suspend fun <T : Any> addDocument(collectionPath: String, data: T): String
+    suspend fun <T : Any> setDocument(collectionPath: String, documentId: String, data: T)
+    suspend fun <T : Any> getDocument(collectionPath: String, documentId: String, objectClass: Class<T>): T?
+    suspend fun <T : Any> getDocuments(collectionPath: String, objectClass: Class<T>): List<T>
+    suspend fun deleteDocument(collectionPath: String, documentId: String)
 
-    // ... (bestehende Methoden bleiben unverändert) ...
-    suspend fun <T> getDocument(collection: String, documentId: String, type: Class<T>): T?
-    suspend fun <T> getDocuments(collection: String, type: Class<T>): List<T>
-    suspend fun <T : SavableDataClass> saveDocument(collection: String, document: T): String
-    fun <T> getCollection(clazz: Class<T>): CollectionReference
-
-    /**
-     * Gibt eine Referenz auf eine beliebige Subcollection zurück.
-     *
-     * @param parentCollection Der Name der übergeordneten Collection (z.B. "districts").
-     * @param parentId Die ID des Dokuments in der übergeordneten Collection.
-     * @param subcollection Der Name der Subcollection (z.B. "congregations").
-     * @return Eine CollectionReference zur gewünschten Subcollection.
-     */
-    fun getSubcollection(
-        parentCollection: String,
-        parentId: String,
-        subcollection: String
-    ): CollectionReference
-
-    suspend fun <T : Any> saveDocumentWithId(collectionPath: String, documentId: String, document: T): Boolean
-
-    // NEUE METHODEN FÜR SUBCOLLECTIONS
+    // Subcollection APIs
     suspend fun <T : Any> addDocumentToSubcollection(
         parentCollection: String,
         parentId: String,
@@ -45,13 +26,6 @@ interface IFirestoreService {
         data: T
     )
 
-    suspend fun <T : Any> getDocumentsFromSubcollection(
-        parentCollection: String,
-        parentId: String,
-        subcollection: String,
-        objectClass: Class<T>
-    ): List<T>
-
     suspend fun <T : Any> getDocumentFromSubcollection(
         parentCollectionPath: String,
         parentDocumentId: String,
@@ -60,6 +34,13 @@ interface IFirestoreService {
         objectClass: Class<T>
     ): T?
 
+    suspend fun <T : Any> getDocumentsFromSubcollection(
+        parentCollection: String,
+        parentId: String,
+        subcollection: String,
+        objectClass: Class<T>
+    ): List<T>
+
     suspend fun deleteDocumentFromSubcollection(
         parentCollection: String,
         parentId: String,
@@ -67,8 +48,11 @@ interface IFirestoreService {
         documentId: String
     )
 
-    fun <T : Any> getCollectionGroupFlow(collectionId: String, type: Class<T>): Flow<List<T>>
+    fun getSubcollection(parentCollection: String, parentId: String, subcollection: String): CollectionReference
 
-    // Neu: Delete eines Dokuments in einer Top-Level-Collection
-    suspend fun deleteDocument(collection: String, documentId: String)
+    // Project-specific helpers used elsewhere in the codebase
+    suspend fun <T : Any> saveDocument(collectionPath: String, data: T): String
+    suspend fun <T : Any> saveDocumentWithId(collectionPath: String, documentId: String, data: T): Boolean
+    fun <T : Any> getCollectionGroupFlow(subcollectionName: String, objectClass: Class<T>): Flow<List<T>>
+    fun <T : Any> getCollectionFlow(collectionPath: String, objectClass: Class<T>): Flow<List<T>>
 }

@@ -32,9 +32,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
 
     testOptions {
         unitTests {
@@ -52,7 +49,6 @@ dependencies {
     implementation(project(":theme"))
     implementation(project(":core:model"))
     implementation(project(":data"))
-    implementation(project(":mocking"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

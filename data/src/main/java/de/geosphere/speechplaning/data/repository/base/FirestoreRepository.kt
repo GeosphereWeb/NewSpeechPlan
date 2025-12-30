@@ -1,19 +1,18 @@
 package de.geosphere.speechplaning.data.repository.base
 
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.tasks.await
+import de.geosphere.speechplaning.data.repository.services.IFirestoreService
 
 /**
  * Generische Basisimplementierung für Firestore-Repositories.
  * @param T Der Typ der Entität. Muss ein '@DocumentId'-annotiertes Feld 'id: String' haben oder
  *          die Methode 'extractIdFromEntity' muss entsprechend überschrieben werden.
- * @param firestore Die FirebaseFirestore-Instanz.
+ * @param firestoreService Die Abstraktion über Firestore-Operationen.
  * @param collectionPath Der Pfad zur Firestore-Collection.
  * @param clazz Die Klassenreferenz der Entität (z.B. MyEntity::class.java).
  */
 @Suppress("TooGenericExceptionCaught", "TooGenericExceptionThrown")
 abstract class FirestoreRepository<T : Any>(
-    protected val firestore: FirebaseFirestore,
+    protected val firestoreService: IFirestoreService,
     private val collectionPath: String,
     private val clazz: Class<T>
 ) : IFirestoreRepository<T, String> { // ID ist hier als String spezialisiert
@@ -37,15 +36,10 @@ abstract class FirestoreRepository<T : Any>(
         val entityId = extractIdFromEntity(entity)
         return try {
             if (isEntityIdBlank(entityId)) {
-                val documentReference = firestore.collection(collectionPath)
-                    .add(entity)
-                    .await()
-                documentReference.id // Gibt die von Firestore generierte ID zurück
+                firestoreService.saveDocument(collectionPath, entity)
             } else {
-                firestore.collection(collectionPath)
-                    .document(entityId)
-                    .set(entity)
-                    .await()
+                val ok = firestoreService.saveDocumentWithId(collectionPath, entityId, entity)
+                if (!ok) throw RuntimeException("Failed to set document with id $entityId in $collectionPath")
                 entityId // Gibt die existierende ID zurück
             }
         } catch (e: Exception) {
@@ -57,11 +51,7 @@ abstract class FirestoreRepository<T : Any>(
     override suspend fun getById(id: String): T? {
         return try {
             if (id.isBlank()) return null // Keine gültige ID zum Abrufen
-            val documentSnapshot = firestore.collection(collectionPath)
-                .document(id)
-                .get()
-                .await()
-            documentSnapshot.toObject(clazz)
+            firestoreService.getDocument(collectionPath, id, clazz)
         } catch (e: Exception) {
             throw RuntimeException("Failed to get entity '$id' from $collectionPath", e)
         }
@@ -69,10 +59,7 @@ abstract class FirestoreRepository<T : Any>(
 
     override suspend fun getAll(): List<T> {
         return try {
-            val querySnapshot = firestore.collection(collectionPath)
-                .get()
-                .await()
-            querySnapshot.toObjects(clazz)
+            firestoreService.getDocuments(collectionPath, clazz)
         } catch (e: Exception) {
             throw RuntimeException("Failed to get all entities from $collectionPath", e)
         }
@@ -84,10 +71,7 @@ abstract class FirestoreRepository<T : Any>(
 
         // 2. Try the Firestore operation.
         try {
-            firestore.collection(collectionPath)
-                .document(id)
-                .delete()
-                .await()
+            firestoreService.deleteDocument(collectionPath, id)
         } catch (e: Exception) {
             // This catch block is now only for Firestore exceptions.
             throw RuntimeException("Failed to delete entity '$id' from $collectionPath", e)
