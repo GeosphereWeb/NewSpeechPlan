@@ -1,16 +1,46 @@
 #!/bin/sh
 
-	echo "---Zurücksetzung der ---" >&2
-	echo " ===== google-services.json ====== " >&2
+# Stellt sicher, dass das Skript im Root-Verzeichnis des Repositories ausgeführt wird.
+cd "$(git rev-parse --show-toplevel)" || exit
 
-# Git pre-commit hook to replace google-services.json with a dummy version.
-# This script is executed from the root of the Git repository.
+echo "--- Führe Pre-Commit-Hook aus ---" >&2
 
-# Path to the google-services.json file, relative to the repository root.
-# Make sure this path is correct for your project structure.
-FILE_TO_EXCLUDE="app/google-services.json serviceAccountKey.json"
+# --- 1. Prüfung auf unerwünschte, sensible Dateien ---
 
-# Dummy content for google-services.json
+# Liste der Dateien, die niemals committet werden dürfen (durch Leerzeichen getrennt)
+FILES_TO_BLOCK="serviceAccountKey.json"
+
+# Finde alle für den Commit vorgemerkten ("staged") Dateien
+STAGED_FILES=$(git diff --cached --name-only)
+
+# Variable, um zu prüfen, ob der Commit abgebrochen werden muss
+BLOCK_COMMIT=false
+
+# Gehe durch jede zu blockierende Datei
+for FILE in $FILES_TO_BLOCK; do
+  # Prüfe, ob die Datei committet werden soll
+  if echo "$STAGED_FILES" | grep -q "^$FILE$"; then
+    echo "############################################################" >&2
+    echo "FEHLER: Versuch, die sensible Datei '$FILE' zu committen!" >&2
+    echo "Diese Datei darf niemals in das Repository gelangen." >&2
+    echo "############################################################" >&2
+    BLOCK_COMMIT=true
+  fi
+done
+
+# Wenn eine blockierte Datei gefunden wurde, brich den Commit sofort ab.
+if [ "$BLOCK_COMMIT" = true ]; then
+  echo "\nCOMMIT ABGEBROCHEN. Bitte entferne die sensible(n) Datei(en) aus dem Git-Tracking." >&2
+  exit 1 # Bricht den Commit-Vorgang mit einem Fehler ab
+fi
+
+# --- 2. Sicherstellen, dass die Dummy-google-services.json committet wird ---
+
+TARGET_FILE_PATH="app/google-services.json"
+
+echo "-> Überschreibe '$TARGET_FILE_PATH' mit Dummy-Version für den Commit." >&2
+
+# Erstelle die Dummy-Version der google-services.json
 # Using a heredoc for multiline JSON content
 cat <<EOF > "$TARGET_FILE_PATH"
 {
@@ -45,9 +75,11 @@ cat <<EOF > "$TARGET_FILE_PATH"
 }
 EOF
 
-# Stage the potentially modified google-services.json.
-# This ensures that the dummy version is included in the commit.
+# Füge die nun überschriebene Dummy-Datei zum Commit hinzu.
+# Das stellt sicher, dass immer nur die Dummy-Version im Repository landet.
 git add "$TARGET_FILE_PATH"
 
-# Exit with 0 to indicate success and allow the commit.
+echo "-> Commit ist sauber. Fortfahren..." >&2
+
+# Exit 0, um den Commit zu erlauben.
 exit 0

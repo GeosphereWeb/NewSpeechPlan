@@ -1,15 +1,36 @@
 #!/bin/sh
 
-	echo "---Zurücksetzung der ---" >&2
-	echo " ===== google-services.json ====== " >&2
+echo "--- Prüfe Commit auf sensible Dateien ---" >&2
 
-# Der relative Pfad zur Datei, die ausgeschlossen werden soll
-FILE_TO_EXCLUDE="app/google-services.json serviceAccountKey.json"
+# Liste der Dateien, die niemals committet werden sollen (durch Leerzeichen getrennt)
+FILES_TO_EXCLUDE="app/google-services.json serviceAccountKey.json"
 
-# Prüft, ob die Datei zum Commit hinzugefügt ("staged") wurde
-if git diff --cached --name-only | grep -q "$FILE_TO_EXCLUDE"; then
-  echo "Entferne $FILE_TO_EXCLUDE aus dem Commit."
-  git reset HEAD "$FILE_TO_EXCLUDE"
+# Finde alle für den Commit vorgemerkten ("staged") Dateien
+STAGED_FILES=$(git diff --cached --name-only)
+
+# Variable, um zu prüfen, ob eine Zurücksetzung stattgefunden hat
+RESET_PERFORMED=false
+
+# Gehe durch jede auszuschließende Datei
+for FILE in $FILES_TO_EXCLUDE; do
+  # Prüfe, ob die aktuelle Datei in der Liste der "staged" Dateien vorkommt
+  # 'echo "$STAGED_FILES" | grep -q "^$FILE$"' stellt sicher, dass nur exakte Treffer zählen
+  if echo "$STAGED_FILES" | grep -q "^$FILE$"; then
+    echo "FEHLER: $FILE ist für den Commit vorgemerkt und wird entfernt." >&2
+    echo "-> 'git reset HEAD $FILE'" >&2
+    git reset HEAD "$FILE"
+    RESET_PERFORMED=true
+  fi
+done
+
+# Wenn eine Datei entfernt wurde, den Commit abbrechen, damit der Benutzer ihn überprüfen kann.
+if [ "$RESET_PERFORMED" = true ]; then
+  echo "------------------------------------------------" >&2
+  echo "COMMIT ABGEBROCHEN." >&2
+  echo "Eine oder mehrere sensible Dateien wurden aus dem Commit entfernt." >&2
+  echo "Bitte überprüfe deine Änderungen und committe erneut." >&2
+  exit 1 # Bricht den Commit-Vorgang ab
 fi
 
-exit 0
+echo "-> Commit ist sauber. Fortfahren..." >&2
+exit 0 # Erlaubt den Commit
