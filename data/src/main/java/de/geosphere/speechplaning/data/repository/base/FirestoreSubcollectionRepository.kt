@@ -29,7 +29,12 @@ abstract class FirestoreSubcollectionRepository<T : SavableDataClass, ID : Any, 
         return try {
             val documentId = entityId as? String ?: ""
             if (documentId.isBlank()) {
-                subcollectionActions.addDocumentToSubcollection(parentCollectionPath, parentDocId, subcollectionName, entity) as ID
+                subcollectionActions.addDocumentToSubcollection(
+                    parentCollectionPath,
+                    parentDocId,
+                    subcollectionName,
+                    entity
+                ) as ID
             } else {
                 subcollectionActions.setDocumentInSubcollection(
                     parentCollectionPath,
@@ -43,7 +48,8 @@ abstract class FirestoreSubcollectionRepository<T : SavableDataClass, ID : Any, 
         } catch (e: Exception) {
             val idForErrorMessage = if ((entityId as? String)?.isBlank() != false) "[new]" else entityId.toString()
             throw RuntimeException(
-                "Failed to save entity '$idForErrorMessage' in subcollection '$subcollectionName' under parent '$parentDocId' in '$parentCollectionPath'",
+                "Failed to save entity '$idForErrorMessage' in subcollection '$subcollectionName' " +
+                    "under parent '$parentDocId' in '$parentCollectionPath'",
                 e
             )
         }
@@ -55,27 +61,21 @@ abstract class FirestoreSubcollectionRepository<T : SavableDataClass, ID : Any, 
         val parentCollectionPath = buildParentCollectionPath(*parentIds)
         val parentDocId = getParentDocumentId(*parentIds)
         return try {
-            subcollectionActions.getDocumentFromSubcollection(parentCollectionPath, parentDocId, subcollectionName, documentId, clazz)
+            subcollectionActions.getDocumentFromSubcollection(
+                parentCollectionPath,
+                parentDocId,
+                subcollectionName,
+                documentId,
+                clazz
+            )
         } catch (e: Exception) {
             throw RuntimeException(
-                "Failed to get entity '$documentId' from subcollection '$subcollectionName' under parent '$parentDocId' in '$parentCollectionPath'",
+                "Failed to get entity '$documentId' from subcollection '$subcollectionName' under parent " +
+                    "'$parentDocId' in '$parentCollectionPath'",
                 e
             )
         }
     }
-
-    // override suspend fun getAll(vararg parentIds: PID): List<T> {
-    //     val parentCollectionPath = buildParentCollectionPath(*parentIds)
-    //     val parentDocId = getParentDocumentId(*parentIds)
-    //     return try {
-    //         subcollectionActions.getDocumentsFromSubcollection(parentCollectionPath, parentDocId, subcollectionName, clazz)
-    //     } catch (e: Exception) {
-    //         throw RuntimeException(
-    //             "Failed to get all entities from subcollection '$subcollectionName' under parent '$parentDocId' in '$parentCollectionPath'",
-    //             e
-    //         )
-    //     }
-    // }
 
     override suspend fun delete(id: ID, vararg parentIds: PID) {
         val documentId = id as? String ?: throw IllegalArgumentException("ID must be a non-blank String for deletion.")
@@ -83,10 +83,16 @@ abstract class FirestoreSubcollectionRepository<T : SavableDataClass, ID : Any, 
         val parentCollectionPath = buildParentCollectionPath(*parentIds)
         val parentDocId = getParentDocumentId(*parentIds)
         try {
-            subcollectionActions.deleteDocumentFromSubcollection(parentCollectionPath, parentDocId, subcollectionName, documentId)
+            subcollectionActions.deleteDocumentFromSubcollection(
+                parentCollectionPath,
+                parentDocId,
+                subcollectionName,
+                documentId
+            )
         } catch (e: Exception) {
             throw RuntimeException(
-                "Failed to delete entity '$documentId' from subcollection '$subcollectionName' under parent '$parentDocId' in '$parentCollectionPath'",
+                "Failed to delete entity '$documentId' from subcollection '$subcollectionName' " +
+                    "under parent '$parentDocId' in '$parentCollectionPath'",
                 e
             )
         }

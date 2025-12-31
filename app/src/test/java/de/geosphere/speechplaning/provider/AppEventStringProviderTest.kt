@@ -3,6 +3,7 @@ package de.geosphere.speechplaning.provider
 
 import android.content.Context
 import de.geosphere.speechplaning.core.model.data.Event
+import de.geosphere.speechplaning.core.ui.provider.AppEventStringProvider
 import de.geosphere.speechplaning.theme.R
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe

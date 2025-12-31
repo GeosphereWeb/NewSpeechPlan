@@ -10,16 +10,18 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream
-import java.nio.charset.Charset
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 enum class Event {
+    CIRCUIT_ASSEMBLY,
     CIRCUIT_ASSEMBLY_WITH_CIRCUIT_OVERSEER,
-    CIRCUIT_OVERSEER_CONGREGATION_VISIT,
-    CONVENTION,
-    MEMORIAL,
-    SPECIAL_LECTURE,
+    CIRCUIT_OVERSEER_CONGREGATION_VISIT, // Dienstwoche
+    CONVENTION, // Regionaler Kongress
+    MEMORIAL, // Gedächnismal
+    SPECIAL_LECTURE, // Sondervortrag
+
+    BRANCH_CONVENTION,
     MISCELLANEOUS,
     UNKNOWN,
 }
@@ -54,7 +56,7 @@ fun main() = runBlocking {
     val serviceAccountPath = "C:/Users/werne/AndroidStudioProjects/NewSpeechPlan/serviceAccountKey.json"
 
     // Path to CSV file - PLEASE ADJUST!
-    val csvFilePath = "C:/Users/werne/AndroidStudioProjects/NewSpeechPlan/import_src/export_Vortragsplanung.CSV"
+    val csvFilePath = "Export_Vortragsplanung.CSV"
 
     importer.importData(serviceAccountPath, csvFilePath)
 }
@@ -81,7 +83,7 @@ class CsvVortragsplanungImporter {
         // --- 2. Read CSV ---
         println("Reading CSV file: $csvFilePath")
         val lines = try {
-            File(csvFilePath).readLines(Charset.forName("ISO8859-1")).drop(1)
+            File(csvFilePath).readLines(Charsets.UTF_8).drop(1)
         } catch (e: Exception) {
             println("Error reading CSV: ${e.message}")
             return
@@ -112,16 +114,22 @@ class CsvVortragsplanungImporter {
                     null
                 }
 
-                val eventStr = columns.getOrElse(3) { "" }.trim()
-                val eventType = when (eventStr) {
-                    "Dienstwoche" -> Event.CIRCUIT_OVERSEER_CONGREGATION_VISIT
-                    "Sondervortrag" -> Event.SPECIAL_LECTURE
-                    "Sonstige" -> Event.CONVENTION
+                val weekEvent = columns.getOrElse(1) { "" }.trim().toInt()
+                val eventType = when (weekEvent) {
+                    3 -> Event.CIRCUIT_ASSEMBLY
+                    // Event.CIRCUIT_ASSEMBLY_WITH_CIRCUIT_OVERSEER
+                    2 -> Event.CIRCUIT_OVERSEER_CONGREGATION_VISIT
+                    4 -> Event.CONVENTION
+                    5 -> Event.MEMORIAL
+                    7 -> Event.SPECIAL_LECTURE
+
+                    6 -> Event.BRANCH_CONVENTION
+                    1 -> Event.MISCELLANEOUS
                     else -> Event.UNKNOWN
                 }
 
                 val speechNumber = columns.getOrElse(11) { "" }.trim().ifBlank { null }
-                val speakerName = "${columns.getOrElse(6) { "" }.trim()} ${columns.getOrElse(5) { "" }.trim()}".trim()
+                val speakerName = "${columns.getOrElse(5) { "" }.trim()} ${columns.getOrElse(4) { "" }.trim()}".trim()
 
                 val event = CongregationEvent(
                     dateString = dateString,
@@ -129,7 +137,7 @@ class CsvVortragsplanungImporter {
                     speechId = speechNumber,
                     speechNumber = speechNumber,
                     speechSubject = columns.getOrElse(12) { "" }.trim().ifBlank { null },
-                    speakerId = columns.getOrElse(4) { "" }.trim().ifBlank { null },
+                    speakerId = columns.getOrElse(3) { "" }.trim().ifBlank { null },
                     speakerName = if (speakerName.isNotBlank()) speakerName else null,
                     speakerCongregationId = columns.getOrElse(9) { "" }.trim().ifBlank { null },
                     speakerCongregationName = columns.getOrElse(10) { "" }.trim().ifBlank { null },
