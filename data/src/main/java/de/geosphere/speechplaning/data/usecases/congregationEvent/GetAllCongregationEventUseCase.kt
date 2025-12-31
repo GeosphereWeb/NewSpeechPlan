@@ -6,9 +6,6 @@ import de.geosphere.speechplaning.data.repository.CongregationEventRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
-
-private const val SAMPLE_IDS_LIMIT = 5
 
 class GetAllCongregationEventUseCase(
     private val congregationEventRepository: CongregationEventRepository
@@ -18,15 +15,11 @@ class GetAllCongregationEventUseCase(
     /**
      * @return Ein Flow, der eine Liste von Versammlungen emittiert, verpackt in ein Result.
      */
-    operator fun invoke(districtId: String, congregationId: String): Flow<Result<List<CongregationEvent>>> {
-        return congregationEventRepository.getAllFlow(districtId, congregationId)
-            .onEach { list ->
-                try {
-                    val ids = list.mapNotNull { it.id }.take(SAMPLE_IDS_LIMIT)
-                    Log.d(tag, "collectionGroup emitted size=${'$'}{list.size}, sampleIds=${'$'}ids")
-                } catch (e: Exception) {
-                    Log.w(tag, "Failed to log collectionGroup list", e)
-                }
+    operator fun invoke(): Flow<Result<List<CongregationEvent>>> {
+        return congregationEventRepository.getAllFlow()
+            .map { list ->
+                // Daten sortieren
+                list.sortedBy { it.date }
             }
             .map { list ->
                 // Erfolgreiche Daten in Result.success verpacken
