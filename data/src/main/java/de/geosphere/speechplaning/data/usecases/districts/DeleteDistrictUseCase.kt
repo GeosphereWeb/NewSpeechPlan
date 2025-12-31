@@ -1,8 +1,8 @@
 package de.geosphere.speechplaning.data.usecases.districts
 
-import de.geosphere.speechplaning.data.repository.DistrictRepositoryImpl
+import de.geosphere.speechplaning.data.repository.DistrictRepository
 
-class DeleteDistrictUseCase(private val repository: DistrictRepositoryImpl) {
+class DeleteDistrictUseCase(private val repository: DistrictRepository) {
     suspend operator fun invoke(speechId: String): Result<Unit> {
         if (speechId.isBlank()) {
             return Result.failure(IllegalArgumentException("District ID cannot be blank."))

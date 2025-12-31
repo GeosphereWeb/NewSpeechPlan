@@ -9,7 +9,7 @@ import kotlinx.coroutines.tasks.await
 
 open class FirestoreServiceImpl(
     private val firestore: FirebaseFirestore
-) : IFirestoreService {
+) : ICollectionActions, ISubcollectionActions, IFlowActions {
 
     override suspend fun <T : Any> addDocument(collectionPath: String, data: T): String {
         val ref = firestore.collection(collectionPath).add(data).await()

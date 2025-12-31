@@ -1,13 +1,13 @@
 package de.geosphere.speechplaning.data.usecases.congregation
 
 import de.geosphere.speechplaning.core.model.Congregation
-import de.geosphere.speechplaning.data.repository.CongregationRepositoryImpl
+import de.geosphere.speechplaning.data.repository.CongregationRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 
 class GetAllCongregationsUseCase(
-    private val congregationRepository: CongregationRepositoryImpl
+    private val congregationRepository: CongregationRepository
 ) {
     /**
      * @return Ein Flow, der eine Liste von Versammlungen emittiert, verpackt in ein Result.

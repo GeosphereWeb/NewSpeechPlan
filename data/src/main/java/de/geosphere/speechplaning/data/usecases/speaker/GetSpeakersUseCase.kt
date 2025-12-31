@@ -1,12 +1,12 @@
 package de.geosphere.speechplaning.data.usecases.speaker
 
 import de.geosphere.speechplaning.core.model.Speaker
-import de.geosphere.speechplaning.data.repository.SpeakerRepositoryImpl
+import de.geosphere.speechplaning.data.repository.SpeakerRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 
-class GetSpeakersUseCase(private val repository: SpeakerRepositoryImpl) {
+class GetSpeakersUseCase(private val repository: SpeakerRepository) {
     /**
      * Ruft Redner ab.
      * @param parentIds Wenn angegeben (districtId, congregationId), werden Redner dieser Versammlung geladen.

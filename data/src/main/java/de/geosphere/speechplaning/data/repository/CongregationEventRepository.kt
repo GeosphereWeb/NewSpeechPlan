@@ -2,7 +2,9 @@ package de.geosphere.speechplaning.data.repository
 
 import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.data.repository.base.FirestoreRepository
-import de.geosphere.speechplaning.data.repository.services.IFirestoreService
+import de.geosphere.speechplaning.data.repository.services.ICollectionActions
+import de.geosphere.speechplaning.data.repository.services.IFlowActions
+import de.geosphere.speechplaning.data.repository.services.ISubcollectionActions
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -12,10 +14,13 @@ private const val DISTRICTS_COLLECTION = "districts"
 private const val CONGREGATIONS_SUBCOLLECTION = "congregations"
 
 @Suppress("TooGenericExceptionCaught", "TooGenericExceptionThrown", "TooManyFunctions")
-class CongregationEventRepositoryImpl(
-    firestoreService: IFirestoreService
-) : FirestoreRepository<CongregationEvent>(
-    firestoreService = firestoreService,
+class CongregationEventRepository(
+    collectionActions: ICollectionActions,
+    private val subcollectionActions: ISubcollectionActions,
+    private val flowActions: IFlowActions
+) : FirestoreRepository<CongregationEvent, String>(
+    collectionActions = collectionActions,
+    flowActions = flowActions,
     collectionPath = CONGREGATION_EVENTS_COLLECTION,
     clazz = CongregationEvent::class.java
 ) {
@@ -34,16 +39,12 @@ class CongregationEventRepositoryImpl(
         return getById(eventId)
     }
 
-    suspend fun getAllEvents(): List<CongregationEvent> {
-        return getAll()
-    }
-
     suspend fun deleteEvent(eventId: String) {
         delete(eventId)
     }
 
     fun getAllEventsFlow(): Flow<List<CongregationEvent>> {
-        return firestoreService.getCollectionGroupFlow(CONGREGATION_EVENTS_COLLECTION, CongregationEvent::class.java)
+        return flowActions.getCollectionGroupFlow(CONGREGATION_EVENTS_COLLECTION, CongregationEvent::class.java)
     }
 
     // Add subcollection flow compatibility
@@ -51,7 +52,7 @@ class CongregationEventRepositoryImpl(
         val actualParentCollectionPath = buildParentCollectionPath(*parentIds)
         val actualParentDocumentId = getParentDocumentId(*parentIds)
 
-        val collectionRef = firestoreService.getSubcollection(
+        val collectionRef = subcollectionActions.getSubcollection(
             parentCollection = actualParentCollectionPath,
             parentId = actualParentDocumentId,
             subcollection = CONGREGATION_EVENTS_COLLECTION
@@ -100,14 +101,14 @@ class CongregationEventRepositoryImpl(
 
         return try {
             if (entityId.isBlank()) {
-                firestoreService.addDocumentToSubcollection(
+                subcollectionActions.addDocumentToSubcollection(
                     parentCollection = parentCollectionPath,
                     parentId = parentDocId,
                     subcollection = CONGREGATION_EVENTS_COLLECTION,
                     data = event
                 )
             } else {
-                firestoreService.setDocumentInSubcollection(
+                subcollectionActions.setDocumentInSubcollection(
                     parentCollection = parentCollectionPath,
                     parentId = parentDocId,
                     subcollection = CONGREGATION_EVENTS_COLLECTION,
@@ -131,7 +132,7 @@ class CongregationEventRepositoryImpl(
         val parentCollectionPath = buildParentCollectionPath(districtId, congregationId)
         val parentDocId = getParentDocumentId(districtId, congregationId)
         return try {
-            firestoreService.getDocumentFromSubcollection(
+            subcollectionActions.getDocumentFromSubcollection(
                 parentCollectionPath = parentCollectionPath,
                 parentDocumentId = parentDocId,
                 subcollectionName = CONGREGATION_EVENTS_COLLECTION,
@@ -151,7 +152,7 @@ class CongregationEventRepositoryImpl(
         val parentCollectionPath = buildParentCollectionPath(districtId, congregationId)
         val parentDocId = getParentDocumentId(districtId, congregationId)
         return try {
-            firestoreService.getDocumentsFromSubcollection(
+            subcollectionActions.getDocumentsFromSubcollection(
                 parentCollection = parentCollectionPath,
                 parentId = parentDocId,
                 subcollection = CONGREGATION_EVENTS_COLLECTION,
@@ -171,7 +172,7 @@ class CongregationEventRepositoryImpl(
         val parentCollectionPath = buildParentCollectionPath(districtId, congregationId)
         val parentDocId = getParentDocumentId(districtId, congregationId)
         try {
-            firestoreService.deleteDocumentFromSubcollection(
+            subcollectionActions.deleteDocumentFromSubcollection(
                 parentCollection = parentCollectionPath,
                 parentId = parentDocId,
                 subcollection = CONGREGATION_EVENTS_COLLECTION,

@@ -1,80 +1,59 @@
 package de.geosphere.speechplaning.data.repository.base
 
-import de.geosphere.speechplaning.data.repository.services.IFirestoreService
+import de.geosphere.speechplaning.core.model.SavableDataClass
+import de.geosphere.speechplaning.data.repository.services.ICollectionActions
+import de.geosphere.speechplaning.data.repository.services.IFlowActions
+import kotlinx.coroutines.flow.Flow
 
-/**
- * Generische Basisimplementierung für Firestore-Repositories.
- * @param T Der Typ der Entität. Muss ein '@DocumentId'-annotiertes Feld 'id: String' haben oder
- *          die Methode 'extractIdFromEntity' muss entsprechend überschrieben werden.
- * @param firestoreService Die Abstraktion über Firestore-Operationen.
- * @param collectionPath Der Pfad zur Firestore-Collection.
- * @param clazz Die Klassenreferenz der Entität (z.B. MyEntity::class.java).
- */
 @Suppress("TooGenericExceptionCaught", "TooGenericExceptionThrown")
-abstract class FirestoreRepository<T : Any>(
-    protected val firestoreService: IFirestoreService,
+abstract class FirestoreRepository<T : SavableDataClass, ID : Any>(
+    private val collectionActions: ICollectionActions,
+    private val flowActions: IFlowActions,
     private val collectionPath: String,
     private val clazz: Class<T>
-) : IFirestoreRepository<T, String> { // ID ist hier als String spezialisiert
+) : IFirestoreRepository<T, ID> {
 
-    /**
-     * Extrahiert die ID aus der Entität. Muss von Subklassen überschrieben werden,
-     * um das korrekte ID-Feld der Entität zurückzugeben.
-     * Z.B.: return entity.id
-     */
-    internal abstract fun extractIdFromEntity(entity: T): String
+    // Abstrakte Methode zur Extraktion der ID aus einer Entität
+    abstract fun extractIdFromEntity(entity: T): ID
 
-    /**
-     * Prüft, ob die ID der Entität als "leer" oder "neu" betrachtet werden soll.
-     * Standardmäßig wird String.isBlank() verwendet.
-     */
-    protected open fun isEntityIdBlank(id: String): Boolean {
-        return id.isBlank()
-    }
-
-    override suspend fun save(entity: T): String {
-        val entityId = extractIdFromEntity(entity)
+    override suspend fun save(entity: T): ID {
+        val id = extractIdFromEntity(entity)
         return try {
-            if (isEntityIdBlank(entityId)) {
-                firestoreService.saveDocument(collectionPath, entity)
+            // Firestore IDs are strings, so we need to handle this. We assume ID is String for now.
+            val documentId = id as? String ?: ""
+            if (documentId.isBlank()) {
+                collectionActions.addDocument(collectionPath, entity) as ID
             } else {
-                val ok = firestoreService.saveDocumentWithId(collectionPath, entityId, entity)
-                if (!ok) throw RuntimeException("Failed to set document with id $entityId in $collectionPath")
-                entityId // Gibt die existierende ID zurück
+                collectionActions.setDocument(collectionPath, documentId, entity)
+                id
             }
         } catch (e: Exception) {
-            val idForErrorMessage = if (isEntityIdBlank(entityId)) "[new]" else entityId
-            throw RuntimeException("Failed to save entity '$idForErrorMessage' in $collectionPath", e)
+            val idForErrorMessage = if ((id as? String)?.isBlank() != false) "[new]" else id.toString()
+            throw RuntimeException("Failed to save entity '$idForErrorMessage' in collection '$collectionPath'", e)
         }
     }
 
-    override suspend fun getById(id: String): T? {
+    override suspend fun getById(id: ID): T? {
+        val documentId = id as? String ?: return null
+        if (documentId.isBlank()) return null
         return try {
-            if (id.isBlank()) return null // Keine gültige ID zum Abrufen
-            firestoreService.getDocument(collectionPath, id, clazz)
+            collectionActions.getDocument(collectionPath, documentId, clazz)
         } catch (e: Exception) {
-            throw RuntimeException("Failed to get entity '$id' from $collectionPath", e)
+            throw RuntimeException("Failed to get entity '$documentId' from collection '$collectionPath'", e)
         }
     }
 
-    override suspend fun getAll(): List<T> {
-        return try {
-            firestoreService.getDocuments(collectionPath, clazz)
-        } catch (e: Exception) {
-            throw RuntimeException("Failed to get all entities from $collectionPath", e)
-        }
-    }
-
-    override suspend fun delete(id: String) {
-        // 1. Validate input first. This will throw IllegalArgumentException directly.
-        require(id.isNotBlank()) { "Document ID cannot be blank for deletion." }
-
-        // 2. Try the Firestore operation.
+    override suspend fun delete(id: ID) {
+        val documentId = id as? String ?: throw IllegalArgumentException("ID must be a non-blank String for deletion.")
+        require(documentId.isNotBlank()) { "Document ID cannot be blank for deletion." }
         try {
-            firestoreService.deleteDocument(collectionPath, id)
+            collectionActions.deleteDocument(collectionPath, documentId)
         } catch (e: Exception) {
-            // This catch block is now only for Firestore exceptions.
-            throw RuntimeException("Failed to delete entity '$id' from $collectionPath", e)
+            throw RuntimeException("Failed to delete entity '$documentId' from collection '$collectionPath'", e)
         }
+    }
+
+    override fun getAllFlow(): Flow<List<T>> {
+        return flowActions.getCollectionFlow(collectionPath, clazz)
     }
 }

@@ -1,7 +1,7 @@
 package de.geosphere.speechplaning.data.usecases.congregation
 
 import de.geosphere.speechplaning.core.model.Congregation
-import de.geosphere.speechplaning.data.repository.CongregationRepositoryImpl
+import de.geosphere.speechplaning.data.repository.CongregationRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.map
  * Ruft alle Versammlungen über alle Bezirke hinweg ab.
  * Nützlich für Auswahl-Listen (Dropdowns).
  */
-class ObserveAllCongregationsUseCase(private val repository: CongregationRepositoryImpl) {
+class ObserveAllCongregationsUseCase(private val repository: CongregationRepository) {
     operator fun invoke(): Flow<Result<List<Congregation>>> {
         return repository.getAllCongregationsGlobalFlow()
             .map { list ->

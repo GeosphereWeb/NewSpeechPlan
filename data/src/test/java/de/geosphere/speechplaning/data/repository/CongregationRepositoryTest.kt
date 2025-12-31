@@ -13,7 +13,7 @@ import io.mockk.mockk
 internal class CongregationRepositoryTest : BehaviorSpec({
 
     lateinit var firestoreService: IFirestoreService
-    lateinit var congregationRepository: CongregationRepositoryImpl
+    lateinit var congregationRepository: CongregationRepository
 
     val districtId = "testDistrictId"
     val congregationId = "testCongregationId"
@@ -23,7 +23,7 @@ internal class CongregationRepositoryTest : BehaviorSpec({
 
     beforeEach {
         firestoreService = mockk(relaxed = true)
-        congregationRepository = CongregationRepositoryImpl(firestoreService)
+        congregationRepository = CongregationRepository(firestoreService)
     }
 
     given("SaveCongregation") {

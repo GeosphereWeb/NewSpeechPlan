@@ -6,6 +6,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source.SERVER
 import de.geosphere.speechplaning.core.model.AppUser
 import de.geosphere.speechplaning.core.model.data.UserRole
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -93,6 +94,7 @@ class UserRepositoryImpl(
         usersCollection.document(user.uid).set(user).await()
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override val currentUser: Flow<AppUser?> = callbackFlow {
         // 1. Wir hören auf den Login-Status von Firebase Auth
         val authListener = FirebaseAuth.AuthStateListener { auth ->

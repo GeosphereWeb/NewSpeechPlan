@@ -16,7 +16,7 @@ import java.time.LocalDate
 internal class CongregationEventRepositoryTest : BehaviorSpec({
 
     lateinit var firestoreService: IFirestoreService
-    lateinit var repository: CongregationEventRepositoryImpl
+    lateinit var repository: CongregationEventRepository
 
     val testDistrictId = "testDistrictId001"
     val testCongregationId = "testCongId002"
@@ -34,7 +34,7 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
 
     beforeEach {
         firestoreService = mockk(relaxed = true)
-        repository = CongregationEventRepositoryImpl(firestoreService)
+        repository = CongregationEventRepository(firestoreService)
 
         testEvent = CongregationEvent(
             id = testEventId,

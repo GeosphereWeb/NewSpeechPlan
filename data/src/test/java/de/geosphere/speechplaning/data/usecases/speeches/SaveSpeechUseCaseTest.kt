@@ -1,7 +1,7 @@
 package de.geosphere.speechplaning.data.usecases.speeches
 
 import de.geosphere.speechplaning.core.model.Speech
-import de.geosphere.speechplaning.data.repository.SpeechRepositoryImpl
+import de.geosphere.speechplaning.data.repository.SpeechRepository
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.result.shouldBeFailure
@@ -18,7 +18,7 @@ class SaveSpeechUseCaseTest : BehaviorSpec({
     // Dadurch sind die Mocks (repository) immer frisch und enthalten keine Aufrufe aus vorherigen Tests.
     isolationMode = IsolationMode.InstancePerLeaf
 
-    val repository = mockk<SpeechRepositoryImpl>(relaxed = true)
+    val repository = mockk<SpeechRepository>(relaxed = true)
     val useCase = SaveSpeechUseCase(repository)
 
     Given("A valid speech") {

@@ -2,7 +2,7 @@ package de.geosphere.speechplaning.data.usecases.congregationEvent
 
 import android.util.Log
 import de.geosphere.speechplaning.core.model.CongregationEvent
-import de.geosphere.speechplaning.data.repository.CongregationEventRepositoryImpl
+import de.geosphere.speechplaning.data.repository.CongregationEventRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.onEach
 private const val SAMPLE_IDS_LIMIT = 5
 
 @Suppress("TooGenericExceptionCaught")
-class GetCongregationEventUseCase(private val repository: CongregationEventRepositoryImpl) {
+class GetCongregationEventUseCase(private val repository: CongregationEventRepository) {
     private val tag = "GetCongregationEventUseCase"
 
     // Akzeptiert optional parentIds: wenn leer -> collection-group-flow (global), ansonsten Subcollection-Flow

@@ -1,8 +1,8 @@
 package de.geosphere.speechplaning.data.usecases.speeches
 
-import de.geosphere.speechplaning.data.repository.SpeechRepositoryImpl
+import de.geosphere.speechplaning.data.repository.SpeechRepository
 
-class DeleteSpeechUseCase(private val repository: SpeechRepositoryImpl) {
+class DeleteSpeechUseCase(private val repository: SpeechRepository) {
     suspend operator fun invoke(speechId: String): Result<Unit> {
         if (speechId.isBlank()) {
             return Result.failure(IllegalArgumentException("Speech ID cannot be blank."))

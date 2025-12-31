@@ -1,13 +1,13 @@
 package de.geosphere.speechplaning.data.usecases.districts
 
 import de.geosphere.speechplaning.core.model.District
-import de.geosphere.speechplaning.data.repository.DistrictRepositoryImpl
+import de.geosphere.speechplaning.data.repository.DistrictRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 
 class GetAllDistrictsUseCase(
-    private val districtRepository: DistrictRepositoryImpl
+    private val districtRepository: DistrictRepository
 ) {
     /**
      * @return Ein Flow, der eine Liste von Versammlungen emittiert, verpackt in ein Result.

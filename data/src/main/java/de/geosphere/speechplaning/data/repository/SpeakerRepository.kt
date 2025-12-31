@@ -2,7 +2,8 @@ package de.geosphere.speechplaning.data.repository
 
 import de.geosphere.speechplaning.core.model.Speaker
 import de.geosphere.speechplaning.data.repository.base.FirestoreSubcollectionRepository
-import de.geosphere.speechplaning.data.repository.services.IFirestoreService
+import de.geosphere.speechplaning.data.repository.services.IFlowActions
+import de.geosphere.speechplaning.data.repository.services.ISubcollectionActions
 import kotlinx.coroutines.flow.Flow
 
 private const val SPEAKERS_SUBCOLLECTION = "speakers"
@@ -10,10 +11,13 @@ private const val DISTRICTS_COLLECTION = "districts"
 private const val CONGREGATIONS_SUBCOLLECTION = "congregations"
 
 @Suppress("TooGenericExceptionCaught", "TooGenericExceptionThrown")
-class SpeakerRepositoryImpl(
-    firestoreService: IFirestoreService
-) : FirestoreSubcollectionRepository<Speaker>(
-    firestoreService = firestoreService,
+class SpeakerRepository(
+    subcollectionActions: ISubcollectionActions,
+    private val flowActions: IFlowActions
+) : FirestoreSubcollectionRepository
+<Speaker, String, String>(
+    subcollectionActions = subcollectionActions,
+    flowActions = flowActions,
     subcollectionName = SPEAKERS_SUBCOLLECTION,
     clazz = Speaker::class.java
 ) {
@@ -61,9 +65,9 @@ class SpeakerRepositoryImpl(
      * @param congregationId Die ID der Versammlung.
      * @return Eine Liste von Speaker-Objekten.
      */
-    suspend fun getSpeakersForCongregation(districtId: String, congregationId: String): List<Speaker> {
+    fun getSpeakersForCongregation(districtId: String, congregationId: String): Flow<List<Speaker>> {
         // Ruft die getAll-Methode der Basisklasse auf.
-        return super.getAll(districtId, congregationId)
+        return super.getAllFlow(districtId, congregationId)
     }
 
     /**
@@ -78,11 +82,7 @@ class SpeakerRepositoryImpl(
         super.delete(speakerId, districtId, congregationId)
     }
 
-    fun getSpeakersForCongregationFlow(speakerId: String): Flow<List<Speaker>> {
-        return getAllFlow(speakerId)
-    }
-
     fun getAllSpeakersGlobalFlow(): Flow<List<Speaker>> {
-        return firestoreService.getCollectionGroupFlow(SPEAKERS_SUBCOLLECTION, Speaker::class.java)
+        return flowActions.getCollectionGroupFlow(SPEAKERS_SUBCOLLECTION, Speaker::class.java)
     }
 }

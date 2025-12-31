@@ -2,17 +2,20 @@ package de.geosphere.speechplaning.data.repository
 
 import de.geosphere.speechplaning.core.model.Congregation
 import de.geosphere.speechplaning.data.repository.base.FirestoreSubcollectionRepository
-import de.geosphere.speechplaning.data.repository.services.IFirestoreService
+import de.geosphere.speechplaning.data.repository.services.IFlowActions
+import de.geosphere.speechplaning.data.repository.services.ISubcollectionActions
 import kotlinx.coroutines.flow.Flow
 
 private const val CONGREGATIONS_SUBCOLLECTION = "congregations"
 private const val DISTRICTS_COLLECTION = "districts"
 
 @Suppress("TooGenericExceptionCaught", "TooGenericExceptionThrown")
-class CongregationRepositoryImpl(
-    firestoreService: IFirestoreService
-) : FirestoreSubcollectionRepository<Congregation>(
-    firestoreService = firestoreService,
+class CongregationRepository(
+    subcollectionActions: ISubcollectionActions,
+    private val flowActions: IFlowActions
+) : FirestoreSubcollectionRepository<Congregation, String, String>(
+    subcollectionActions = subcollectionActions,
+    flowActions = flowActions,
     subcollectionName = CONGREGATIONS_SUBCOLLECTION,
     clazz = Congregation::class.java
 ) {
@@ -59,9 +62,9 @@ class CongregationRepositoryImpl(
      * @param districtId Die ID des Districts, dessen Versammlungen abgerufen werden sollen.
      * @return Eine Liste von Congregation-Objekten.
      */
-    suspend fun getCongregationsForDistrict(districtId: String): List<Congregation> {
+    fun getCongregationsForDistrict(districtId: String): Flow<List<Congregation>> {
         // Ruft die getAll-Methode der Basisklasse auf und übergibt die districtId als parentId.
-        return super.getAll(districtId)
+        return super.getAllFlow(districtId)
     }
 
     /**
@@ -91,6 +94,6 @@ class CongregationRepositoryImpl(
      */
     fun getAllCongregationsGlobalFlow(): Flow<List<Congregation>> {
         // "congregations" ist der Name der Subcollection, definiert in der Konstante oben
-        return firestoreService.getCollectionGroupFlow("congregations", Congregation::class.java)
+        return flowActions.getCollectionGroupFlow("congregations", Congregation::class.java)
     }
 }
