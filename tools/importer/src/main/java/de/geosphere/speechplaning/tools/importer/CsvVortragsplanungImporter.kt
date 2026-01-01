@@ -81,7 +81,7 @@ class CsvVortragsplanungImporter {
         // --- 2. Read CSV ---
         println("Reading CSV file: $csvFilePath")
         val lines = try {
-            File(csvFilePath).readLines(Charset.forName("ISO8859-1")).drop(1)
+            File(csvFilePath).readLines(Charsets.UTF_8).drop(1)
         } catch (e: Exception) {
             println("Error reading CSV: ${e.message}")
             return

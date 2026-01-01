@@ -96,7 +96,7 @@ class CsvImporter {
         // --- 2. CSV Lesen ---
         println("Lese CSV Datei: $csvFilePath")
         val lines = try {
-            File(csvFilePath).readLines(Charset.forName("ISO8859-1")).drop(1)
+            File(csvFilePath).readLines(Charsets.UTF_8).drop(1)
         } catch (e: Exception) {
             println("Fehler beim Lesen der CSV: ${e.message}")
             return
@@ -159,8 +159,8 @@ class CsvImporter {
                     id = speakerId,
                     lastName = columns.getOrElse(13) { "" }.trim(),
                     firstName = columns.getOrElse(14) { "" }.trim(),
-                    phone = columns.getOrElse(15) { "" }.trim(),
-                    mobile = columns.getOrElse(16) { "" }.trim(),
+                    mobile = columns.getOrElse(15) { "" }.trim(),
+                    phone = columns.getOrElse(16) { "" }.trim(),
                     email = columns.getOrElse(17) { "" }.trim(),
                     congregationId = columns.getOrElse(18) { "" }.trim(),
                     spiritualStatus = when (columns.getOrElse(19) { "" }.trim().toIntOrNull()) {
