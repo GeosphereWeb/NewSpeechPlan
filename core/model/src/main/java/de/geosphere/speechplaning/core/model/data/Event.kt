@@ -10,11 +10,13 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 enum class Event {
+    CIRCUIT_ASSEMBLY,
     CIRCUIT_ASSEMBLY_WITH_CIRCUIT_OVERSEER,
-    CIRCUIT_OVERSEER_CONGREGATION_VISIT,
-    CONVENTION,
-    MEMORIAL,
-    SPECIAL_LECTURE,
+    CIRCUIT_OVERSEER_CONGREGATION_VISIT, // Dienstwoche
+    CONVENTION, // Regionaler Kongress
+    MEMORIAL, // Gedächnismal
+    SPECIAL_LECTURE, // Sondervortrag
+    BRANCH_CONVENTION,
     MISCELLANEOUS,
     UNKNOWN,
 }

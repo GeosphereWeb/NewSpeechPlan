@@ -67,7 +67,7 @@ fun main() = runBlocking {
     val serviceAccountPath = "C:/Users/werne/AndroidStudioProjects/NewSpeechPlan/serviceAccountKey.json"
 
     // Pfad zur CSV Datei - BITTE ANPASSEN!
-    val csvFilePath = "C:/Users/werne/AndroidStudioProjects/NewSpeechPlan/import_src/Export_Kreis-Versl-Redner-Vortraege.CSV"
+    val csvFilePath = "Export_Kreis-Versl-Redner-Vortraege.CSV"
 
     importer.importData(serviceAccountPath, csvFilePath)
 }
