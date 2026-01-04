@@ -81,11 +81,17 @@ class CsvVortragsplanungImporter {
         val db = FirestoreClient.getFirestore()
 
         // --- 2. Read CSV ---
-        println("Reading CSV file: $csvFilePath")
+        println("Reading CSV from resource: $csvFilePath")
+        // Name des Parameters sollte hier auch angepasst werden zu resourcePath
         val lines = try {
-            File(csvFilePath).readLines(Charsets.UTF_8).drop(1)
+            // Hole den ClassLoader, um auf interne Ressourcen zuzugreifen
+            val inputStream = this.javaClass.classLoader.getResourceAsStream(csvFilePath)
+                ?: throw IllegalArgumentException("Resource not found in classpath: $csvFilePath")
+
+            // Lese den InputStream mit dem korrekten Zeichensatz
+            inputStream.bufferedReader(Charsets.UTF_8).readLines().drop(1)
         } catch (e: Exception) {
-            println("Error reading CSV: ${e.message}")
+            println("Error reading CSV from resources: ${e.message}")
             return
         }
 
@@ -108,11 +114,7 @@ class CsvVortragsplanungImporter {
                 // --- Map CSV columns to new CongregationEvent structure ---
 
                 val dateStrRaw = columns.getOrElse(0) { "" }.trim()
-                val dateString = if (dateStrRaw.isNotBlank()) {
-                    LocalDate.parse(dateStrRaw, formatter).toString() // Format to YYYY-MM-DD
-                } else {
-                    null
-                }
+                val dateString = LocalDate.parse(dateStrRaw, formatter).toString() // Format to YYYY-MM-DD
 
                 val weekEvent = columns.getOrElse(1) { "" }.trim().toInt()
                 val eventType = when (weekEvent) {
@@ -145,8 +147,7 @@ class CsvVortragsplanungImporter {
                 )
 
                 // Write each event to the top-level "congregationEvents" collection
-                db.collection("congregationEvents").add(event).get()
-
+                db.collection("congregationEvents").document(dateString).set(event).get()
                 successCount++
             } catch (e: Exception) {
                 println("Error processing row: $line")
