@@ -1,5 +1,6 @@
 package de.geosphere.speechplaning.feature.congregationEvent
 
+import android.R.attr.text
 import android.app.DatePickerDialog
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -177,7 +179,7 @@ fun CongregationEventListContent(
     // Die Gruppierung wird nur neu berechnet, wenn sich die `events`-Liste ändert.
     val groupedEvents = remember(events) {
         events
-            .sortedByDescending { it.date }
+            .sortedBy { it.date }
             .groupBy { it.date?.year ?: 0 } // 1. Gruppierung nach Jahr
             .mapValues { entry ->
                 entry.value.groupBy { it.date?.month ?: java.time.Month.JANUARY } // 2. Gruppierung nach Monat
@@ -250,7 +252,12 @@ fun MonthHeader(month: String, year: Int) {
         Text(
             text = monthString,
             style = MaterialTheme.typography.titleMedium, // Etwas kleinere Schrift als das Jahr
-            modifier = Modifier.padding(start = 24.dp, end = 16.dp, top = 8.dp, bottom = 8.dp) // Eingerückt, um die Hierarchie zu zeigen
+            modifier = Modifier.padding(
+                start = 24.dp,
+                end = 16.dp,
+                top = 8.dp,
+                bottom = 8.dp
+            ) // Eingerückt, um die Hierarchie zu zeigen
         )
     }
 }
@@ -267,13 +274,21 @@ fun CongregationEventListItem(
             onClick = onClick,
             onLongClick = onLongClick
         ),
-        headlineContent = { Text(congregationEvent.speechSubject ?: "Ereignis ohne Thema") },
+        headlineContent = {
+            Row() {
+                Text(
+                    modifier = Modifier.defaultMinSize(34.dp),
+                    text = congregationEvent.speechNumber ?: "-"
+                )
+                Text(congregationEvent.speechSubject ?: "Ereignis ohne Thema")
+            }
+        },
         supportingContent = {
             val speakerInfo = congregationEvent.speakerName ?: "Kein Redner zugewiesen"
             Text("$speakerInfo (${congregationEvent.speakerCongregationName ?: "Unbekannt"})")
         },
         overlineContent = { Text(congregationEvent.date?.format(formatter) ?: "") },
-        trailingContent = { Text(congregationEvent.speechNumber ?: "-") }
+        trailingContent = { Text(congregationEvent.eventType.toString()) }
     )
 }
 
@@ -497,9 +512,11 @@ fun CongregationEventDetailsScreen(
     onBack: () -> Unit,
     onEdit: (CongregationEvent?) -> Unit
 ) {
-    Card(modifier = Modifier
-        .fillMaxWidth()
-        .padding(16.dp)) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = "Ereignis-Details", style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.height(8.dp))
