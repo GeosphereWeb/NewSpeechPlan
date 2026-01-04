@@ -195,7 +195,7 @@ class CongregationEventViewModel(
             if (!hasPermission) {
                 _viewState.value = _viewState.value.copy(
                     actionError =
-                        "Keine Berechtigung zum Löschen dieses Ereignisses!"
+                    "Keine Berechtigung zum Löschen dieses Ereignisses!"
                 )
                 return@launch
             }

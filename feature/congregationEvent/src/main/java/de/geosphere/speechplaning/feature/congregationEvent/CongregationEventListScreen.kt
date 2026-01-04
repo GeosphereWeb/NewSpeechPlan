@@ -278,8 +278,16 @@ fun CongregationEventListItem(
             val speakerInfo = congregationEvent.speakerName ?: "Kein Redner zugewiesen"
             Text("$speakerInfo (${congregationEvent.speakerCongregationName ?: "Unbekannt"})")
         },
-        overlineContent = { Text(congregationEvent.date?.format(formatter) ?: "") },
-        trailingContent = { Text(stringProvider.getStringForEvent(congregationEvent.eventType)) }
+        trailingContent = { Text(congregationEvent.date?.format(formatter) ?: "") },
+        overlineContent = {
+            Text(
+                text = if (congregationEvent.eventType != Event.MISCELLANEOUS) {
+                    stringProvider.getStringForEvent(congregationEvent.eventType)
+                } else {
+                    ""
+                }
+            )
+        }
     )
 }
 

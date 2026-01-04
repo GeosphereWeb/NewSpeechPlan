@@ -10,7 +10,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream
-import java.nio.charset.Charset
 
 // --- Lokale Kopien der Data Classes (um Abhängigkeiten zu Android zu vermeiden) ---
 
