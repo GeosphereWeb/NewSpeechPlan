@@ -1,6 +1,7 @@
 package de.geosphere.speechplaning.feature.congregationEvent
 
 import android.app.DatePickerDialog
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -8,10 +9,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -22,7 +25,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -36,10 +38,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,9 +52,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -59,13 +63,18 @@ import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.core.model.Speaker
 import de.geosphere.speechplaning.core.model.Speech
 import de.geosphere.speechplaning.core.model.data.Event
+import de.geosphere.speechplaning.core.ui.provider.AppEventStringProvider
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun CongregationEventListScreen(viewModel: CongregationEventViewModel = koinViewModel()) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+fun CongregationEventListScreen(
+    viewModel: CongregationEventViewModel = koinViewModel(),
+    stringProvider: AppEventStringProvider = koinInject()
+) {
+    val uiState by viewModel.uiState.collectAsState()
 
     when (val state = uiState) {
         is CongregationEventUiState.LoadingUiState -> {
@@ -89,7 +98,6 @@ fun CongregationEventListScreen(viewModel: CongregationEventViewModel = koinView
         }
 
         is CongregationEventUiState.SuccessUiState -> {
-            // NavController für Liste <-> Detail
             val navController = rememberNavController()
 
             NavHost(navController = navController, startDestination = "list") {
@@ -110,10 +118,10 @@ fun CongregationEventListScreen(viewModel: CongregationEventViewModel = koinView
                         ) {
                             CongregationEventListContent(
                                 congregationEvents = state.congregationEvents,
-                                onSelectCongregationEvent = { event ->
-                                    // Klick auf Eintrag -> Detailansicht öffnen
-                                    navController.navigate("details/${event.id}")
-                                }
+                                onSelectCongregationEvent = {
+                                    navController.navigate("details/${it.id}")
+                                },
+                                stringProvider = stringProvider
                             )
 
                             if (state.isActionInProgress) {
@@ -138,7 +146,8 @@ fun CongregationEventListScreen(viewModel: CongregationEventViewModel = koinView
                                     allSpeeches = state.allSpeeches,
                                     onDismiss = viewModel::clearSelection,
                                     onSave = viewModel::saveCongregationEvent,
-                                    onDelete = viewModel::deleteCongregationEvent
+                                    onDelete = viewModel::deleteCongregationEvent,
+                                    stringProvider = stringProvider
                                 )
                             }
                         }
@@ -164,19 +173,82 @@ fun CongregationEventListScreen(viewModel: CongregationEventViewModel = koinView
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CongregationEventListContent(
     congregationEvents: List<CongregationEvent>,
-    onSelectCongregationEvent: (CongregationEvent) -> Unit
+    onSelectCongregationEvent: (CongregationEvent) -> Unit,
+    stringProvider: AppEventStringProvider
 ) {
+    val groupedEvents = remember(congregationEvents) {
+        congregationEvents
+            .sortedBy { it.date }
+            .groupBy { it.date?.year ?: 0 }
+            .mapValues { entry ->
+                entry.value.groupBy { it.date?.month ?: java.time.Month.JANUARY }
+            }
+    }
+
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items(congregationEvents, key = { it.id.ifBlank { it.hashCode() } }) { event ->
-            CongregationEventListItem(
-                congregationEvent = event,
-                onClick = { onSelectCongregationEvent(event) }, // Öffnet Details
-                onLongClick = null
-            )
+        groupedEvents.forEach { (year, eventsByMonth) ->
+            stickyHeader {
+                YearHeader(year = year)
+            }
+
+            eventsByMonth.forEach { (month, eventsInMonth) ->
+                stickyHeader {
+                    MonthHeader(month = month, year = year)
+                }
+
+                items(eventsInMonth, key = { it.id.ifBlank { it.hashCode() } }) { event ->
+                    CongregationEventListItem(
+                        congregationEvent = event,
+                        onClick = { onSelectCongregationEvent(event) },
+                        onLongClick = null,
+                        stringProvider = stringProvider
+                    )
+                }
+            }
         }
+    }
+}
+
+@Composable
+fun YearHeader(year: Int) {
+    Surface(
+        color = MaterialTheme.colorScheme.primaryContainer,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(
+            text = year.toString(),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+    }
+}
+
+@Composable
+fun MonthHeader(month: java.time.Month, year: Int) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        val monthString = remember(month, year) {
+            val formatter = DateTimeFormatter.ofPattern("MMMM yyyy")
+            LocalDate.of(year, month, 1).format(formatter)
+        }
+
+        Text(
+            text = monthString,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(
+                start = 24.dp,
+                end = 16.dp,
+                top = 8.dp,
+                bottom = 8.dp
+            )
+        )
     }
 }
 
@@ -184,7 +256,8 @@ fun CongregationEventListContent(
 fun CongregationEventListItem(
     congregationEvent: CongregationEvent,
     onClick: () -> Unit,
-    onLongClick: (() -> Unit)?
+    onLongClick: (() -> Unit)?,
+    stringProvider: AppEventStringProvider
 ) {
     val formatter = remember { DateTimeFormatter.ofPattern("dd. MMMM yyyy") }
     ListItem(
@@ -192,13 +265,29 @@ fun CongregationEventListItem(
             onClick = onClick,
             onLongClick = onLongClick
         ),
-        headlineContent = { Text(congregationEvent.speechSubject ?: "Ereignis ohne Thema") },
+        headlineContent = {
+            Row {
+                Text(
+                    modifier = Modifier.defaultMinSize(34.dp),
+                    text = congregationEvent.speechNumber ?: "-"
+                )
+                Text(congregationEvent.speechSubject ?: "Ereignis ohne Thema")
+            }
+        },
         supportingContent = {
             val speakerInfo = congregationEvent.speakerName ?: "Kein Redner zugewiesen"
             Text("$speakerInfo (${congregationEvent.speakerCongregationName ?: "Unbekannt"})")
         },
-        overlineContent = { Text(congregationEvent.date?.format(formatter) ?: "") },
-        trailingContent = { Text(congregationEvent.speechNumber ?: "-") }
+        trailingContent = { Text(congregationEvent.date?.format(formatter) ?: "") },
+        overlineContent = {
+            Text(
+                text = if (congregationEvent.eventType != Event.MISCELLANEOUS) {
+                    stringProvider.getStringForEvent(congregationEvent.eventType)
+                } else {
+                    ""
+                }
+            )
+        }
     )
 }
 
@@ -211,7 +300,8 @@ fun CongregationEventEditDialog(
     allSpeeches: List<Speech>,
     onDismiss: () -> Unit,
     onSave: (CongregationEvent) -> Unit,
-    onDelete: (String) -> Unit
+    onDelete: (String) -> Unit,
+    stringProvider: AppEventStringProvider
 ) {
     val isEditMode = congregationEvent != null
     val initialEvent = congregationEvent ?: CongregationEvent(
@@ -227,12 +317,11 @@ fun CongregationEventEditDialog(
 
     var showDatePicker by remember { mutableStateOf(false) }
 
-    // --- Abgeleiteter State: gefilterte Reden-Liste ---
     val filteredSpeeches by remember(speakerId, allSpeakers, allSpeeches) {
         derivedStateOf {
             val selectedSpeaker = allSpeakers.find { it.id == speakerId }
             if (selectedSpeaker == null) {
-                allSpeeches // Wenn kein Redner, zeige alle Reden
+                allSpeeches
             } else {
                 val allowedSpeechNumbers = selectedSpeaker.speechNumberIds.map { it.toString() }
                 allSpeeches.filter { it.number in allowedSpeechNumbers }
@@ -252,11 +341,10 @@ fun CongregationEventEditDialog(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- Datums-Auswahl ---
                 val formatter = remember { DateTimeFormatter.ofPattern("dd. MMMM yyyy") }
                 OutlinedTextField(
                     value = date?.format(formatter) ?: "",
-                    onValueChange = {}, // Read-only
+                    onValueChange = {},
                     readOnly = true,
                     label = { Text("Datum") },
                     modifier = Modifier
@@ -272,7 +360,6 @@ fun CongregationEventEditDialog(
                 if (showDatePicker) {
                     val context = LocalContext.current
                     val initial = date ?: LocalDate.now()
-                    // DisposableEffect stellt sicher, dass der Dialog korrekt angezeigt und wieder geschlossen wird
                     DisposableEffect(key1 = showDatePicker) {
                         val dp = DatePickerDialog(
                             context,
@@ -298,7 +385,6 @@ fun CongregationEventEditDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // --- Redner-Auswahl ---
                 var speakerExpanded by remember { mutableStateOf(false) }
                 val selectedSpeaker = allSpeakers.find { it.id == speakerId }
                 ExposedDropdownMenuBox(expanded = speakerExpanded, onExpandedChange = { speakerExpanded = it }) {
@@ -310,17 +396,15 @@ fun CongregationEventEditDialog(
                         label = { Text("Redner") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = speakerExpanded) }
                     )
-                    DropdownMenu(expanded = speakerExpanded, onDismissRequest = { speakerExpanded = false }) {
+                    ExposedDropdownMenu(expanded = speakerExpanded, onDismissRequest = { speakerExpanded = false }) {
                         allSpeakers.forEach { speaker ->
                             DropdownMenuItem(
                                 text = { Text("${speaker.lastName}, ${speaker.firstName}") },
                                 onClick = {
                                     speakerId = speaker.id
-                                    // Wenn der Redner gewechselt wird, prüfen wir, ob die aktuell gewählte Rede noch
-                                    // gültig ist
                                     val allowedSpeechNumbers = speaker.speechNumberIds.map { it.toString() }
                                     if (allSpeeches.find { s -> s.id == speechId }?.number !in allowedSpeechNumbers) {
-                                        speechId = null // Rede zurücksetzen
+                                        speechId = null
                                     }
                                     speakerExpanded = false
                                 }
@@ -331,7 +415,6 @@ fun CongregationEventEditDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // --- Rede-Auswahl (gefiltert) ---
                 var speechExpanded by remember { mutableStateOf(false) }
                 val selectedSpeech = filteredSpeeches.find { it.id == speechId }
 
@@ -339,15 +422,19 @@ fun CongregationEventEditDialog(
                     OutlinedTextField(
                         modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryEditable, true),
                         readOnly = true,
-                        value = selectedSpeech?.let { "${it.number}: ${it.subject}" } ?: "",
+                        value = selectedSpeech?.let { "#${it.number} - ${it.subject}" } ?: "",
                         onValueChange = {},
                         label = { Text("Rede") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = speechExpanded) }
                     )
-                    DropdownMenu(expanded = speechExpanded, onDismissRequest = { speechExpanded = false }) {
+
+                    ExposedDropdownMenu(
+                        expanded = speechExpanded,
+                        onDismissRequest = { speechExpanded = false }
+                    ) {
                         filteredSpeeches.forEach { speech ->
                             DropdownMenuItem(
-                                text = { Text("${speech.number}: ${speech.subject}") },
+                                text = { Text("#${speech.number} - ${speech.subject}") },
                                 onClick = {
                                     speechId = speech.id
                                     speechExpanded = false
@@ -357,58 +444,48 @@ fun CongregationEventEditDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
                     label = { Text("Notizen") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 3
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- Action Buttons ---
-                Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     if (isEditMode) {
-                        TextButton(
+                        Button(
                             onClick = { onDelete(initialEvent.id) },
-                            colors = ButtonDefaults.textButtonColors(
-                                contentColor = MaterialTheme.colorScheme.error
-                            )
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                         ) {
                             Text("Löschen")
                         }
-                        Spacer(modifier = Modifier.weight(1f))
                     }
-                    TextButton(onClick = onDismiss) {
-                        Text("Abbrechen")
-                    }
-                    Button(onClick = {
-                        // Erzeuge finalen Event mit vollständigen Feldern
-                        val selectedSpeaker = allSpeakers.find { it.id == speakerId }
-                        val selectedSpeech = allSpeeches.find { it.id == speechId }
-                        val speakerName = selectedSpeaker?.let { "${it.firstName} ${it.lastName}" }
-                        val speechNumber = selectedSpeech?.number
-                        val speechSubject = selectedSpeech?.subject
-                        val speakerCongregationId = selectedSpeaker?.congregationId
-                        val speakerCongregationName = allCongregations.find { it.id == speakerCongregationId }?.name
 
-                        val finalEvent = initialEvent.copy(
-                            dateString = date?.toString(),
-                            eventType = eventType,
-                            speakerId = speakerId,
-                            speakerName = speakerName,
-                            speakerCongregationId = speakerCongregationId,
-                            speakerCongregationName = speakerCongregationName,
-                            speechId = speechId,
-                            speechNumber = speechNumber,
-                            speechSubject = speechSubject,
-                            notes = notes
-                        )
-                        onSave(finalEvent)
-                    }) {
-                        Text("Speichern")
+                    Row(horizontalArrangement = Arrangement.End, modifier = Modifier.weight(1f)) {
+                        TextButton(onClick = onDismiss) {
+                            Text("Abbrechen")
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(onClick = {
+                            val finalEvent = initialEvent.copy(
+                                dateString = date?.toString(),
+                                eventType = eventType,
+                                speakerId = speakerId,
+                                speechId = speechId,
+                                notes = notes
+                            )
+                            onSave(finalEvent)
+                        }) {
+                            Text("Speichern")
+                        }
                     }
                 }
             }
@@ -422,7 +499,11 @@ fun CongregationEventDetailsScreen(
     onBack: () -> Unit,
     onEdit: (CongregationEvent?) -> Unit
 ) {
-    Card(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = "Ereignis-Details", style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.height(8.dp))

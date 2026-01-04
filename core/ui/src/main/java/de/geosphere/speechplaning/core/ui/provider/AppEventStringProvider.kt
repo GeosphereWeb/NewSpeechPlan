@@ -1,4 +1,4 @@
-package de.geosphere.speechplaning.provider
+package de.geosphere.speechplaning.core.ui.provider
 
 import android.content.Context
 import de.geosphere.speechplaning.core.model.data.Event
@@ -9,11 +9,13 @@ class AppEventStringProvider(private val context: Context) : EventStringProvider
 
     override fun getStringForEvent(event: Event): String {
         val resId = when (event) {
+            Event.CIRCUIT_ASSEMBLY -> R.string.event_circuit_assembly
             Event.CIRCUIT_ASSEMBLY_WITH_CIRCUIT_OVERSEER -> R.string.event_circuit_assembly_with_circuit_overseer
             Event.CIRCUIT_OVERSEER_CONGREGATION_VISIT -> R.string.event_circuit_overseer_congregation_visit
             Event.CONVENTION -> R.string.event_convention
             Event.MEMORIAL -> R.string.event_memorial
             Event.SPECIAL_LECTURE -> R.string.event_special_lecture
+            Event.BRANCH_CONVENTION -> R.string.event_branch_convention
             Event.MISCELLANEOUS -> R.string.event_miscellaneous
             Event.UNKNOWN -> R.string.event_unknown
         }

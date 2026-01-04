@@ -7,7 +7,7 @@ import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.data.authentication.permission.CongregationEventPermissionPolicy
 import de.geosphere.speechplaning.data.usecases.congregation.GetAllCongregationsUseCase
 import de.geosphere.speechplaning.data.usecases.congregationEvent.DeleteCongregationEventUseCase
-import de.geosphere.speechplaning.data.usecases.congregationEvent.GetCongregationEventUseCase
+import de.geosphere.speechplaning.data.usecases.congregationEvent.GetAllCongregationEventUseCase
 import de.geosphere.speechplaning.data.usecases.congregationEvent.SaveCongregationEventUseCase
 import de.geosphere.speechplaning.data.usecases.speaker.GetSpeakersUseCase
 import de.geosphere.speechplaning.data.usecases.speeches.GetSpeechesUseCase
@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class CongregationEventViewModel(
-    private val getCongregationEventUseCase: GetCongregationEventUseCase,
+    private val getAllCongregationEventUseCase: GetAllCongregationEventUseCase,
     private val saveCongregationEventUseCase: SaveCongregationEventUseCase,
     private val deleteCongregationEventUseCase: DeleteCongregationEventUseCase,
     private val getSpeakersUseCase: GetSpeakersUseCase,
@@ -36,7 +36,7 @@ class CongregationEventViewModel(
 
     val uiState: StateFlow<CongregationEventUiState> =
         combine(
-            getCongregationEventUseCase(),
+            getAllCongregationEventUseCase(),
             getSpeechesUseCase(),
             getSpeakersUseCase(),
             observeCurrentUserUseCase(),
@@ -169,9 +169,7 @@ class CongregationEventViewModel(
             // Aufruf der nun suspendenden UseCase
             val result = saveCongregationEventUseCase(filledEvent)
             result
-                .onSuccess {
-                    clearSelection()
-                }
+                .onSuccess { clearSelection() }
                 .onFailure { error ->
                     _viewState.value =
                         _viewState.value.copy(isActionInProgress = false, actionError = error.localizedMessage)
@@ -207,9 +205,7 @@ class CongregationEventViewModel(
             // Nun erwartet UseCase einen einzigen eventId-Parameter
             val result = deleteCongregationEventUseCase(congregationEventId)
             result
-                .onSuccess {
-                    clearSelection()
-                }
+                .onSuccess { clearSelection() }
                 .onFailure { error ->
                     _viewState.value = _viewState.value.copy(
                         isActionInProgress = false,

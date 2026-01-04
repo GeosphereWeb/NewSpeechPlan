@@ -14,4 +14,6 @@
     <string name="ACTIVE">aktiv</string>
     <string name="cancel">abbrechen</string>
     <string name="ok_lbl">OK</string>
+    <string name="event_circuit_assembly">Dienstwoche</string>
+    <string name="event_branch_convention">Zweigbesuch</string>
 </resources>

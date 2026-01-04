@@ -23,27 +23,39 @@ interface ICollectionActions {
  */
 interface ISubcollectionActions {
     suspend fun <T : Any> addDocumentToSubcollection(
-        parentCollection: String, parentId: String, subcollection: String,
+        parentCollection: String,
+        parentId: String,
+        subcollection: String,
         data: T
     ): String
 
     suspend fun <T : Any> setDocumentInSubcollection(
-        parentCollection: String, parentId: String, subcollection: String,
-        documentId: String, data: T
+        parentCollection: String,
+        parentId: String,
+        subcollection: String,
+        documentId: String,
+        data: T
     )
 
     suspend fun <T : Any> getDocumentFromSubcollection(
-        parentCollectionPath: String, parentDocumentId: String,
-        subcollectionName: String, documentId: String, objectClass: Class<T>
+        parentCollectionPath: String,
+        parentDocumentId: String,
+        subcollectionName: String,
+        documentId: String,
+        objectClass: Class<T>
     ): T?
 
     suspend fun <T : Any> getDocumentsFromSubcollection(
-        parentCollection: String, parentId: String,
-        subcollection: String, objectClass: Class<T>
+        parentCollection: String,
+        parentId: String,
+        subcollection: String,
+        objectClass: Class<T>
     ): List<T>
 
     suspend fun deleteDocumentFromSubcollection(
-        parentCollection: String, parentId: String, subcollection: String,
+        parentCollection: String,
+        parentId: String,
+        subcollection: String,
         documentId: String
     )
 

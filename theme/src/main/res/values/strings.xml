@@ -16,4 +16,6 @@
     <string name="ACTIVE">active</string>
     <string name="cancel">cancel</string>
     <string name="ok_lbl">OK</string>
+    <string name="event_circuit_assembly">circuit assembly</string>
+    <string name="event_branch_convention">Branch convention</string>
 </resources>

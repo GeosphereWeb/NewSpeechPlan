@@ -27,7 +27,7 @@ import de.geosphere.speechplaning.data.usecases.congregation.ObserveAllCongregat
 import de.geosphere.speechplaning.data.usecases.congregation.SaveCongregationUseCase
 import de.geosphere.speechplaning.data.usecases.congregationEvent.DeleteCongregationEventUseCase
 import de.geosphere.speechplaning.data.usecases.congregationEvent.GetAllCongregationEventUseCase
-import de.geosphere.speechplaning.data.usecases.congregationEvent.GetCongregationEventUseCase
+import de.geosphere.speechplaning.data.usecases.congregationEvent.ObserveAllEventsForCongregationUseCase
 import de.geosphere.speechplaning.data.usecases.congregationEvent.SaveCongregationEventUseCase
 import de.geosphere.speechplaning.data.usecases.districts.DeleteDistrictUseCase
 import de.geosphere.speechplaning.data.usecases.districts.GetAllDistrictsUseCase
@@ -112,7 +112,7 @@ val dataModule = module {
 
     factoryOf(::DeleteCongregationEventUseCase)
     factoryOf(::GetAllCongregationEventUseCase)
-    factoryOf(::GetCongregationEventUseCase)
+    factoryOf(::ObserveAllEventsForCongregationUseCase)
     factoryOf(::SaveCongregationEventUseCase)
 
     factoryOf(::SignOutUseCase)
