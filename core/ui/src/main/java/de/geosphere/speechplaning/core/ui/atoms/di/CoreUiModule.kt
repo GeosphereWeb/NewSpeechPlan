@@ -2,7 +2,7 @@ package de.geosphere.speechplaning.core.ui.atoms.di
 
 import de.geosphere.speechplaning.core.ui.atoms.AppAvatarResourceProvider
 import de.geosphere.speechplaning.core.ui.atoms.AvatarProvider
-import de.geosphere.speechplaning.core.ui.atoms.EventMapper
+import de.geosphere.speechplaning.core.ui.provider.EventMapper
 import de.geosphere.speechplaning.core.ui.atoms.SpiritualStatusMapper
 import de.geosphere.speechplaning.core.ui.provider.AppSpiritualStatusStringProvider
 import org.koin.core.module.dsl.factoryOf

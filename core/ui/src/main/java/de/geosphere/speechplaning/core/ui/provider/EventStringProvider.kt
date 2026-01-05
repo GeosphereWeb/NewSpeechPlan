@@ -1,4 +1,4 @@
-package de.geosphere.speechplaning.core.ui.atoms
+package de.geosphere.speechplaning.core.ui.provider
 
 import de.geosphere.speechplaning.core.model.data.Event
 

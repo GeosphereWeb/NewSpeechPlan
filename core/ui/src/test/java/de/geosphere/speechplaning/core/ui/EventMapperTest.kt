@@ -1,8 +1,8 @@
 package de.geosphere.speechplaning.core.ui
 
 import de.geosphere.speechplaning.core.model.data.Event
-import de.geosphere.speechplaning.core.ui.atoms.EventMapper
-import de.geosphere.speechplaning.core.ui.atoms.EventStringProvider
+import de.geosphere.speechplaning.core.ui.provider.EventMapper
+import de.geosphere.speechplaning.core.ui.provider.EventStringProvider
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.every

@@ -2,7 +2,7 @@ package de.geosphere.speechplaning.core.ui.provider
 
 import android.content.Context
 import de.geosphere.speechplaning.core.model.data.Event
-import de.geosphere.speechplaning.core.ui.atoms.EventStringProvider
+import de.geosphere.speechplaning.core.ui.provider.EventStringProvider
 import de.geosphere.speechplaning.theme.R
 
 class AppEventStringProvider(private val context: Context) : EventStringProvider {

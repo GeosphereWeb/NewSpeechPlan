@@ -28,7 +28,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.geosphere.speechplaning.core.model.CongregationEvent
-import de.geosphere.speechplaning.core.ui.atoms.EventStringProvider
+import de.geosphere.speechplaning.core.ui.provider.EventStringProvider
 import de.geosphere.speechplaning.core.ui.provider.AppEventStringProvider
 import de.geosphere.speechplaning.theme.ThemePreviews
 import org.koin.androidx.compose.koinViewModel

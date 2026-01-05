@@ -1,9 +1,9 @@
-package de.geosphere.speechplaning.core.ui.atoms
+package de.geosphere.speechplaning.core.ui.provider
 
 import de.geosphere.speechplaning.core.model.data.Event
 
 /**
- * Maps an [Event] to its localized string representation and vice versa.
+ * Maps an [de.geosphere.speechplaning.core.model.data.Event] to its localized string representation and vice versa.
  *
  * This class provides a centralized way to handle the conversion between the `Event` enum
  * and the user-facing strings defined in the application's resources. It uses an
@@ -12,7 +12,7 @@ import de.geosphere.speechplaning.core.model.data.Event
  * It is primarily used to display event types in the UI and to parse user input or stored
  * string values back into the corresponding enum.
  *
- * @param stringProvider An implementation that provides the localized string for a given [Event].
+ * @param stringProvider An implementation that provides the localized string for a given [de.geosphere.speechplaning.core.model.data.Event].
  */
 @Suppress("SwallowedException")
 class EventMapper(private val stringProvider: EventStringProvider) {
