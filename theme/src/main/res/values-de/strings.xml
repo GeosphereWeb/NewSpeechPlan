@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">NEW Speech Planing</string>
     <string name="event_circuit_assembly_with_circuit_overseer">Kreiskongress mit dem Kreisaufseher</string>
     <string name="event_circuit_overseer_congregation_visit">Versammlungsbesuch des Kreisaufsehers</string>
     <string name="event_convention">Regionaler Kongress</string>

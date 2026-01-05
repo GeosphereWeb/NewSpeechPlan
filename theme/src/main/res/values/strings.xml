@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">NEW Speech Planing</string>
+    <string name="app_name" translatable="false">Speech Planer</string>
 
     <string name="event_circuit_assembly_with_circuit_overseer">Circuit assembly with circuit observer</string>
     <string name="event_circuit_overseer_congregation_visit">circuit observer congregation visit</string>
