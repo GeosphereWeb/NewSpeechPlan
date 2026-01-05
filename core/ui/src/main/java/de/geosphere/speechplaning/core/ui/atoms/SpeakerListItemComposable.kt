@@ -1,5 +1,7 @@
 package de.geosphere.speechplaning.core.ui.atoms
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
@@ -7,8 +9,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -45,7 +51,7 @@ fun SpeakerListItemComposable(
         )
     ) {
         Row(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(16.dp).fillMaxWidth()
         ) {
             Icon(
                 modifier = Modifier.size(40.dp),
@@ -57,7 +63,7 @@ fun SpeakerListItemComposable(
                 contentDescription = "Avatar für ${speaker.spiritualStatus}",
                 tint = Color.Unspecified
             )
-            Column(modifier = Modifier.padding(start = 16.dp)) {
+            Column(modifier = Modifier.padding(start = 16.dp).weight(1f)) {
                 Text(
                     text = "${speaker.firstName} ${speaker.lastName}",
                     style = MaterialTheme.typography.titleMedium
@@ -87,6 +93,26 @@ fun SpeakerListItemComposable(
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
+                }
+
+            }
+            val context = LocalContext.current
+            val hasPhoneNumber = speaker.mobile.isNotBlank()
+
+            if (isExpanded && hasPhoneNumber) {
+                val numberToDail = speaker.mobile.ifBlank { speaker.phone }
+                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$numberToDail"))
+
+                IconButton(
+                    modifier = Modifier.padding(start = 8.dp),
+                    onClick = {
+                    context.startActivity(intent)
+                }
+                ) {
+                    Icon(
+                        modifier = Modifier.size(40.dp),
+                        tint = Color(0xFF19812A),
+                        imageVector = Icons.Default.Phone, contentDescription = null)
                 }
             }
         }
