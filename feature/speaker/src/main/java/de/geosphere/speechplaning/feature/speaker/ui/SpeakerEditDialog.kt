@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -23,6 +21,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +38,27 @@ import de.geosphere.speechplaning.core.model.Speech
 import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
 
+@Immutable
+private data class SpeakerEditDialogState(
+    val isEditMode: Boolean,
+    val firstName: String,
+    val lastName: String,
+    val congregationId: String,
+    val allCongregations: List<Congregation>,
+    val selectedSpeechIds: List<Int>,
+    val allSpeeches: List<Speech>,
+    val active: Boolean,
+    val onFirstNameChange: (String) -> Unit,
+    val onLastNameChange: (String) -> Unit,
+    val onCongregationSelected: (Congregation) -> Unit,
+    val onActiveChange: (Boolean) -> Unit,
+    val onAddSpeechClick: () -> Unit,
+    val onRemoveSpeechClick: (Int) -> Unit,
+    val onDismiss: () -> Unit,
+    val onSave: () -> Unit,
+    val onDelete: () -> Unit
+)
+
 @Composable
 fun SpeakerEditDialog(
     speaker: Speaker,
@@ -48,14 +68,12 @@ fun SpeakerEditDialog(
     onSave: (Speaker) -> Unit,
     onDelete: (String) -> Unit
 ) {
-    // State initialisieren
     var nameLast by remember(speaker.id) { mutableStateOf(speaker.lastName) }
     var nameFirst by remember(speaker.id) { mutableStateOf(speaker.firstName) }
     var congregationId by remember(speaker.id) { mutableStateOf(speaker.congregationId) }
     var districtId by remember(speaker.id) { mutableStateOf(speaker.districtId) }
     var active by remember(speaker.id) { mutableStateOf(speaker.active) }
 
-    // StateList für die IDs.
     val selectedSpeechIds = remember(speaker.id) { speaker.speechNumberIds.toMutableStateList() }
 
     LaunchedEffect(speaker.speechNumberIds) {
@@ -67,7 +85,7 @@ fun SpeakerEditDialog(
 
     var showSpeechSelectionDialog by remember { mutableStateOf(false) }
 
-    SpeechEditDialogContent(
+    val state = SpeakerEditDialogState(
         isEditMode = speaker.id.isNotBlank(),
         firstName = nameFirst,
         lastName = nameLast,
@@ -102,6 +120,8 @@ fun SpeakerEditDialog(
         onDelete = { onDelete(speaker.id) }
     )
 
+    SpeechEditDialogContent(state)
+
     if (showSpeechSelectionDialog) {
         SpeechSelectionDialog(
             allSpeeches = allSpeeches,
@@ -119,38 +139,19 @@ fun SpeakerEditDialog(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Suppress("LongParameterList", "LongMethod")
-private fun SpeechEditDialogContent(
-    isEditMode: Boolean,
-    firstName: String,
-    lastName: String,
-    congregationId: String,
-    allCongregations: List<Congregation>,
-    selectedSpeechIds: List<Int>,
-    allSpeeches: List<Speech>,
-    active: Boolean,
-    onFirstNameChange: (String) -> Unit,
-    onLastNameChange: (String) -> Unit,
-    onCongregationSelected: (Congregation) -> Unit,
-    onActiveChange: (Boolean) -> Unit,
-    onAddSpeechClick: () -> Unit,
-    onRemoveSpeechClick: (Int) -> Unit,
-    onDismiss: () -> Unit,
-    onSave: () -> Unit,
-    onDelete: () -> Unit
-) {
-    Dialog(onDismissRequest = onDismiss) {
+private fun SpeechEditDialogContent(state: SpeakerEditDialogState) {
+    Dialog(onDismissRequest = state.onDismiss) {
         Card {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = if (isEditMode) "Redner bearbeiten" else "Neuer Redner",
+                    text = if (state.isEditMode) "Redner bearbeiten" else "Neuer Redner",
                     style = MaterialTheme.typography.titleLarge
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedTextField(
-                    value = firstName,
-                    onValueChange = onFirstNameChange,
+                    value = state.firstName,
+                    onValueChange = state.onFirstNameChange,
                     label = { Text("Vorname") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
@@ -158,8 +159,8 @@ private fun SpeechEditDialogContent(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 OutlinedTextField(
-                    value = lastName,
-                    onValueChange = onLastNameChange,
+                    value = state.lastName,
+                    onValueChange = state.onLastNameChange,
                     label = { Text("Nachname") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
@@ -169,7 +170,7 @@ private fun SpeechEditDialogContent(
 
                 var expanded by remember { mutableStateOf(false) }
                 val selectedCongregationName =
-                    allCongregations.find { it.id == congregationId }?.name ?: congregationId
+                    state.allCongregations.find { it.id == state.congregationId }?.name ?: state.congregationId
 
                 ExposedDropdownMenuBox(
                     expanded = expanded,
@@ -190,11 +191,11 @@ private fun SpeechEditDialogContent(
                         expanded = expanded,
                         onDismissRequest = { expanded = false }
                     ) {
-                        allCongregations.forEach { congregation ->
+                        state.allCongregations.forEach { congregation ->
                             DropdownMenuItem(
                                 text = { Text(congregation.name) },
                                 onClick = {
-                                    onCongregationSelected(congregation)
+                                    state.onCongregationSelected(congregation)
                                     expanded = false
                                 },
                                 contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
@@ -206,13 +207,13 @@ private fun SpeechEditDialogContent(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text("Zugewiesene Vorträge:", style = MaterialTheme.typography.labelLarge)
-                if (selectedSpeechIds.isEmpty()) {
+                if (state.selectedSpeechIds.isEmpty()) {
                     Text("- Keine -", style = MaterialTheme.typography.bodySmall)
                 } else {
                     Column {
-                        selectedSpeechIds.sorted().forEach { id ->
+                        state.selectedSpeechIds.sorted().forEach { id ->
                             val speechName =
-                                allSpeeches.find { it.number.toIntOrNull() == id }?.subject
+                                state.allSpeeches.find { it.number.toIntOrNull() == id }?.subject
                                     ?: "Unbekannter Vortrag"
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -224,30 +225,30 @@ private fun SpeechEditDialogContent(
                                     style = MaterialTheme.typography.bodyMedium,
                                     modifier = Modifier.weight(1f)
                                 )
-                                TextButton(onClick = { onRemoveSpeechClick(id) }) {
+                                TextButton(onClick = { state.onRemoveSpeechClick(id) }) {
                                     Text("X")
                                 }
                             }
                         }
                     }
                 }
-                TextButton(onClick = onAddSpeechClick) {
+                TextButton(onClick = state.onAddSpeechClick) {
                     Text("Vortrag hinzufügen")
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = active, onCheckedChange = onActiveChange)
+                    Checkbox(checked = state.active, onCheckedChange = state.onActiveChange)
                     Text("Aktiv")
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                    if (isEditMode) {
+                    if (state.isEditMode) {
                         TextButton(
-                            onClick = onDelete,
+                            onClick = state.onDelete,
                             colors = ButtonDefaults.textButtonColors(
                                 contentColor = MaterialTheme.colorScheme.error
                             )
@@ -256,10 +257,10 @@ private fun SpeechEditDialogContent(
                         }
                         Spacer(modifier = Modifier.weight(1f))
                     }
-                    TextButton(onClick = onDismiss) {
+                    TextButton(onClick = state.onDismiss) {
                         Text("Abbrechen")
                     }
-                    Button(onClick = onSave) {
+                    Button(onClick = state.onSave) {
                         Text("Speichern")
                     }
                 }
@@ -268,77 +269,67 @@ private fun SpeechEditDialogContent(
     }
 }
 
-@Composable
-fun SpeechSelectionDialog(
-    allSpeeches: List<Speech>,
-    alreadySelectedIds: List<Int>,
-    onSpeechSelected: (Speech) -> Unit,
-    onDismiss: () -> Unit
-) {
-    Dialog(onDismissRequest = onDismiss) {
-        Card(modifier = Modifier.height(400.dp)) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("Vortrag auswählen", style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.height(8.dp))
-                LazyColumn(modifier = Modifier.weight(1f)) {
-                    items(allSpeeches) { speech ->
-                        val isAlreadySelected = speech.number.toIntOrNull() in alreadySelectedIds
-                        if (!isAlreadySelected) {
-                            DropdownMenuItem(
-                                text = { Text("${speech.number}: ${speech.subject}") },
-                                onClick = { onSpeechSelected(speech) }
-                            )
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) {
-                    Text("Schließen")
-                }
-            }
-        }
-    }
-}
-
 @ThemePreviews
 @Composable
-fun SpeakerEditDialog_AddNew_Preview() {
+private fun SpeechEditDialogContent_AddNew_Preview() {
     SpeechPlaningTheme {
-        SpeakerEditDialog(
-            speaker = Speaker(),
-            allCongregations = listOf(
-                Congregation(id = "1", name = "Musterversammlung", districtId = "D1"),
-                Congregation(id = "2", name = "Zweite Versammlung", districtId = "D1")
-            ),
-            allSpeeches = emptyList(),
-            onDismiss = {},
-            onSave = {},
-            onDelete = {}
+        SpeechEditDialogContent(
+            state = SpeakerEditDialogState(
+                isEditMode = false,
+                firstName = "",
+                lastName = "",
+                congregationId = "",
+                allCongregations = listOf(
+                    Congregation(id = "1", name = "Musterversammlung", districtId = "D1"),
+                    Congregation(id = "2", name = "Zweite Versammlung", districtId = "D1")
+                ),
+                selectedSpeechIds = emptyList(),
+                allSpeeches = emptyList(),
+                active = true,
+                onFirstNameChange = {},
+                onLastNameChange = {},
+                onCongregationSelected = {},
+                onActiveChange = {},
+                onAddSpeechClick = {},
+                onRemoveSpeechClick = {},
+                onDismiss = {},
+                onSave = {},
+                onDelete = {}
+            )
         )
     }
 }
 
 @ThemePreviews
 @Composable
-fun SpeakerEditDialog_Edit_Preview() {
+private fun SpeechEditDialogContent_Edit_Preview() {
     SpeechPlaningTheme {
-        SpeakerEditDialog(
-            speaker = Speaker(
-                id = "123",
+        SpeechEditDialogContent(
+            state = SpeakerEditDialogState(
+                isEditMode = true,
                 firstName = "Max",
                 lastName = "Mustermann",
+                congregationId = "1",
+                allCongregations = listOf(
+                    Congregation(id = "1", name = "Musterversammlung", districtId = "D1")
+                ),
+                selectedSpeechIds = listOf(1, 2, 3),
+                allSpeeches = listOf(
+                    Speech(id = "1", number = "1", subject = "Wie gut kennst du Gott?"),
+                    Speech(id = "2", number = "2", subject = "Die Bibel und du"),
+                    Speech(id = "3", number = "3", subject = "Was ist der Sinn des Lebens?")
+                ),
                 active = true,
-                congregationId = "1"
-            ),
-            allCongregations = listOf(
-                Congregation(id = "1", name = "Musterversammlung", districtId = "D1")
-            ),
-            allSpeeches = listOf(
-                Speech(id = "1", number = "1", subject = "Wie gut kennst du Gott?")
-            ),
-            onDismiss = {},
-            onSave = {},
-            onDelete = {}
+                onFirstNameChange = {},
+                onLastNameChange = {},
+                onCongregationSelected = {},
+                onActiveChange = {},
+                onAddSpeechClick = {},
+                onRemoveSpeechClick = {},
+                onDismiss = {},
+                onSave = {},
+                onDelete = {}
+            )
         )
     }
 }
