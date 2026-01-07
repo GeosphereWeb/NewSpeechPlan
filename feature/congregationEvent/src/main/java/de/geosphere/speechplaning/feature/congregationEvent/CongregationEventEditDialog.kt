@@ -43,6 +43,7 @@ import de.geosphere.speechplaning.core.model.Speaker
 import de.geosphere.speechplaning.core.model.Speech
 import de.geosphere.speechplaning.core.model.data.Event
 import de.geosphere.speechplaning.core.ui.provider.AppEventStringProvider
+import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
 import java.time.LocalDate
 
@@ -366,7 +367,7 @@ fun CongregationEventEditDialog(
 
 @ThemePreviews
 @Composable
-fun CongregationEventEditDialogContentPreview() {
+fun CongregationEventEditDialogContentPreview() = SpeechPlaningTheme {
     val dialogState = CongregationEventEditDialogState(
         date = LocalDate.now(),
         speakerId = "speaker1",

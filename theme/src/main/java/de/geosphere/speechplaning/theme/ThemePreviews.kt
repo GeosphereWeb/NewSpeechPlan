@@ -7,13 +7,15 @@ import androidx.compose.ui.tooling.preview.Preview
     showBackground = true,
     name = "Light Mode",
     uiMode = Configuration.UI_MODE_NIGHT_NO,
-    device = "spec:width=411dp,height=891dp"
+    device = "spec:width=411dp,height=891dp",
+    locale = "de"
 )
 @Preview(
     showBackground = true,
     backgroundColor = 0xFF000000,
     name = "Dark Mode",
     uiMode = Configuration.UI_MODE_NIGHT_YES,
-    device = "spec:width=411dp,height=891dp"
+    device = "spec:width=411dp,height=891dp",
+    locale = "de"
 )
 annotation class ThemePreviews

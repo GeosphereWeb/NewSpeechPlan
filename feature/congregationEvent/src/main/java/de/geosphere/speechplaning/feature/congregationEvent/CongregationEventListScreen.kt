@@ -28,8 +28,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.geosphere.speechplaning.core.model.CongregationEvent
-import de.geosphere.speechplaning.core.ui.provider.EventStringProvider
 import de.geosphere.speechplaning.core.ui.provider.AppEventStringProvider
+import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
@@ -185,26 +185,6 @@ fun CongregationEventSuccessContent(
     }
 }
 
-// Mock implementations für Previews - verwendet Interface-Schnittstelle
-private class MockEventStringProvider : EventStringProvider {
-    override fun getStringForEvent(event: de.geosphere.speechplaning.core.model.data.Event): String {
-        return when (event) {
-            de.geosphere.speechplaning.core.model.data.Event.CIRCUIT_ASSEMBLY -> "Kreisversammlung"
-            de.geosphere.speechplaning.core.model.data.Event.CIRCUIT_ASSEMBLY_WITH_CIRCUIT_OVERSEER -> "Kreisversammlung mit Kreisaufseher"
-            de.geosphere.speechplaning.core.model.data.Event.CIRCUIT_OVERSEER_CONGREGATION_VISIT -> "Kreisaufseher-Besuch"
-            de.geosphere.speechplaning.core.model.data.Event.SPECIAL_LECTURE -> "Sondervortrag"
-            de.geosphere.speechplaning.core.model.data.Event.BRANCH_CONVENTION -> "Regionalkongress"
-            de.geosphere.speechplaning.core.model.data.Event.MEMORIAL -> "Gedächtnismahl"
-            de.geosphere.speechplaning.core.model.data.Event.MISCELLANEOUS -> ""
-            else -> "Unbekannt"
-        }
-    }
-
-    override fun getUnknownEventString(): String {
-        return "Unbekannt"
-    }
-}
-
 private fun createMockUiState(): CongregationEventUiState.SuccessUiState {
     val mockEvents = listOf(
         CongregationEvent(
@@ -244,7 +224,10 @@ private fun createMockUiState(): CongregationEventUiState.SuccessUiState {
         showEditDialog = false,
         selectedCongregationEvent = null,
         allSpeakers = listOf(
-            de.geosphere.speechplaning.core.model.Speaker(id = "s1", firstName = "Max", lastName = "Müller", speechNumberIds = listOf(1, 2, 3))
+            de.geosphere.speechplaning.core.model.Speaker(
+                id = "s1", firstName = "Max", lastName = "Müller",
+                speechNumberIds = listOf(1, 2, 3)
+            )
         ),
         allCongregations = listOf(
             de.geosphere.speechplaning.core.model.Congregation(id = "c1", name = "Berlin-Mitte")
@@ -257,13 +240,13 @@ private fun createMockUiState(): CongregationEventUiState.SuccessUiState {
 
 @ThemePreviews
 @Composable
-fun CongregationEventLoadingContentPreview() {
+fun CongregationEventLoadingContentPreview() = SpeechPlaningTheme {
     CongregationEventLoadingContent()
 }
 
 @ThemePreviews
 @Composable
-fun CongregationEventErrorContentPreview() {
+fun CongregationEventErrorContentPreview() = SpeechPlaningTheme {
     CongregationEventErrorContent(message = "Fehler beim Laden der Ereignisse")
 }
 
@@ -273,7 +256,7 @@ fun CongregationEventErrorContentPreview() {
  */
 @ThemePreviews
 @Composable
-fun CongregationEventSuccessListPreview() {
+fun CongregationEventSuccessListPreview() = SpeechPlaningTheme {
     val mockState = createMockUiState()
 
     Scaffold(

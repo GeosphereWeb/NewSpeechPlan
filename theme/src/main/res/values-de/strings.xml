@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="event_circuit_assembly_with_circuit_overseer">Kreiskongress mit dem Kreisaufseher</string>
-    <string name="event_circuit_overseer_congregation_visit">Versammlungsbesuch des Kreisaufsehers</string>
-    <string name="event_convention">Regionaler Kongress</string>
-    <string name="event_memorial">Abendmahl</string>
-    <string name="event_special_lecture">Sondervortrag</string>
-    <string name="event_miscellaneous">Sonstiges</string>
-    <string name="event_unknown">unbekannt</string>
     <string name="spiritual_status_ministerial_servant">Dienstamtgehilfe</string>
     <string name="spiritual_status_elder">Ältester</string>
     <string name="spiritual_status_unknown">unbekannt</string>
     <string name="ACTIVE">aktiv</string>
     <string name="cancel">abbrechen</string>
     <string name="ok_lbl">OK</string>
-    <string name="event_circuit_assembly">Dienstwoche</string>
-    <string name="event_branch_convention">Zweigbesuch</string>
+    <string name="event_branch_convention">Besuch des Vertreters der Weltzentrale</string>
+    <string name="event_stream">Stream</string>
+    <string name="event_congregation">Versammlung</string>
+    <string name="event_circuit_overseer_congregation_visit">Dienstwoche</string>
+    <string name="event_circuit_assembly">Kreiskongress</string>
+    <string name="event_convention">Regionaler Kongress</string>
+    <string name="event_memorial">Abendmahl</string>
+    <string name="event_special_lecture">Sondervortrag</string>
+    <string name="event_miscellaneous">Sonstiges</string>
 </resources>

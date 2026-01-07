@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalContext
 import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.core.model.data.Event
 import de.geosphere.speechplaning.core.ui.provider.AppEventStringProvider
+import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -55,7 +56,7 @@ fun CongregationEventListContent(
 
 @ThemePreviews
 @Composable
-fun CongregationEventListContentPreview() {
+fun CongregationEventListContentPreview() = SpeechPlaningTheme {
     val mockEvents = listOf(
         CongregationEvent(
             id = "1",
@@ -73,7 +74,7 @@ fun CongregationEventListContentPreview() {
             speechSubject = "Hoffnung für die Zukunft",
             speakerName = "Schmidt, Lisa",
             speakerCongregationName = "Hamburg-Nord",
-            eventType = Event.MISCELLANEOUS
+            eventType = Event.MEMORIAL
         ),
         CongregationEvent(
             id = "3",

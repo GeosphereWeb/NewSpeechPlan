@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.core.model.data.Event
+import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
 
 /**
@@ -86,7 +87,7 @@ fun CongregationEventDetailsScreen(
 
 @ThemePreviews
 @Composable
-fun CongregationEventDetailsContentPreview() {
+fun CongregationEventDetailsContentPreview() = SpeechPlaningTheme {
     val mockEvent = CongregationEvent(
         id = "1",
         dateString = "2026-01-15",
@@ -106,7 +107,7 @@ fun CongregationEventDetailsContentPreview() {
 
 @ThemePreviews
 @Composable
-fun CongregationEventDetailsContentEmptyPreview() {
+fun CongregationEventDetailsContentEmptyPreview() = SpeechPlaningTheme {
     CongregationEventDetailsContent(
         congregationEvent = null,
         onBack = {},
