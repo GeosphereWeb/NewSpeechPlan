@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
 
 @Composable
@@ -28,6 +29,6 @@ fun YearHeader(year: Int) {
 
 @ThemePreviews
 @Composable
-fun YearHeaderPreview() {
+fun YearHeaderPreview() = SpeechPlaningTheme {
     YearHeader(year = 2026)
 }

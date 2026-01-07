@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -39,6 +40,6 @@ fun MonthHeader(month: java.time.Month, year: Int) {
 
 @ThemePreviews
 @Composable
-fun MonthHeaderPreview() {
+fun MonthHeaderPreview() = SpeechPlaningTheme {
     MonthHeader(month = java.time.Month.JANUARY, year = 2026)
 }

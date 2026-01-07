@@ -1,14 +1,6 @@
 <resources>
     <string name="app_name" translatable="false">Speech Planer</string>
 
-    <string name="event_circuit_assembly_with_circuit_overseer">Circuit assembly with circuit observer</string>
-    <string name="event_circuit_overseer_congregation_visit">circuit observer congregation visit</string>
-    <string name="event_convention">convention</string>
-    <string name="event_memorial">memorial</string>
-    <string name="event_special_lecture">special lecture</string>
-    <string name="event_miscellaneous">miscellaneaous</string>
-    <string name="event_unknown">unknown</string>
-    
     <string name="spiritual_status_ministerial_servant">ministerial servant</string>
     <string name="spiritual_status_elder">Elder</string>
     <string name="spiritual_status_unknown">unknown</string>
@@ -16,6 +8,14 @@
     <string name="ACTIVE">active</string>
     <string name="cancel">cancel</string>
     <string name="ok_lbl">OK</string>
+    <string name="event_congregation">congregation</string>
+    <string name="event_circuit_overseer_congregation_visit">circuit congregation</string>
     <string name="event_circuit_assembly">circuit assembly</string>
-    <string name="event_branch_convention">Branch convention</string>
+    <string name="event_convention">convention</string>
+    <string name="event_memorial">memorial</string>
+    <string name="event_special_lecture">special lecture</string>
+    <string name="event_miscellaneous">miscellaneous</string>
+    <string name="event_branch_convention">branch convention</string>
+    <string name="event_stream">stream</string>
+    <string name="event_unknown" translatable="false">unknown</string>
 </resources>
