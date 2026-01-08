@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Badge
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -48,7 +49,7 @@ fun CongregationEventListItem(
                 Text(
                     modifier = Modifier.defaultMinSize(34.dp),
                     text = congregationEvent.speechNumber ?: "-",
-                    color = MaterialTheme.colorScheme.tertiary
+                    color = MaterialTheme.extendedColorScheme.customColor4.color
                 )
                 Text(
                     modifier = Modifier.weight(1f),
@@ -64,7 +65,7 @@ fun CongregationEventListItem(
                     color = if (congregationEvent.speechSubject.isNullOrBlank() &&
                         congregationEvent.eventType == Event.CONGREGATION
                     ) {
-                        MaterialTheme.colorScheme.error
+                        colorScheme.error
                     } else {
                         Color.Unspecified
                     }
@@ -88,9 +89,9 @@ fun CongregationEventListItem(
                 ),
                 fontStyle = if (congregationEvent.speakerName == null) FontStyle.Italic else FontStyle.Normal,
                 color = if (congregationEvent.speakerName != null) {
-                    MaterialTheme.extendedColorScheme.customColor4.color
+                    colorScheme.tertiary
                 } else {
-                    MaterialTheme.extendedColorScheme.customColor4.color.copy(alpha = 0.3f)
+                    colorScheme.tertiary.copy(alpha = 0.3f)
                 }
             )
         },
@@ -99,14 +100,14 @@ fun CongregationEventListItem(
             if (congregationEvent.eventType != Event.CONGREGATION) {
                 Badge(
                     containerColor = if (congregationEvent.eventType == Event.MEMORIAL) {
-                        MaterialTheme.colorScheme.tertiaryContainer
+                        colorScheme.tertiaryContainer
                     } else {
-                        MaterialTheme.colorScheme.primaryContainer
+                        colorScheme.primaryContainer
                     },
                     contentColor = if (congregationEvent.eventType == Event.MEMORIAL) {
-                        MaterialTheme.colorScheme.onTertiaryContainer
+                        colorScheme.onTertiaryContainer
                     } else {
-                        MaterialTheme.colorScheme.onPrimaryContainer
+                        colorScheme.onPrimaryContainer
                     }
                 ) {
                     Text(

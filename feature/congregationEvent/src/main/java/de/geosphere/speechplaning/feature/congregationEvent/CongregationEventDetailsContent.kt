@@ -13,9 +13,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.core.model.data.Event
+import de.geosphere.speechplaning.core.ui.provider.AppEventStringProvider
 import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
 
@@ -26,14 +28,19 @@ import de.geosphere.speechplaning.theme.ThemePreviews
 fun CongregationEventDetailsContent(
     congregationEvent: CongregationEvent?,
     onBack: () -> Unit,
-    onEdit: () -> Unit
+    onEdit: () -> Unit,
+    stringProvider: AppEventStringProvider
 ) {
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             Text(
                 text = "Ereignis-Details",
                 style = androidx.compose.material3.MaterialTheme.typography.titleLarge
@@ -48,10 +55,10 @@ fun CongregationEventDetailsContent(
 
             val formatter = remember { java.time.format.DateTimeFormatter.ofPattern("dd. MMMM yyyy") }
             Text("Datum: ${congregationEvent.date?.format(formatter) ?: congregationEvent.dateString}")
-            Text("Typ: ${congregationEvent.eventType}")
+            Text("Typ: ${stringProvider.getStringForEvent(congregationEvent.eventType)}")
             Text("Redner: ${congregationEvent.speakerName ?: "-"}")
-            Text("Gemeinde: ${congregationEvent.speakerCongregationName ?: "-"}")
-            Text("Rede: ${congregationEvent.speechNumber ?: "-"} ${congregationEvent.speechSubject ?: ""}")
+            Text("Versammlung: ${congregationEvent.speakerCongregationName ?: "-"}")
+            Text("Ansprache: ${congregationEvent.speechNumber ?: "-"} ${congregationEvent.speechSubject ?: ""}")
             Spacer(modifier = Modifier.height(8.dp))
             Text("Notizen:")
             Text(congregationEvent.notes ?: "")
@@ -76,12 +83,14 @@ fun CongregationEventDetailsContent(
 fun CongregationEventDetailsScreen(
     congregationEvent: CongregationEvent?,
     onBack: () -> Unit,
-    onEdit: (CongregationEvent?) -> Unit
+    onEdit: (CongregationEvent?) -> Unit,
+    stringProvider: AppEventStringProvider
 ) {
     CongregationEventDetailsContent(
         congregationEvent = congregationEvent,
         onBack = onBack,
-        onEdit = { onEdit(congregationEvent) }
+        onEdit = { onEdit(congregationEvent) },
+        stringProvider = stringProvider
     )
 }
 
@@ -101,7 +110,8 @@ fun CongregationEventDetailsContentPreview() = SpeechPlaningTheme {
     CongregationEventDetailsContent(
         congregationEvent = mockEvent,
         onBack = {},
-        onEdit = {}
+        onEdit = {},
+        stringProvider = AppEventStringProvider(context = LocalContext.current)
     )
 }
 
@@ -111,6 +121,7 @@ fun CongregationEventDetailsContentEmptyPreview() = SpeechPlaningTheme {
     CongregationEventDetailsContent(
         congregationEvent = null,
         onBack = {},
-        onEdit = {}
+        onEdit = {},
+        stringProvider = AppEventStringProvider(context = LocalContext.current)
     )
 }

@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import de.geosphere.speechplaning.core.model.Speech
 import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
+import de.geosphere.speechplaning.theme.extendedColorScheme
 
 @Composable
 fun SpeechListItem(speech: Speech, onClick: () -> Unit, onLongClick: (() -> Unit)?) {
@@ -38,7 +39,7 @@ fun SpeechListItem(speech: Speech, onClick: () -> Unit, onLongClick: (() -> Unit
                 text = speech.number,
                 maxLines = 1,
                 textAlign = TextAlign.Right,
-                color = MaterialTheme.colorScheme.tertiary
+                color = MaterialTheme.extendedColorScheme.customColor4.color
             )
         },
         headlineContent = {

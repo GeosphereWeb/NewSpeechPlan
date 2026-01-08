@@ -179,7 +179,8 @@ fun CongregationEventSuccessContent(
             CongregationEventDetailsScreen(
                 congregationEvent = event,
                 onBack = { navController.popBackStack() },
-                onEdit = { ev -> onEditEvent(navController, ev) }
+                onEdit = { ev -> onEditEvent(navController, ev) },
+                stringProvider = stringProvider
             )
         }
     }
