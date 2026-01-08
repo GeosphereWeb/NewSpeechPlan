@@ -13,18 +13,18 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 enum class Event {
-    CONGREGATION, //Versammlung
+    CONGREGATION, // Versammlung
     CIRCUIT_OVERSEER_CONGREGATION_VISIT, // Dienstwoche,
-    CIRCUIT_ASSEMBLY,// Kreiskongress
+    CIRCUIT_ASSEMBLY, // Kreiskongress
     CONVENTION, // Regionaler Kongress,
     MEMORIAL, // Gedächnismal
     SPECIAL_LECTURE, // Sondervortrag
     MISCELLANEOUS, // Sonstiges
-    BRANCH_CONVENTION,  // Zweigbesuch
+    BRANCH_CONVENTION, // Zweigbesuch
     STREAM, // Stream
+    SPECIAL_CONVENTION, // Besondere Zusammenkunft
     UNKNOWN,
 }
-
 
 // Data Class for the Congregation Event (updated)
 data class CongregationEvent(
@@ -118,15 +118,16 @@ class CsvVortragsplanungImporter {
 
                 val weekEvent = columns.getOrElse(1) { "" }.trim().toInt()
                 val eventType = when (weekEvent) {
-                    1 -> Event.CONGREGATION//Versammlung
+                    1 -> Event.CONGREGATION // Versammlung
                     2 -> Event.CIRCUIT_OVERSEER_CONGREGATION_VISIT // Dienstwoche,
-                    3 -> Event.CIRCUIT_ASSEMBLY// Kreiskongress
+                    3 -> Event.CIRCUIT_ASSEMBLY // Kreiskongress
                     4 -> Event.CONVENTION // Regionaler Kongress,
                     5 -> Event.MEMORIAL // Abendmahl
                     7 -> Event.SPECIAL_LECTURE // Sondervortrag
                     8 -> Event.MISCELLANEOUS // Sonstiges
-                    6 -> Event.BRANCH_CONVENTION  // Zweigbesuch
+                    6 -> Event.BRANCH_CONVENTION // Zweigbesuch
                     10 -> Event.STREAM // Stream
+                    9 -> Event.SPECIAL_CONVENTION // Besondere Zusammenkunft
                     else -> Event.UNKNOWN
                 }
 

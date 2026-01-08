@@ -78,11 +78,11 @@ fun SpeakerListContent(
                     }
                     items(speakersInGroup, key = { it.id }) {
                         SpeakerListItem(
+                            modifier = Modifier,
                             speaker = it,
                             isExpanded = it.id == expandedSpeakerId,
                             onClick = { expandedSpeakerId = if (it.id == expandedSpeakerId) null else it.id },
-                            onLongClick = { onSelectSpeaker(it) },
-                        )
+                        ) { onSelectSpeaker(it) }
                     }
                 }
             }

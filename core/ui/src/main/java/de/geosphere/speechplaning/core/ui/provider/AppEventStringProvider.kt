@@ -17,6 +17,7 @@ class AppEventStringProvider(private val context: Context) : EventStringProvider
             Event.MISCELLANEOUS -> R.string.event_miscellaneous
             Event.BRANCH_CONVENTION -> R.string.event_branch_convention
             Event.STREAM -> R.string.event_stream
+            Event.SPECIAL_CONVENTION -> R.string.event_special_convention
             Event.UNKNOWN -> R.string.event_unknown
         }
         return context.getString(resId)

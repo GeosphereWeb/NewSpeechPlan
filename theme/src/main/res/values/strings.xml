@@ -18,4 +18,5 @@
     <string name="event_branch_convention">branch convention</string>
     <string name="event_stream">stream</string>
     <string name="event_unknown" translatable="false">unknown</string>
+    <string name="event_special_convention">Special Convention</string>
 </resources>

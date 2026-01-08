@@ -1,24 +1,69 @@
 package de.geosphere.speechplaning.feature.speeches.ui
 
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.Hyphens
+import androidx.compose.ui.text.style.LineBreak
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import de.geosphere.speechplaning.core.model.Speech
-import de.geosphere.speechplaning.core.ui.atoms.SpeechListItemComposable
 import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
 
 @Composable
 fun SpeechListItem(speech: Speech, onClick: () -> Unit, onLongClick: (() -> Unit)?) {
-    SpeechListItemComposable(
-        modifier = Modifier.combinedClickable(
-            onClick = onClick,
-            onLongClick = onLongClick
-        ),
-        number = speech.number,
-        subject = speech.subject,
-        enabled = speech.active // Hier wird der Status an die UI weitergereicht
+    val contentAlpha = if (speech.active) 1f else 0.38f
+    ListItem(
+        modifier = Modifier
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
+            .alpha(contentAlpha),
+        shadowElevation = 1.dp,
+        leadingContent = {
+            Text(
+                modifier = Modifier.defaultMinSize(34.dp),
+                text = speech.number,
+                maxLines = 1,
+                textAlign = TextAlign.Right,
+                color = MaterialTheme.colorScheme.tertiary
+            )
+        },
+        headlineContent = {
+            Box(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = speech.subject,
+                    minLines = 1,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    style = TextStyle(
+                        hyphens = Hyphens.Auto,
+                        lineBreak = LineBreak(
+                            strategy = LineBreak.Strategy.HighQuality,
+                            strictness = LineBreak.Strictness.Normal,
+                            wordBreak = LineBreak.WordBreak.Default
+                        )
+                    ),
+                )
+            }
+        },
+        trailingContent = { }
     )
+    HorizontalDivider()
 }
 
 @ThemePreviews
