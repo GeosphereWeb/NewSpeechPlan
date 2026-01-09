@@ -2,6 +2,7 @@ package de.geosphere.speechplaning.feature.congregationEvent
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
@@ -39,6 +40,7 @@ fun CongregationEventListItem(
     stringProvider: AppEventStringProvider
 ) {
     val formatter = remember { DateTimeFormatter.ofPattern("dd. MMM yy") }
+    val formatter2 = remember { DateTimeFormatter.ofPattern("EEEE") }
     ListItem(
         modifier = Modifier.combinedClickable(
             onClick = onClick,
@@ -70,12 +72,20 @@ fun CongregationEventListItem(
                         Color.Unspecified
                     }
                 )
-                Text(
-                    modifier = Modifier.padding(start = 8.dp),
-                    text = congregationEvent.date?.format(formatter) ?: "",
-                    fontSize = MaterialTheme.typography.bodySmall.fontSize.value.sp,
-                    color = MaterialTheme.extendedColorScheme.customColor2.color
-                )
+                Column {
+                    Text(
+                        modifier = Modifier.padding(start = 8.dp),
+                        text = congregationEvent.date?.format(formatter) ?: "",
+                        fontSize = MaterialTheme.typography.bodySmall.fontSize.value.sp,
+                        color = MaterialTheme.extendedColorScheme.customColor2.color
+                    )
+                    Text(
+                        modifier = Modifier.padding(start = 8.dp),
+                        text = congregationEvent.date?.format(formatter2) ?: "",
+                        fontSize = MaterialTheme.typography.bodySmall.fontSize.value.sp,
+                        color = MaterialTheme.extendedColorScheme.customColor2.color
+                    )
+                }
             }
         },
         supportingContent = {
