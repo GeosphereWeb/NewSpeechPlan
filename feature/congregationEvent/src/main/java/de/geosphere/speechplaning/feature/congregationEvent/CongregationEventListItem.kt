@@ -2,7 +2,6 @@ package de.geosphere.speechplaning.feature.congregationEvent
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
@@ -17,10 +16,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.Hyphens
 import androidx.compose.ui.text.style.LineBreak
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.geosphere.speechplaning.core.model.CongregationEvent
@@ -51,7 +52,6 @@ fun CongregationEventListItem(
                 Text(
                     modifier = Modifier.defaultMinSize(34.dp),
                     text = congregationEvent.speechNumber ?: "-",
-                    color = MaterialTheme.extendedColorScheme.customColor4.color
                 )
                 Text(
                     modifier = Modifier.weight(1f),
@@ -72,38 +72,54 @@ fun CongregationEventListItem(
                         Color.Unspecified
                     }
                 )
-                Column {
-                    Text(
-                        modifier = Modifier.padding(start = 8.dp),
-                        text = congregationEvent.date?.format(formatter) ?: "",
-                        fontSize = MaterialTheme.typography.bodySmall.fontSize.value.sp,
-                        color = MaterialTheme.extendedColorScheme.customColor2.color
+
+                val myText = congregationEvent.date?.format(formatter) ?: ""
+                val myText2 = congregationEvent.date?.format(formatter2) ?: ""
+                Text(
+                    modifier = Modifier.padding(start = 8.dp),
+                    text = "$myText\n$myText2",
+                    fontSize = MaterialTheme.typography.bodySmall.fontSize.value.sp,
+                    color = MaterialTheme.extendedColorScheme.customColor4.color,
+                    textAlign = TextAlign.End,
+                    style = TextStyle(
+                        platformStyle = PlatformTextStyle(
+                            includeFontPadding = false
+                        )
                     )
-                    Text(
-                        modifier = Modifier.padding(start = 8.dp),
-                        text = congregationEvent.date?.format(formatter2) ?: "",
-                        fontSize = MaterialTheme.typography.bodySmall.fontSize.value.sp,
-                        color = MaterialTheme.extendedColorScheme.customColor2.color
-                    )
-                }
+                )
             }
         },
         supportingContent = {
-            val speakerInfo = congregationEvent.speakerName ?: "Kein Redner zugewiesen"
-            Text(
-                modifier = Modifier.padding(start = 34.dp),
-                text = "$speakerInfo (${congregationEvent.speakerCongregationName ?: "Unbekannt"})",
-                style = TextStyle(
-                    hyphens = Hyphens.Auto,
-                    lineBreak = LineBreak.Paragraph
-                ),
-                fontStyle = if (congregationEvent.speakerName == null) FontStyle.Italic else FontStyle.Normal,
-                color = if (congregationEvent.speakerName != null) {
-                    colorScheme.tertiary
-                } else {
-                    colorScheme.tertiary.copy(alpha = 0.3f)
-                }
-            )
+            Row(modifier = Modifier.padding(start = 34.dp)) {
+                Text(
+                    modifier = Modifier.padding(end = 8.dp),
+                    text = congregationEvent.speakerName ?: "Kein Redner zugewiesen",
+                    style = TextStyle(
+                        hyphens = Hyphens.Auto,
+                        lineBreak = LineBreak.Paragraph
+                    ),
+                    fontStyle = if (congregationEvent.speakerName == null) FontStyle.Italic else FontStyle.Normal,
+                    color = if (congregationEvent.speakerName != null) {
+                        colorScheme.tertiary
+                    } else {
+                        colorScheme.tertiary.copy(alpha = 0.3f)
+                    }
+                )
+                Text(
+                    modifier = Modifier,
+                    text = "(${congregationEvent.speakerCongregationName ?: "Unbekannt"})",
+                    style = TextStyle(
+                        hyphens = Hyphens.Auto,
+                        lineBreak = LineBreak.Paragraph
+                    ),
+                    fontStyle = if (congregationEvent.speakerName == null) FontStyle.Italic else FontStyle.Normal,
+                    color = if (congregationEvent.speakerName != null) {
+                        colorScheme.tertiary.copy(alpha = 0.7f)
+                    } else {
+                        colorScheme.tertiary.copy(alpha = 0.3f)
+                    }
+                )
+            }
         },
         // trailingContent = { Text(congregationEvent.date?.format(formatter) ?: "") },
         overlineContent = {

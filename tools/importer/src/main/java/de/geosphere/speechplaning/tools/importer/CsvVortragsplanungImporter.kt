@@ -42,6 +42,9 @@ data class CongregationEvent(
     val speakerCongregationId: String? = null,
     val speakerCongregationName: String? = null,
 
+    val speakerMobile: String? = null,
+    val speakerPhone: String? = null,
+
     val notes: String? = null,
 ) {
     @get:Exclude
@@ -104,7 +107,7 @@ class CsvVortragsplanungImporter {
         lines.forEach { line ->
             val columns = line.split(';')
 
-            if (columns.size < 13) {
+            if (columns.size < 15) {
                 println("Skipped row (too few columns): $line")
                 failureCount++
                 return@forEach
@@ -144,6 +147,8 @@ class CsvVortragsplanungImporter {
                     speakerName = if (speakerName.isNotBlank()) speakerName else null,
                     speakerCongregationId = columns.getOrElse(9) { "" }.trim().ifBlank { null },
                     speakerCongregationName = columns.getOrElse(10) { "" }.trim().ifBlank { null },
+                    speakerMobile = columns.getOrElse(13) { "" }.trim().ifBlank { null },
+                    speakerPhone = columns.getOrElse(14) { "" }.trim().ifBlank { null },
                     notes = null
                 )
 
