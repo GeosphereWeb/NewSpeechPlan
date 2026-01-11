@@ -31,7 +31,7 @@ class BottomNavigationItemTest : ShouldSpec({
 
     should("have correct tabs in companion object") {
         val tabs = BottomNavigationItem.tabs
-        tabs.size shouldBe 4
+        tabs.size shouldBe 5
 
         // Test Plan tab
         val planTab = tabs[0]
