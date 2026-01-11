@@ -1,11 +1,18 @@
 package de.geosphere.speechplaning.feature.congregationEvent
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material3.Badge
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
@@ -27,9 +34,11 @@ import androidx.compose.ui.unit.sp
 import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.core.model.data.Event
 import de.geosphere.speechplaning.core.ui.provider.AppEventStringProvider
+import de.geosphere.speechplaning.data.util.isInCurrentWeek
 import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
 import de.geosphere.speechplaning.theme.extendedColorScheme
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -42,6 +51,9 @@ fun CongregationEventListItem(
 ) {
     val formatter = remember { DateTimeFormatter.ofPattern("dd. MMM yy") }
     val formatter2 = remember { DateTimeFormatter.ofPattern("EEEE") }
+
+    val isSameKW = congregationEvent.date?.isInCurrentWeek() ?: false
+
     ListItem(
         modifier = Modifier.combinedClickable(
             onClick = onClick,
@@ -73,20 +85,23 @@ fun CongregationEventListItem(
                     }
                 )
 
-                val myText = congregationEvent.date?.format(formatter) ?: ""
-                val myText2 = congregationEvent.date?.format(formatter2) ?: ""
-                Text(
-                    modifier = Modifier.padding(start = 8.dp),
-                    text = "$myText\n$myText2",
-                    fontSize = MaterialTheme.typography.bodySmall.fontSize.value.sp,
-                    color = MaterialTheme.extendedColorScheme.customColor4.color,
-                    textAlign = TextAlign.End,
-                    style = TextStyle(
-                        platformStyle = PlatformTextStyle(
-                            includeFontPadding = false
+                Row(modifier = Modifier) {
+                    val myText = congregationEvent.date?.format(formatter) ?: ""
+                    val myText2 = congregationEvent.date?.format(formatter2) ?: ""
+                    if (isSameKW) Icon(imageVector = Icons.Default.Event, contentDescription = null, modifier = Modifier.size(22.dp))
+                    Text(
+                        modifier = Modifier.padding(start = 8.dp),
+                        text = "$myText\n$myText2",
+                        fontSize = MaterialTheme.typography.bodySmall.fontSize.value.sp,
+                        color = MaterialTheme.extendedColorScheme.customColor4.color,
+                        textAlign = TextAlign.End,
+                        style = TextStyle(
+                            platformStyle = PlatformTextStyle(
+                                includeFontPadding = false
+                            )
                         )
                     )
-                )
+                }
             }
         },
         supportingContent = {
@@ -121,7 +136,8 @@ fun CongregationEventListItem(
                 )
             }
         },
-        // trailingContent = { Text(congregationEvent.date?.format(formatter) ?: "") },
+        // trailingContent = { if (isSameKW) Icon(imageVector = Icons.Default.Event, contentDescription = null)
+        //     else Icon(imageVector = Icons.Default.CalendarToday, contentDescription = null) },
         overlineContent = {
             if (congregationEvent.eventType != Event.CONGREGATION) {
                 Badge(
