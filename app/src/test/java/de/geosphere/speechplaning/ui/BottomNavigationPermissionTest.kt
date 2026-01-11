@@ -43,7 +43,7 @@ class BottomNavigationPermissionTest : ShouldSpec({
         filteredTabs.any { it.route == Screen.CongregationRoute } shouldBe false
     }
 
-    should("show all tabs for SPEAKING_ASSISTANT user") {
+    should("show only Plan and Speeches tabs for SPEAKING_ASSISTANT user") {
         val speakingAssistantUser = AppUser(
             uid = "789",
             role = UserRole.SPEAKING_ASSISTANT
@@ -51,9 +51,28 @@ class BottomNavigationPermissionTest : ShouldSpec({
 
         val filteredTabs = filterTabsByPermissions(speakingAssistantUser)
 
-        filteredTabs.size shouldBe 5
+        filteredTabs.size shouldBe 2
         filteredTabs.any { it.route == Screen.PlaningRoute } shouldBe true
-        filteredTabs.any { it.route == Screen.SpeakerRoute } shouldBe true
+        filteredTabs.any { it.route == Screen.SpeechesRoute } shouldBe true
+        filteredTabs.any { it.route == Screen.SpeakerRoute } shouldBe false
+        filteredTabs.any { it.route == Screen.DistrictsRoute } shouldBe false
+        filteredTabs.any { it.route == Screen.CongregationRoute } shouldBe false
+    }
+
+    should("show only Plan and Speeches tabs for NONE user") {
+        val noneUser = AppUser(
+            uid = "999",
+            role = UserRole.NONE
+        )
+
+        val filteredTabs = filterTabsByPermissions(noneUser)
+
+        filteredTabs.size shouldBe 2
+        filteredTabs.any { it.route == Screen.PlaningRoute } shouldBe true
+        filteredTabs.any { it.route == Screen.SpeechesRoute } shouldBe true
+        filteredTabs.any { it.route == Screen.SpeakerRoute } shouldBe false
+        filteredTabs.any { it.route == Screen.DistrictsRoute } shouldBe false
+        filteredTabs.any { it.route == Screen.CongregationRoute } shouldBe false
     }
 
     should("show all tabs when user is null") {
