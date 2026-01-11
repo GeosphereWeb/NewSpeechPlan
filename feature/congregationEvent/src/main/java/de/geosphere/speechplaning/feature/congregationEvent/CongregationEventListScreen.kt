@@ -140,7 +140,8 @@ fun CongregationEventSuccessContent(
                     CongregationEventListContent(
                         congregationEvents = state.congregationEvents,
                         onSelectCongregationEvent = { onEventSelect(navController, it) },
-                        stringProvider = stringProvider
+                        stringProvider = stringProvider,
+                        isWhatsAppInstalled = state.isWhatsAppInstalled
                     )
 
                     if (state.isActionInProgress) {
@@ -275,7 +276,8 @@ fun CongregationEventSuccessListPreview() = SpeechPlaningTheme {
             CongregationEventListContent(
                 congregationEvents = mockState.congregationEvents,
                 onSelectCongregationEvent = {},
-                stringProvider = AppEventStringProvider(context = LocalContext.current)
+                stringProvider = AppEventStringProvider(context = LocalContext.current),
+                isWhatsAppInstalled = true
             )
         }
     }

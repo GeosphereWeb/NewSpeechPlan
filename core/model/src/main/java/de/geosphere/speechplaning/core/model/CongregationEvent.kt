@@ -24,6 +24,9 @@ data class CongregationEvent(
     val speakerCongregationId: String? = null,
     val speakerCongregationName: String? = null,
 
+    val speakerMobile: String? = null,
+    val speakerPhone: String? = null,
+
     val notes: String? = null,
 ) : SavableDataClass() {
     @get:Exclude

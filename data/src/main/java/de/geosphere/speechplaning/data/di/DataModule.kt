@@ -45,6 +45,8 @@ import de.geosphere.speechplaning.data.usecases.speeches.DeleteSpeechUseCase
 import de.geosphere.speechplaning.data.usecases.speeches.GetSpeechesUseCase
 import de.geosphere.speechplaning.data.usecases.speeches.SaveSpeechUseCase
 import de.geosphere.speechplaning.data.usecases.user.ObserveCurrentUserUseCase
+import de.geosphere.speechplaning.data.util.AndroidAppChecker
+import de.geosphere.speechplaning.data.util.AppChecker
 import de.geosphere.speechplaning.data.util.GoogleIdTokenParser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -81,6 +83,8 @@ val dataModule = module {
     singleOf(::CongregationPermissionPolicy)
     singleOf(::CongregationEventPermissionPolicy)
     singleOf(::SpeakerPermissionPolicy)
+
+    singleOf(::AndroidAppChecker) { bind<AppChecker>() }
 
     // UseCases
     factoryOf(::SignInWithEmailAndPasswordUseCase)
