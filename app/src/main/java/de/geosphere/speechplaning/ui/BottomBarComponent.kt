@@ -12,16 +12,18 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
-import de.geosphere.speechplaning.core.navigation.BottomNavigationItem
 
 @Composable
 fun BottomBarComponent(
     currentDestination: NavDestination?,
     navController: NavHostController,
+    currentUser: de.geosphere.speechplaning.core.model.AppUser?,
     modifier: Modifier = Modifier,
 ) {
+    val visibleTabs = filterTabsByPermissions(currentUser)
+
     NavigationBar(modifier = modifier) {
-        BottomNavigationItem.Companion.tabs.forEach { navItem ->
+        visibleTabs.forEach { navItem ->
             val isSelected = currentDestination?.hierarchy?.any {
                 it.route == navItem.route::class.qualifiedName
             } == true

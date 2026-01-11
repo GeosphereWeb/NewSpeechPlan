@@ -8,7 +8,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import de.geosphere.speechplaning.core.navigation.BottomNavigationItem
+import de.geosphere.speechplaning.core.model.AppUser
 import de.geosphere.speechplaning.core.navigation.Screen
 import de.geosphere.speechplaning.feature.congregation.CongregationListScreen
 import de.geosphere.speechplaning.feature.congregationEvent.CongregationEventListScreen
@@ -19,11 +19,14 @@ import de.geosphere.speechplaning.feature.speeches.ui.SpeechListScreen
 @Composable
 fun AppNavHostComponent(
     navController: NavHostController,
-    innerPadding: PaddingValues
+    innerPadding: PaddingValues,
+    currentUser: AppUser? = null
 ) {
+    val visibleTabs = filterTabsByPermissions(currentUser)
+
     NavHost(
         navController = navController,
-        startDestination = BottomNavigationItem.Companion.tabs.first().route,
+        startDestination = visibleTabs.first().route,
         modifier = Modifier.Companion
             .padding(5.dp)
             .padding(innerPadding)
