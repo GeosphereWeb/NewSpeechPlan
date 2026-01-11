@@ -12,6 +12,7 @@ import de.geosphere.speechplaning.data.usecases.congregationEvent.SaveCongregati
 import de.geosphere.speechplaning.data.usecases.speaker.GetSpeakersUseCase
 import de.geosphere.speechplaning.data.usecases.speeches.GetSpeechesUseCase
 import de.geosphere.speechplaning.data.usecases.user.ObserveCurrentUserUseCase
+import de.geosphere.speechplaning.data.util.AppChecker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -28,7 +29,8 @@ class CongregationEventViewModel(
     private val getSpeechesUseCase: GetSpeechesUseCase,
     private val getAllCongregationsUseCase: GetAllCongregationsUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
-    private val permissionPolicy: CongregationEventPermissionPolicy
+    private val permissionPolicy: CongregationEventPermissionPolicy,
+    private val appChecker: AppChecker
 ) : ViewModel() {
 
     private val TAG = "CongregationEventVM"
@@ -68,6 +70,8 @@ class CongregationEventViewModel(
                 canDelete = permissionPolicy.canManageGeneral(appUser)
             }
 
+            val isWhatsAppInstalled = appChecker.isAppInstalled("com.whatsapp")
+
             CongregationEventUiState.SuccessUiState(
                 congregationEvents = congregationEvents,
                 allSpeakers = allSpeakers,
@@ -79,7 +83,8 @@ class CongregationEventViewModel(
                 actionError = viewState.actionError,
                 canCreateCongregationEvent = canCreate,
                 canEditCongregationEvent = canEdit,
-                canDeleteCongregationEvent = canDelete
+                canDeleteCongregationEvent = canDelete,
+                isWhatsAppInstalled = isWhatsAppInstalled
             )
         }.stateIn(
             scope = viewModelScope,
