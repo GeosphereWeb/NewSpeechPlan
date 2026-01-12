@@ -1,15 +1,12 @@
 package de.geosphere.speechplaning.feature.congregationEvent
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
@@ -38,7 +35,6 @@ import de.geosphere.speechplaning.data.util.isInCurrentWeek
 import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
 import de.geosphere.speechplaning.theme.extendedColorScheme
-import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -88,7 +84,14 @@ fun CongregationEventListItem(
                 Row(modifier = Modifier) {
                     val myText = congregationEvent.date?.format(formatter) ?: ""
                     val myText2 = congregationEvent.date?.format(formatter2) ?: ""
-                    if (isSameKW) Icon(imageVector = Icons.Default.Event, contentDescription = null, modifier = Modifier.size(22.dp))
+                    if (isSameKW) {
+                        Icon(
+                            imageVector = Icons.Default.Event,
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                            tint = MaterialTheme.extendedColorScheme.customColor4.color.copy(alpha = 0.7f)
+                        )
+                    }
                     Text(
                         modifier = Modifier.padding(start = 8.dp),
                         text = "$myText\n$myText2",
