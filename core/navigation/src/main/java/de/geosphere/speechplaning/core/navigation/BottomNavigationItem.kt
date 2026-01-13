@@ -4,19 +4,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.automirrored.outlined.ListAlt
 import androidx.compose.material.icons.filled.Apartment
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.FolderShared
 import androidx.compose.material.icons.filled.MeetingRoom
 import androidx.compose.material.icons.outlined.Apartment
-import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.FolderShared
 import androidx.compose.material.icons.outlined.MeetingRoom
-import androidx.compose.ui.graphics.vector.ImageVector
+import de.geosphere.speechplaning.theme.R
 
 data class BottomNavigationItem(
     val label: String,
-    val selectedIcon: ImageVector,
-    val unselectedIcon: ImageVector,
+    val selectedIcon: Any,
+    val unselectedIcon: Any,
     val hasNews: Boolean,
     val route: Screen,
     val badgeCount: Int? = null,
@@ -25,8 +23,8 @@ data class BottomNavigationItem(
         val tabs = listOf(
             BottomNavigationItem(
                 label = "Plan",
-                selectedIcon = Icons.Filled.CalendarMonth,
-                unselectedIcon = Icons.Outlined.CalendarMonth,
+                selectedIcon = R.drawable.podium,
+                unselectedIcon = R.drawable.podium,
                 route = Screen.PlaningRoute,
                 hasNews = true,
             ),

@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.geosphere.speechplaning.core.model.CongregationEvent
+import de.geosphere.speechplaning.core.model.data.UserRole
 import de.geosphere.speechplaning.data.authentication.permission.CongregationEventPermissionPolicy
 import de.geosphere.speechplaning.data.usecases.congregation.GetAllCongregationsUseCase
 import de.geosphere.speechplaning.data.usecases.congregationEvent.DeleteCongregationEventUseCase
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 class CongregationEventViewModel(
     private val getAllCongregationEventUseCase: GetAllCongregationEventUseCase,
@@ -36,7 +38,7 @@ class CongregationEventViewModel(
     private val TAG = "CongregationEventVM"
     private val _viewState = MutableStateFlow(CongregationEventViewState())
 
-    val uiState: StateFlow<CongregationEventUiState> =
+    private val uiState: StateFlow<CongregationEventUiState> =
         combine(
             getAllCongregationEventUseCase(),
             getSpeechesUseCase(),
@@ -91,6 +93,49 @@ class CongregationEventViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = CongregationEventUiState.LoadingUiState
         )
+
+    val filteredUiState = combine(
+        uiState,
+        observeCurrentUserUseCase()
+    ) { currentState, appUser ->
+        if (currentState is CongregationEventUiState.SuccessUiState) {
+            val filteredEvents = when (appUser?.role) {
+                UserRole.ADMIN -> {
+                    // Admin sieht alle Termine
+                    currentState.congregationEvents
+                }
+
+                UserRole.SPEAKING_ASSISTANT -> {
+                    // Speaking Assistant sieht nur Termine von 2 Wochen zurück bis 5 Wochen in die Zukunft
+                    val today = LocalDate.now()
+                    val minDate = today.minusWeeks(2)
+                    val maxDate = today.plusWeeks(5)
+
+                    currentState.congregationEvents.filter { event ->
+                        event.date?.let { date ->
+                            date >= minDate && date <= maxDate
+                        } ?: false
+                    }
+                }
+
+                else -> {
+                    // Andere Rollen (z.B. SPEAKING_PLANER, NONE) sehen alle Termine
+                    currentState.congregationEvents
+                }
+            }
+
+            currentState.copy(
+                congregationEvents = filteredEvents
+            )
+        } else {
+            currentState
+        }
+    }.stateIn(
+        // Wandle den java . util . concurrent . Flow wieder in einen kotlinx . coroutines . flow . StateFlow um, damit die UI ihn beobachten kann
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = CongregationEventUiState.LoadingUiState
+    )
 
     fun selectCongregationEvent(congregationEvent: CongregationEvent?) {
         _viewState.value = _viewState.value.copy(
