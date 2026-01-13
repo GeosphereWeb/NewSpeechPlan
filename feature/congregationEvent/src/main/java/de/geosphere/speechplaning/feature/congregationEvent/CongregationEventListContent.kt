@@ -4,31 +4,51 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PhoneForwarded
 import androidx.compose.material.icons.automirrored.filled.SendToMobile
+import androidx.compose.material.icons.filled.Event
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.core.model.data.Event
 import de.geosphere.speechplaning.core.ui.provider.AppEventStringProvider
+import de.geosphere.speechplaning.data.util.isInCurrentWeek
+import de.geosphere.speechplaning.theme.R
 import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
+import de.geosphere.speechplaning.theme.surfaceVariantLightHighContrast
+import kotlinx.coroutines.launch
 import java.time.Month
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
@@ -39,71 +59,144 @@ fun CongregationEventListContent(
     stringProvider: AppEventStringProvider,
     isWhatsAppInstalled: Boolean
 ) {
-    val groupedEvents = remember(congregationEvents) {
-        congregationEvents
-            .sortedBy { it.date }
+    var initialScrollDone by rememberSaveable { mutableStateOf(false) }
+
+    val sortedEvents = remember(congregationEvents) {
+        congregationEvents.sortedBy { it.date }
+    }
+
+    val groupedEvents = remember(sortedEvents) {
+        sortedEvents
             .groupBy { it.date?.year ?: 0 }
             .mapValues { entry ->
                 entry.value.groupBy { it.date?.month ?: Month.JANUARY }
             }
     }
-    val context = LocalContext.current
 
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        groupedEvents.forEach { (year, eventsByMonth) ->
-            stickyHeader {
-                YearHeader(year = year)
+    val context = LocalContext.current
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+
+    var yearHeaderHeightPx by remember { mutableIntStateOf(0) }
+    var monthHeaderHeightPx by remember { mutableIntStateOf(0) }
+
+    fun scrollToCurrentWeek() {
+        val targetEvent = sortedEvents.find { it.date?.isInCurrentWeek() ?: false }
+
+        if (targetEvent != null) {
+            var calculatedIndex = 0
+            var targetFound = false
+
+            groupedEvents.forEach { (year, eventsByMonth) ->
+                if (targetFound) return@forEach
+
+                calculatedIndex++ // Year header
+
+                eventsByMonth.forEach { (month, eventsInMonth) ->
+                    if (targetFound) return@forEach
+
+                    calculatedIndex++ // Month header
+
+                    val indexInMonth = eventsInMonth.indexOf(targetEvent)
+                    if (indexInMonth != -1) {
+                        calculatedIndex += indexInMonth
+                        targetFound = true
+                    } else {
+                        calculatedIndex += eventsInMonth.size
+                    }
+                }
             }
 
-            eventsByMonth.forEach { (month, eventsInMonth) ->
+            if (targetFound) {
+                coroutineScope.launch {
+                    listState.animateScrollToItem(
+                        index = calculatedIndex,
+                        scrollOffset = -yearHeaderHeightPx
+                    )
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(sortedEvents, yearHeaderHeightPx, monthHeaderHeightPx) {
+        if (!initialScrollDone && sortedEvents.isNotEmpty() && yearHeaderHeightPx > 0 && monthHeaderHeightPx > 0) {
+            scrollToCurrentWeek()
+            initialScrollDone = true
+        }
+    }
+
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            Button(
+                onClick = { scrollToCurrentWeek() },
+
+                ) {
+                Row(modifier = Modifier) {
+                    Text(text = "Scroll to...")
+                    Icon(imageVector = Icons.Default.Event, contentDescription = null)
+                }
+            }
+        }
+
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            state = listState
+        ) {
+            groupedEvents.forEach { (year, eventsByMonth) ->
                 stickyHeader {
-                    MonthHeader(month = month, year = year)
+                    YearHeader(
+                        year = year,
+                        modifier = Modifier.onSizeChanged { size ->
+                            yearHeaderHeightPx = size.height
+                        }
+                    )
                 }
 
-                items(eventsInMonth, key = { it.id.ifBlank { it.hashCode() } }) { event ->
-                    SwipeableItemWithActions(
-                        isRevealed = false,
-                        actionsLeft = {
-                            if (!event.speakerMobile.isNullOrEmpty()) {
-                                FilledIconButton(
-                                    modifier = Modifier.size(50.dp),
-                                    shape = RoundedCornerShape(10.dp),
-                                    colors = IconButtonDefaults.filledIconButtonColors(
-                                        containerColor = Color(0xFF01C040), // Hintergrundfarbe
-                                        contentColor = de.geosphere.speechplaning.theme.surfaceVariantLightHighContrast
-                                        // Iconfarbe
-                                    ),
-                                    onClick = {
-                                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${event.speakerMobile}"))
-                                        context.startActivity(intent)
-                                    }
-                                ) {
-                                    Icon(
-                                        modifier = Modifier.size(40.dp),
-                                        imageVector = Icons.AutoMirrored.Filled.SendToMobile,
-                                        contentDescription = null
-                                    )
-                                }
+                eventsByMonth.forEach { (month, eventsInMonth) ->
+                    stickyHeader {
+                        MonthHeader(
+                            month = month,
+                            year = year,
+                            modifier = Modifier.onSizeChanged { size ->
+                                monthHeaderHeightPx = size.height
                             }
-                            if (!event.speakerPhone.isNullOrEmpty()) {
-                                FilledIconButton(
-                                    modifier = Modifier.size(50.dp),
-                                    shape = RoundedCornerShape(10.dp),
-                                    colors = IconButtonDefaults.filledIconButtonColors(
-                                        containerColor = Color(0xFF01C040), // Hintergrundfarbe
-                                        contentColor = de.geosphere.speechplaning.theme.surfaceVariantLightHighContrast
-                                        // Iconfarbe
-                                    ),
-                                    onClick = {
-                                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${event.speakerPhone}"))
-                                        context.startActivity(intent)
-                                    }
-                                ) {
+                        )
+                    }
+
+                    items(eventsInMonth, key = { it.id.ifBlank { it.hashCode() } }) { event ->
+                        SwipeableItemWithActions(
+                            isRevealed = false,
+                            actionsLeft = {
+                                if (!event.speakerMobile.isNullOrEmpty()) {
                                     FilledIconButton(
                                         modifier = Modifier.size(50.dp),
                                         shape = RoundedCornerShape(10.dp),
                                         colors = IconButtonDefaults.filledIconButtonColors(
-                                            containerColor = Color(0xFF01C040), // Hintergrundfarbe
+                                            containerColor = Color(0xFF01C040),
+                                            contentColor = de.geosphere.speechplaning.theme.surfaceVariantLightHighContrast
+                                        ),
+                                        onClick = {
+                                            val intent =
+                                                Intent(Intent.ACTION_DIAL, Uri.parse("tel:${event.speakerMobile}"))
+                                            context.startActivity(intent)
+                                        }
+                                    ) {
+                                        Icon(
+                                            modifier = Modifier.size(40.dp),
+                                            imageVector = Icons.AutoMirrored.Filled.SendToMobile,
+                                            contentDescription = null
+                                        )
+                                    }
+                                }
+                                if (!event.speakerPhone.isNullOrEmpty()) {
+                                    FilledIconButton(
+                                        modifier = Modifier.size(50.dp),
+                                        shape = RoundedCornerShape(10.dp),
+                                        colors = IconButtonDefaults.filledIconButtonColors(
+                                            containerColor = Color(0xFF01C040),
                                             contentColor = de.geosphere.speechplaning.theme.surfaceVariantLightHighContrast
                                         ),
                                         onClick = {
@@ -112,86 +205,91 @@ fun CongregationEventListContent(
                                             context.startActivity(intent)
                                         }
                                     ) {
+                                        FilledIconButton(
+                                            modifier = Modifier.size(50.dp),
+                                            shape = RoundedCornerShape(10.dp),
+                                            colors = IconButtonDefaults.filledIconButtonColors(
+                                                containerColor = Color(0xFF01C040),
+                                                contentColor = surfaceVariantLightHighContrast
+                                            ),
+                                            onClick = {
+                                                val intent =
+                                                    Intent(
+                                                        Intent.ACTION_DIAL,
+                                                        Uri.parse("tel:${event.speakerPhone}")
+                                                    )
+                                                context.startActivity(intent)
+                                            }
+                                        ) {
+                                            Icon(
+                                                modifier = Modifier.size(40.dp),
+                                                imageVector = Icons.AutoMirrored.Filled.PhoneForwarded,
+                                                contentDescription = null
+                                            )
+                                        }
+                                    }
+                                }
+                            },
+                            actionsRight = {
+                                val rawPhoneNumber = event.speakerMobile?.takeIf { it.isNotBlank() }
+                                if (isWhatsAppInstalled && !rawPhoneNumber.isNullOrBlank()) {
+                                    FilledIconButton(
+                                        modifier = Modifier.size(50.dp),
+                                        shape = RoundedCornerShape(10.dp),
+                                        colors = IconButtonDefaults.filledIconButtonColors(
+                                            containerColor = Color(0xFF01C040),
+                                            contentColor = de.geosphere.speechplaning.theme.surfaceVariantLightHighContrast
+                                        ),
+                                        onClick = {
+                                            val normalizedNumber = rawPhoneNumber
+                                                .replace(Regex("[^0-9]"), "")
+                                                .removePrefix("00")
+
+                                            val intent = Intent(
+                                                Intent.ACTION_VIEW,
+                                                Uri.parse("smsto:$normalizedNumber")
+                                            )
+
+                                            val message =
+                                                "Hallo ${event.speakerName}, es geht um den Vortrag " +
+                                                    "'${event.speechSubject}' am ${event.dateString}."
+                                            intent.putExtra("sms_body", message)
+
+                                            intent.setPackage("com.whatsapp")
+
+                                            try {
+                                                context.startActivity(intent)
+                                            } catch (e: Exception) {
+                                                Toast.makeText(
+                                                    context,
+                                                    "WhatsApp konnte nicht geöffnet werden.",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        }
+                                    ) {
                                         Icon(
                                             modifier = Modifier.size(40.dp),
-                                            imageVector = Icons.AutoMirrored.Filled.PhoneForwarded,
+                                            painter = painterResource(R.drawable.whatsapp_icon),
                                             contentDescription = null
                                         )
                                     }
                                 }
-                            }
-                        },
-                        actionsRight = {
-                            // 1. Prüfe, ob eine Telefonnummer vorhanden ist (Mobil oder Festnetz)
-                            val rawPhoneNumber = event.speakerMobile?.takeIf { it.isNotBlank() }
-                            if (isWhatsAppInstalled && !rawPhoneNumber.isNullOrBlank()) {
-                                FilledIconButton(
-                                    modifier = Modifier.size(50.dp),
-                                    shape = RoundedCornerShape(10.dp),
-                                    colors = IconButtonDefaults.filledIconButtonColors(
-                                        containerColor = Color(0xFF01C040), // Hintergrundfarbe
-                                        contentColor = de.geosphere.speechplaning.theme.surfaceVariantLightHighContrast
-                                    ),
-                                    onClick = {
-                                        // whatsapp soll sich mit mit der telefonnummer öffnen
-                                        // --- HIER IST DIE NORMALISIERUNG ---
-                                        // 2. Bereinige die Telefonnummer:
-                                        //    - Entferne alle Zeichen, die keine Ziffern sind (Leerzeichen, +, -, /, etc.)
-                                        //    - Ersetze eine führende "00" durch nichts (z.B. aus 0049 wird 49)
-                                        val normalizedNumber = rawPhoneNumber
-                                            .replace(Regex("[^0-9]"), "") // Entfernt alles außer Zahlen
-                                            .removePrefix("00")              // Entfernt führende "00"
+                            },
+                            modifier = Modifier,
+                            onExpanded = { },
+                            onCollapsed = { }
+                        ) {
+                            CongregationEventListItem(
+                                congregationEvent = event,
+                                onClick = { onSelectCongregationEvent(event) },
+                                onLongClick = null,
+                                stringProvider = stringProvider
+                            )
+                        }
 
-                                        // 3. Erstelle einen Intent mit der "smsto:" URI und der bereinigten Nummer
-                                        val intent = Intent(
-                                            Intent.ACTION_VIEW,
-                                            Uri.parse("smsto:$normalizedNumber")
-                                        )
-
-                                        // 4. Optional: Füge eine vordefinierte Nachricht hinzu
-                                        val message =
-                                            "Hallo ${event.speakerName}, es geht um den Vortrag '${event.speechSubject}' am ${event.dateString}."
-                                        intent.putExtra("sms_body", message)
-
-                                        // 5. Binde den Intent explizit an das WhatsApp-Paket
-                                        intent.setPackage("com.whatsapp")
-
-                                        // 6. Starte die Activity und fange mögliche Fehler ab
-                                        try {
-                                            context.startActivity(intent)
-                                        } catch (e: Exception) {
-                                            // --- HIER IST DIE ÄNDERUNG ---
-                                            // Zeige einen Toast, wenn WhatsApp nicht geöffnet werden konnte.
-                                            // Das passiert z.B., wenn WhatsApp doch nicht installiert ist oder ein anderer Fehler auftritt.
-                                            Toast.makeText(
-                                                context,
-                                                "WhatsApp konnte nicht geöffnet werden.",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
-                                    }
-                                ) {
-                                    Icon(
-                                        modifier = Modifier.size(40.dp),
-                                        painter = painterResource(de.geosphere.speechplaning.theme.R.drawable.whatsapp_icon),
-                                        contentDescription = null
-                                    )
-                                }
-                            }
-                        },
-                        modifier = Modifier,
-                        onExpanded = { },
-                        onCollapsed = { }
-                    ) {
-                        CongregationEventListItem(
-                            congregationEvent = event,
-                            onClick = { onSelectCongregationEvent(event) },
-                            onLongClick = null,
-                            stringProvider = stringProvider
-                        )
+                        HorizontalDivider()
                     }
-
-                    HorizontalDivider()
                 }
             }
         }
@@ -232,7 +330,7 @@ fun CongregationEventListContentPreview() = SpeechPlaningTheme {
     )
     CongregationEventListContent(
         congregationEvents = mockEvents,
-        onSelectCongregationEvent = {},
+        onSelectCongregationEvent = { },
         stringProvider = AppEventStringProvider(context = LocalContext.current),
         isWhatsAppInstalled = true
     )

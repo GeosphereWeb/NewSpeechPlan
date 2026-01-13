@@ -39,7 +39,7 @@ fun CongregationEventListScreen(
     viewModel: CongregationEventViewModel = koinViewModel(),
     stringProvider: AppEventStringProvider = koinInject()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.filteredUiState.collectAsState()
 
     when (val state = uiState) {
         is CongregationEventUiState.LoadingUiState -> {

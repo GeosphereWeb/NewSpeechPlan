@@ -15,10 +15,10 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun MonthHeader(month: java.time.Month, year: Int) {
+fun MonthHeader(month: java.time.Month, year: Int, modifier: Modifier = Modifier) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceVariant,
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         val monthString = remember(month, year) {
             val formatter = DateTimeFormatter.ofPattern("MMMM yyyy")
