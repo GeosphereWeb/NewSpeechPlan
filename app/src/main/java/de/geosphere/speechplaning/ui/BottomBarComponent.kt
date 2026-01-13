@@ -8,6 +8,8 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -51,10 +53,22 @@ fun BottomBarComponent(
                             }
                         }
                     ) {
-                        Icon(
-                            imageVector = if (isSelected) navItem.selectedIcon else navItem.unselectedIcon,
-                            contentDescription = navItem.label
-                        )
+                        // --- HIER PASSIERT DIE MAGIE ---
+                        val iconData = if (isSelected) navItem.selectedIcon else navItem.unselectedIcon
+
+                        when (iconData) {
+                            // Fall 1: Das Icon ist eine Drawable-Ressourcen-ID (Int)
+                            is Int -> Icon(
+                                painter = painterResource(id = iconData),
+                                contentDescription = navItem.label
+                            )
+
+                            // Fall 2: Das Icon ist ein Standard ImageVector
+                            is ImageVector -> Icon(
+                                imageVector = iconData,
+                                contentDescription = navItem.label
+                            )
+                        }
                     }
                 }
             )
