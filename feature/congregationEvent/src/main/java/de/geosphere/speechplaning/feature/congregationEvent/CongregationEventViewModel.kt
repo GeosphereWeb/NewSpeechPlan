@@ -109,7 +109,7 @@ class CongregationEventViewModel(
                     // Speaking Assistant sieht nur Termine von 2 Wochen zurück bis 5 Wochen in die Zukunft
                     val today = LocalDate.now()
                     val minDate = today.minusWeeks(2)
-                    val maxDate = today.plusWeeks(5)
+                    val maxDate = today.plusWeeks(9)
 
                     currentState.congregationEvents.filter { event ->
                         event.date?.let { date ->
