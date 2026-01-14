@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
@@ -34,7 +32,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import de.geosphere.speechplaning.core.model.Congregation
@@ -43,6 +43,7 @@ import de.geosphere.speechplaning.core.model.Speaker
 import de.geosphere.speechplaning.core.model.Speech
 import de.geosphere.speechplaning.core.model.data.Event
 import de.geosphere.speechplaning.core.ui.provider.AppEventStringProvider
+import de.geosphere.speechplaning.theme.R
 import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
 import java.time.LocalDate
@@ -169,7 +170,7 @@ fun DateSelector(
             .clickable { showDatePicker = true },
         trailingIcon = {
             IconButton(onClick = { showDatePicker = true }) {
-                Icon(Icons.Default.CalendarToday, contentDescription = "Datum wählen")
+                Icon(ImageVector.vectorResource(R.drawable.calendar_today), contentDescription = "Datum wählen")
             }
         }
     )

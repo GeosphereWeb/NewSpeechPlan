@@ -7,9 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -22,13 +19,16 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.core.ui.provider.AppEventStringProvider
+import de.geosphere.speechplaning.theme.R
 import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
 import org.koin.androidx.compose.koinViewModel
@@ -89,7 +89,7 @@ fun CongregationEventErrorContent(message: String) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Icon(
-            imageVector = Icons.Default.Warning,
+            imageVector = ImageVector.vectorResource(R.drawable.warning),
             contentDescription = "Error",
             tint = androidx.compose.material3.MaterialTheme.colorScheme.error
         )
@@ -127,7 +127,7 @@ fun CongregationEventSuccessContent(
                 floatingActionButton = {
                     if (state.canCreateCongregationEvent) {
                         FloatingActionButton(onClick = { onNavigateToDetails(null) }) {
-                            Icon(Icons.Default.Add, contentDescription = "Neues Ereignis")
+                            Icon(ImageVector.vectorResource(R.drawable.add), contentDescription = "Neues Ereignis")
                         }
                     }
                 }
@@ -264,7 +264,7 @@ fun CongregationEventSuccessListPreview() = SpeechPlaningTheme {
     Scaffold(
         floatingActionButton = {
             androidx.compose.material3.FloatingActionButton(onClick = {}) {
-                Icon(Icons.Default.Add, contentDescription = "Neues Ereignis")
+                Icon(ImageVector.vectorResource(R.drawable.add), contentDescription = "Neues Ereignis")
             }
         }
     ) { padding ->

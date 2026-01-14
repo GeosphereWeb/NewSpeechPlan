@@ -14,10 +14,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.PhoneForwarded
-import androidx.compose.material.icons.automirrored.filled.SendToMobile
-import androidx.compose.material.icons.filled.Event
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
@@ -36,9 +32,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.core.model.data.Event
@@ -136,7 +134,7 @@ fun CongregationEventListContent(
                 ) {
                 Row(modifier = Modifier) {
                     Text(text = "Scroll to...")
-                    Icon(imageVector = Icons.Default.Event, contentDescription = null)
+                    Icon(imageVector = ImageVector.vectorResource(R.drawable.today), contentDescription = null)
                 }
             }
         }
@@ -186,7 +184,7 @@ fun CongregationEventListContent(
                                     ) {
                                         Icon(
                                             modifier = Modifier.size(40.dp),
-                                            imageVector = Icons.AutoMirrored.Filled.SendToMobile,
+                                            imageVector = ImageVector.vectorResource(R.drawable.send_to_mobile),
                                             contentDescription = null
                                         )
                                     }
@@ -223,7 +221,7 @@ fun CongregationEventListContent(
                                         ) {
                                             Icon(
                                                 modifier = Modifier.size(40.dp),
-                                                imageVector = Icons.AutoMirrored.Filled.PhoneForwarded,
+                                                imageVector = ImageVector.vectorResource(R.drawable.phone_forwarded),
                                                 contentDescription = null
                                             )
                                         }
