@@ -2,13 +2,17 @@ package de.geosphere.speechplaning.feature.congregationEvent
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Text
@@ -16,7 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
@@ -51,19 +54,60 @@ fun CongregationEventListItem(
 
     val isSameKW = congregationEvent.date?.isInCurrentWeek() ?: false
 
-    ListItem(
-        modifier = Modifier.combinedClickable(
-            onClick = onClick,
-            onLongClick = onLongClick
-        ),
-        headlineContent = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(4.dp)
+            .padding(bottom = 8.dp)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            val test = (
+                if (congregationEvent.speechNumber != null) {
+                    if (congregationEvent.speechNumber!!.toInt() < 900) {
+                        congregationEvent.speechNumber
+                    } else {
+                        ""
+                    }
+                } else {
+                    "-"
+                }
+                ).toString()
+            Text(
+                modifier = Modifier.defaultMinSize(34.dp),
+                text = test,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
+                Box(modifier = Modifier.requiredHeight(18.dp)) {
+                    if (congregationEvent.eventType != Event.CONGREGATION) {
+                        Badge(
+                            containerColor = if (congregationEvent.eventType == Event.MEMORIAL) {
+                                colorScheme.tertiaryContainer
+                            } else {
+                                colorScheme.primaryContainer
+                            },
+                            contentColor = if (congregationEvent.eventType == Event.MEMORIAL) {
+                                colorScheme.onTertiaryContainer
+                            } else {
+                                colorScheme.onPrimaryContainer
+                            }
+                        ) {
+                            Text(
+                                text = stringProvider.getStringForEvent(congregationEvent.eventType)
+                            )
+                        }
+                    }
+                }
                 Text(
-                    modifier = Modifier.defaultMinSize(34.dp),
-                    text = congregationEvent.speechNumber ?: "-",
-                )
-                Text(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.fillMaxWidth(),
                     text = congregationEvent.speechSubject ?: "Ereignis ohne Thema",
                     style = TextStyle(
                         hyphens = Hyphens.Auto,
@@ -73,29 +117,59 @@ fun CongregationEventListItem(
                             wordBreak = LineBreak.WordBreak.Default
                         )
                     ),
+                    minLines = 2,
                     color = if (congregationEvent.speechSubject.isNullOrBlank() &&
                         congregationEvent.eventType == Event.CONGREGATION
                     ) {
                         colorScheme.error
                     } else {
-                        Color.Unspecified
+                        MaterialTheme.colorScheme.primary
                     }
                 )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Text(
+                        modifier = Modifier.padding(end = 8.dp),
+                        text = congregationEvent.speakerName ?: "Kein Redner zugewiesen",
+                        style = TextStyle(
+                            hyphens = Hyphens.Auto,
+                            lineBreak = LineBreak.Paragraph
+                        ),
+                        fontStyle = if (congregationEvent.speakerName == null) FontStyle.Italic else FontStyle.Normal,
+                        color = if (congregationEvent.speakerName != null) {
+                            colorScheme.tertiary
+                        } else {
+                            colorScheme.tertiary.copy(alpha = 0.3f)
+                        }
+                    )
+                    Text(
+                        modifier = Modifier,
+                        text = "(${congregationEvent.speakerCongregationName ?: "Unbekannt"})",
+                        style = TextStyle(
+                            hyphens = Hyphens.Auto,
+                            lineBreak = LineBreak.Paragraph
+                        ),
+                        fontStyle = if (congregationEvent.speakerName == null) FontStyle.Italic else FontStyle.Normal,
+                        color = if (congregationEvent.speakerName != null) {
+                            colorScheme.tertiary.copy(alpha = 0.7f)
+                        } else {
+                            colorScheme.tertiary.copy(alpha = 0.3f)
+                        }
+                    )
+                }
+            }
 
-                Row(modifier = Modifier) {
-                    val myText = congregationEvent.date?.format(formatter) ?: ""
-                    val myText2 = congregationEvent.date?.format(formatter2) ?: ""
-                    if (isSameKW) {
-                        Icon(
-                            imageVector = ImageVector.vectorResource(R.drawable.today),
-                            contentDescription = null,
-                            modifier = Modifier.size(22.dp),
-                            tint = MaterialTheme.extendedColorScheme.customColor4.color.copy(alpha = 0.7f)
-                        )
-                    }
+            Row(modifier = Modifier) {
+                val myText = congregationEvent.date?.format(formatter) ?: ""
+                val myText2 = congregationEvent.date?.format(formatter2) ?: ""
+                val myTextUhr = "17:30" + " Uhr"
+
+                Column {
                     Text(
                         modifier = Modifier.padding(start = 8.dp),
-                        text = "$myText\n$myText2",
+                        text = "$myText\n$myText2\n$myTextUhr",
                         fontSize = MaterialTheme.typography.bodySmall.fontSize.value.sp,
                         color = MaterialTheme.extendedColorScheme.customColor4.color,
                         textAlign = TextAlign.End,
@@ -105,74 +179,29 @@ fun CongregationEventListItem(
                             )
                         )
                     )
+                }
+                Column(modifier = Modifier.padding(start = 8.dp)) {
                     if (congregationEvent.speakerIsInformed) {
                         Icon(
                             imageVector = ImageVector.vectorResource(R.drawable.verified),
                             contentDescription = null,
                             modifier = Modifier
-                                .size(22.dp)
-                                .padding(start = 4.dp),
-                            tint = Color.Green
+                                .size(22.dp),
+                            tint = MaterialTheme.extendedColorScheme.gruen.color
+                        )
+                    }
+                    if (isSameKW) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(R.drawable.today),
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                            tint = MaterialTheme.extendedColorScheme.customColor4.color.copy(alpha = 0.7f)
                         )
                     }
                 }
             }
-        },
-        supportingContent = {
-            Row(modifier = Modifier.padding(start = 34.dp)) {
-                Text(
-                    modifier = Modifier.padding(end = 8.dp),
-                    text = congregationEvent.speakerName ?: "Kein Redner zugewiesen",
-                    style = TextStyle(
-                        hyphens = Hyphens.Auto,
-                        lineBreak = LineBreak.Paragraph
-                    ),
-                    fontStyle = if (congregationEvent.speakerName == null) FontStyle.Italic else FontStyle.Normal,
-                    color = if (congregationEvent.speakerName != null) {
-                        colorScheme.tertiary
-                    } else {
-                        colorScheme.tertiary.copy(alpha = 0.3f)
-                    }
-                )
-                Text(
-                    modifier = Modifier,
-                    text = "(${congregationEvent.speakerCongregationName ?: "Unbekannt"})",
-                    style = TextStyle(
-                        hyphens = Hyphens.Auto,
-                        lineBreak = LineBreak.Paragraph
-                    ),
-                    fontStyle = if (congregationEvent.speakerName == null) FontStyle.Italic else FontStyle.Normal,
-                    color = if (congregationEvent.speakerName != null) {
-                        colorScheme.tertiary.copy(alpha = 0.7f)
-                    } else {
-                        colorScheme.tertiary.copy(alpha = 0.3f)
-                    }
-                )
-            }
-        },
-        // trailingContent = { if (isSameKW) Icon(imageVector = Icons.Default.Event, contentDescription = null)
-        //     else Icon(imageVector = Icons.Default.CalendarToday, contentDescription = null) },
-        overlineContent = {
-            if (congregationEvent.eventType != Event.CONGREGATION) {
-                Badge(
-                    containerColor = if (congregationEvent.eventType == Event.MEMORIAL) {
-                        colorScheme.tertiaryContainer
-                    } else {
-                        colorScheme.primaryContainer
-                    },
-                    contentColor = if (congregationEvent.eventType == Event.MEMORIAL) {
-                        colorScheme.onTertiaryContainer
-                    } else {
-                        colorScheme.onPrimaryContainer
-                    }
-                ) {
-                    Text(
-                        text = stringProvider.getStringForEvent(congregationEvent.eventType)
-                    )
-                }
-            }
         }
-    )
+    }
 }
 
 @ThemePreviews

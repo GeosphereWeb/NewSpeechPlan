@@ -21,6 +21,7 @@ data class ExtendedColorScheme(
     val customColor3: ColorFamily,
     val customColor4: ColorFamily,
     val customColor5: ColorFamily,
+    val gruen: ColorFamily
 )
 
 private val lightScheme = lightColorScheme(
@@ -282,6 +283,12 @@ val extendedLight = ExtendedColorScheme(
         customColor5ContainerLight,
         onCustomColor5ContainerLight,
     ),
+    gruen = ColorFamily(
+        greenLight,
+        onGreenLight,
+        greenContainerLight,
+        onGreenContainerLight,
+    ),
 )
 
 val extendedDark = ExtendedColorScheme(
@@ -314,6 +321,12 @@ val extendedDark = ExtendedColorScheme(
         onCustomColor5Dark,
         customColor5ContainerDark,
         onCustomColor5ContainerDark,
+    ),
+    gruen = ColorFamily(
+        greenDark,
+        onGreenDark,
+        greenContainerDark,
+        onGreenContainerDark,
     ),
 )
 
@@ -348,6 +361,12 @@ val extendedLightMediumContrast = ExtendedColorScheme(
         customColor5ContainerLightMediumContrast,
         onCustomColor5ContainerLightMediumContrast,
     ),
+    gruen = ColorFamily(
+        greenLightMediumContrast,
+        onGreenLightMediumContrast,
+        greenContainerLightMediumContrast,
+        onGreenContainerLightMediumContrast,
+    ),
 )
 
 val extendedLightHighContrast = ExtendedColorScheme(
@@ -380,6 +399,12 @@ val extendedLightHighContrast = ExtendedColorScheme(
         onCustomColor5LightHighContrast,
         customColor5ContainerLightHighContrast,
         onCustomColor5ContainerLightHighContrast,
+    ),
+    gruen = ColorFamily(
+        greenLightHighContrast,
+        onGreenLightHighContrast,
+        greenContainerLightHighContrast,
+        onGreenContainerLightHighContrast,
     ),
 )
 
@@ -414,6 +439,12 @@ val extendedDarkMediumContrast = ExtendedColorScheme(
         customColor5ContainerDarkMediumContrast,
         onCustomColor5ContainerDarkMediumContrast,
     ),
+    gruen = ColorFamily(
+        greenDarkMediumContrast,
+        onGreenDarkMediumContrast,
+        greenContainerDarkMediumContrast,
+        onGreenContainerDarkMediumContrast,
+    ),
 )
 
 val extendedDarkHighContrast = ExtendedColorScheme(
@@ -446,6 +477,12 @@ val extendedDarkHighContrast = ExtendedColorScheme(
         onCustomColor5DarkHighContrast,
         customColor5ContainerDarkHighContrast,
         onCustomColor5ContainerDarkHighContrast,
+    ),
+    gruen = ColorFamily(
+        greenDarkHighContrast,
+        onGreenDarkHighContrast,
+        greenContainerDarkHighContrast,
+        onGreenContainerDarkHighContrast,
     ),
 )
 

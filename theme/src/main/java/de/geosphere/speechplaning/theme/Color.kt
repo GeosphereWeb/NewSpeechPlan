@@ -344,3 +344,38 @@ val onCustomColor5DarkHighContrast = Color(0xFF000000)
 val customColor5ContainerDarkHighContrast = Color(0xFFE0B3EF)
 val onCustomColor5ContainerDarkHighContrast = Color(0xFF190025)
 
+// Grün-Farben (fehlen vorher) - Light / Dark / Medium / High Contrast
+val greenLight = Color(0xFF1DB425)
+val onGreenLight = Color(0xFFFFFFFF)
+val greenContainerLight = Color(0xFFC8E6C9)
+val onGreenContainerLight = Color(0xFF00220B)
+
+val greenDark = Color(0xFF429640)
+val onGreenDark = Color(0xFF06360C)
+val greenContainerDark = Color(0xFF0D5B19)
+val onGreenContainerDark = Color(0xFFFFFFFF)
+
+// Medium contrast mappings (light)
+val greenLightMediumContrast = greenLight
+val onGreenLightMediumContrast = onGreenLight
+val greenContainerLightMediumContrast = greenContainerLight
+val onGreenContainerLightMediumContrast = onGreenContainerLight
+
+// Medium contrast mappings (dark)
+val greenDarkMediumContrast = greenDark
+val onGreenDarkMediumContrast = onGreenDark
+val greenContainerDarkMediumContrast = greenContainerDark
+val onGreenContainerDarkMediumContrast = onGreenContainerDark
+
+// High contrast mappings (light)
+val greenLightHighContrast = greenLight
+val onGreenLightHighContrast = onGreenLight
+val greenContainerLightHighContrast = greenContainerLight
+val onGreenContainerLightHighContrast = onGreenContainerLight
+
+// High contrast mappings (dark)
+val greenDarkHighContrast = greenDark
+val onGreenDarkHighContrast = onGreenDark
+val greenContainerDarkHighContrast = greenContainerDark
+val onGreenContainerDarkHighContrast = onGreenContainerDark
+

@@ -176,10 +176,14 @@ class CongregationEventViewModel(
             val isNew = congregationEvent.id.isBlank()
 
             val hasPermission = if (currentUser != null) {
-                if (isNew) {
-                    permissionPolicy.canCreate(currentUser)
-                } else {
-                    permissionPolicy.canEdit(currentUser, congregationEvent)
+                when {
+                    isNew -> {
+                        permissionPolicy.canCreate(currentUser)
+                    }
+
+                    else -> {
+                        permissionPolicy.canEdit(currentUser, congregationEvent)
+                    }
                 }
             } else {
                 false

@@ -8,7 +8,6 @@ import com.google.firebase.cloud.FirestoreClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import java.io.File
 import java.io.FileInputStream
 
 // --- Lokale Kopien der Data Classes (um Abhängigkeiten zu Android zu vermeiden) ---
@@ -92,14 +91,22 @@ class CsvImporter {
 
         val db = FirestoreClient.getFirestore()
 
-        // --- 2. CSV Lesen ---
-        println("Lese CSV Datei: $csvFilePath")
+        // --- 2. Read CSV ---
+        println("Reading CSV from resource: $csvFilePath")
+        // Name des Parameters sollte hier auch angepasst werden zu resourcePath
         val lines = try {
-            File(csvFilePath).readLines(Charsets.UTF_8).drop(1)
+            // Hole den ClassLoader, um auf interne Ressourcen zuzugreifen
+            val inputStream = this.javaClass.classLoader.getResourceAsStream(csvFilePath)
+                ?: throw IllegalArgumentException("Resource not found in classpath: $csvFilePath")
+
+            // Lese den InputStream mit dem korrekten Zeichensatz
+            inputStream.bufferedReader(Charsets.UTF_8).readLines().drop(1)
         } catch (e: Exception) {
-            println("Fehler beim Lesen der CSV: ${e.message}")
+            println("Error reading CSV from resources: ${e.message}")
             return
         }
+
+        println("Found ${lines.size} events to import.")
 
         val districts = mutableMapOf<String, District>()
         val congregations = mutableMapOf<String, Congregation>()
