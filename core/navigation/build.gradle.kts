@@ -54,7 +54,6 @@ dependencies {
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.material.icons.extended)
 
     // Unit Tests
     testImplementation(kotlin("test"))

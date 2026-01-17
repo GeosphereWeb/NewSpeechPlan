@@ -16,4 +16,9 @@
     <string name="event_special_lecture">Sondervortrag</string>
     <string name="event_miscellaneous">Sonstiges</string>
     <string name="event_special_convention">"Besondere Zusammenkunft "</string>
+    <string name="planning_lb">Vortrags-\nplanung</string>
+    <string name="speakers_lb">Redner</string>
+    <string name="districts_lb">Kreise</string>
+    <string name="speeches_lb">Vortrags-\nthemen</string>
+    <string name="congregation_lb">Versamm-\nlungen</string>
 </resources>

@@ -1,9 +1,6 @@
 package de.geosphere.speechplaning.feature.login.ui
 
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -14,9 +11,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import de.geosphere.speechplaning.theme.R
 
 /**
  * Ein wiederverwendbares Textfeld für die Passworteingabe mit einem Button
@@ -29,10 +29,7 @@ import androidx.compose.ui.text.input.VisualTransformation
  */
 @Composable
 fun PasswordTextfieldComponent(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-    modifier: Modifier = Modifier
+    value: String, onValueChange: (String) -> Unit, label: String, modifier: Modifier = Modifier
 ) {
     var passwortSichtbar by remember { mutableStateOf(false) }
 
@@ -48,7 +45,8 @@ fun PasswordTextfieldComponent(
             PasswordVisualTransformation()
         },
         trailingIcon = {
-            val image = if (passwortSichtbar) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+            val image = if (passwortSichtbar) ImageVector.vectorResource(R.drawable.visibility)
+            else ImageVector.vectorResource(R.drawable.visibility_off)
             val description = if (passwortSichtbar) "Passwort ausblenden" else "Passwort anzeigen"
             IconButton(onClick = { passwortSichtbar = !passwortSichtbar }) {
                 Icon(imageVector = image, contentDescription = description)

@@ -9,8 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FilterList
+
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -22,8 +21,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import de.geosphere.speechplaning.core.model.Speech
+import de.geosphere.speechplaning.theme.R
 import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
 
@@ -56,7 +58,7 @@ fun SpeechListContent(
                 .padding(8.dp),
         ) {
             Button(onClick = { visibleFilter = visibleFilter.not() }) {
-                Icon(Icons.Default.FilterList, contentDescription = "Filter")
+                Icon(ImageVector.vectorResource(R.drawable.filter_list), contentDescription = "Filter")
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Filter")
             }

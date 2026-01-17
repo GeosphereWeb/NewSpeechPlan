@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Event
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -19,7 +17,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
@@ -32,6 +32,7 @@ import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.core.model.data.Event
 import de.geosphere.speechplaning.core.ui.provider.AppEventStringProvider
 import de.geosphere.speechplaning.data.util.isInCurrentWeek
+import de.geosphere.speechplaning.theme.R
 import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
 import de.geosphere.speechplaning.theme.extendedColorScheme
@@ -86,7 +87,7 @@ fun CongregationEventListItem(
                     val myText2 = congregationEvent.date?.format(formatter2) ?: ""
                     if (isSameKW) {
                         Icon(
-                            imageVector = Icons.Default.Event,
+                            imageVector = ImageVector.vectorResource(R.drawable.today),
                             contentDescription = null,
                             modifier = Modifier.size(22.dp),
                             tint = MaterialTheme.extendedColorScheme.customColor4.color.copy(alpha = 0.7f)
