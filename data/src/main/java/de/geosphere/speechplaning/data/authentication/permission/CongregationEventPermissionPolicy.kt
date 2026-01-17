@@ -41,4 +41,15 @@ class CongregationEventPermissionPolicy {
     fun canManageGeneral(user: AppUser): Boolean {
         return user.role == UserRole.ADMIN || user.role == UserRole.SPEAKING_PLANER
     }
+
+    // Darf der User den "Redner ist informiert" Status ändern?
+    // SPEAKING_ASSISTANT darf diesen Switch betätigen
+    fun canToggleSpeakerInformed(user: AppUser): Boolean {
+        return when (user.role) {
+            UserRole.ADMIN -> true
+            UserRole.SPEAKING_PLANER -> true
+            UserRole.SPEAKING_ASSISTANT -> true
+            else -> false
+        }
+    }
 }

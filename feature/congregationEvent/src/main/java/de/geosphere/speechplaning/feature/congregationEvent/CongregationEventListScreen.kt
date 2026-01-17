@@ -167,7 +167,10 @@ fun CongregationEventSuccessContent(
                             onDismiss = onDismissEditDialog,
                             onSave = onSaveEvent,
                             onDelete = onDeleteEvent,
-                            stringProvider = stringProvider
+                            stringProvider = stringProvider,
+                            canEdit = state.canEditCongregationEvent,
+                            canDelete = state.canDeleteCongregationEvent,
+                            canToggleSpeakerInformed = state.canToggleSpeakerInformed
                         )
                     }
                 }

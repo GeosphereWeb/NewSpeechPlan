@@ -20,6 +20,7 @@ sealed interface CongregationEventUiState {
         val canCreateCongregationEvent: Boolean = false,
         val canEditCongregationEvent: Boolean = false,
         val canDeleteCongregationEvent: Boolean = false,
-        val isWhatsAppInstalled: Boolean = false
+        val canToggleSpeakerInformed: Boolean = false,
+        val isWhatsAppInstalled: Boolean = false,
     ) : CongregationEventUiState
 }

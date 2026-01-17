@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
+@Suppress("LongParameterList")
 class CongregationEventViewModel(
     private val getAllCongregationEventUseCase: GetAllCongregationEventUseCase,
     private val saveCongregationEventUseCase: SaveCongregationEventUseCase,
@@ -62,14 +63,28 @@ class CongregationEventViewModel(
             val allCongregations = congregationsResult?.getOrElse { emptyList() } ?: emptyList()
             val allSpeeches = speechesResult.getOrElse { emptyList() }
 
+            // Hole das aktuellste selectedCongregationEvent aus der congregationEvents-Liste
+            val selectedCongregationEventId = viewState.selectedCongregationEvent?.id
+            val selectedCongregationEvent = selectedCongregationEventId?.let { eventId ->
+                congregationEvents.find { it.id == eventId }
+            } ?: viewState.selectedCongregationEvent
+
+            Log.d(
+                TAG,
+                "selectedCongregationEventId=$selectedCongregationEventId, " +
+                    "selectedCongregationEvent.isSpeakerInformed=${selectedCongregationEvent?.speakerIsInformed}"
+            )
+
             var canCreate = false
             var canEdit = false
             var canDelete = false
+            var canToggleSpeakerInformed = false
 
             if (appUser != null) {
                 canCreate = permissionPolicy.canCreate(appUser)
                 canEdit = permissionPolicy.canManageGeneral(appUser)
                 canDelete = permissionPolicy.canManageGeneral(appUser)
+                canToggleSpeakerInformed = permissionPolicy.canToggleSpeakerInformed(appUser)
             }
 
             val isWhatsAppInstalled = appChecker.isAppInstalled("com.whatsapp")
@@ -86,6 +101,7 @@ class CongregationEventViewModel(
                 canCreateCongregationEvent = canCreate,
                 canEditCongregationEvent = canEdit,
                 canDeleteCongregationEvent = canDelete,
+                canToggleSpeakerInformed = canToggleSpeakerInformed,
                 isWhatsAppInstalled = isWhatsAppInstalled
             )
         }.stateIn(
@@ -131,7 +147,8 @@ class CongregationEventViewModel(
             currentState
         }
     }.stateIn(
-        // Wandle den java . util . concurrent . Flow wieder in einen kotlinx . coroutines . flow . StateFlow um, damit die UI ihn beobachten kann
+        // Wandle den java . util . concurrent . Flow wieder in einen kotlinx . coroutines . flow .
+        // StateFlow um, damit die UI ihn beobachten kann
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = CongregationEventUiState.LoadingUiState

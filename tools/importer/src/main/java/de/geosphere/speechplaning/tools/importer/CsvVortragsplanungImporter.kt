@@ -45,6 +45,8 @@ data class CongregationEvent(
     val speakerMobile: String? = null,
     val speakerPhone: String? = null,
 
+    val speakerIsInformed: Boolean = false,
+
     val notes: String? = null,
 ) {
     @get:Exclude
