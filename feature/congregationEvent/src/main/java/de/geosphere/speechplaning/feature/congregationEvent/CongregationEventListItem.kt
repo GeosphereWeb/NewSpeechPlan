@@ -105,6 +105,16 @@ fun CongregationEventListItem(
                             )
                         )
                     )
+                    if (congregationEvent.speakerIsInformed) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(R.drawable.verified),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(22.dp)
+                                .padding(start = 4.dp),
+                            tint = Color.Green
+                        )
+                    }
                 }
             }
         },
@@ -195,7 +205,8 @@ fun CongregationEventListItem2Preview() = SpeechPlaningTheme {
         speechSubject = "Vortrag über Glauben",
         speakerName = null,
         speakerCongregationName = null,
-        eventType = Event.MISCELLANEOUS
+        eventType = Event.MISCELLANEOUS,
+        speakerIsInformed = true
     )
     CongregationEventListItem(
         congregationEvent = mockEvent,
