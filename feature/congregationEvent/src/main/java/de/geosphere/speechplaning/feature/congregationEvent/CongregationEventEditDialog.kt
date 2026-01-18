@@ -259,7 +259,7 @@ private fun CongregationEventEditDialogContent(
                             Text("Abbrechen")
                         }
                         Spacer(modifier = Modifier.width(8.dp))
-                        Button(onClick = onSave, enabled = canEdit || canToggleSpeakerInformed) {
+                        Button(onClick = onSave, enabled = canEdit) {
                             Text("Speichern")
                         }
                     }
