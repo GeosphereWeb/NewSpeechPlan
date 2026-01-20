@@ -23,6 +23,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.geosphere.speechplaning.core.model.Speech
+import de.geosphere.speechplaning.core.model.SpeechWithUsageCount
 import de.geosphere.speechplaning.theme.R
 import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
@@ -125,9 +126,9 @@ private fun SpeechListScreen_Success_Preview() {
         SpeechListScreenContent(
             uiState = SpeechUiState.SuccessUIState(
                 speeches = listOf(
-                    Speech(id = "1", number = "1", subject = "Rede 1"),
-                    Speech(id = "2", number = "2", subject = "Rede 2"),
-                    Speech(id = "3", number = "3", subject = "Ein anderes Thema")
+                    SpeechWithUsageCount(Speech(id = "1", number = "1", subject = "Rede 1"), 3),
+                    SpeechWithUsageCount(Speech(id = "2", number = "2", subject = "Rede 2"), 5),
+                    SpeechWithUsageCount(Speech(id = "3", number = "3", subject = "Ein anderes Thema"), 1)
                 ),
                 canEditSpeech = true
             ),

@@ -109,7 +109,7 @@ class CsvVortragsplanungImporter {
         lines.forEach { line ->
             val columns = line.split(';')
 
-            if (columns.size < 15) {
+            if (columns.size < 16) {
                 println("Skipped row (too few columns): $line")
                 failureCount++
                 return@forEach
@@ -151,7 +151,8 @@ class CsvVortragsplanungImporter {
                     speakerCongregationName = columns.getOrElse(10) { "" }.trim().ifBlank { null },
                     speakerMobile = columns.getOrElse(13) { "" }.trim().ifBlank { null },
                     speakerPhone = columns.getOrElse(14) { "" }.trim().ifBlank { null },
-                    notes = null
+                    notes = null,
+                    speakerIsInformed = columns.getOrElse(15) { "" }.trim().equals("WAHR", ignoreCase = true)
                 )
 
                 // Write each event to the top-level "congregationEvents" collection

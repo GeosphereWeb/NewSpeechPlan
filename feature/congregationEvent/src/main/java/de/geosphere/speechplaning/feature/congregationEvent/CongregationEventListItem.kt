@@ -54,16 +54,36 @@ fun CongregationEventListItem(
 
     val isSameKW = congregationEvent.date?.isInCurrentWeek() ?: false
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(4.dp)
-            .padding(bottom = 8.dp)
+            .padding(6.dp)
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick
             )
     ) {
+
+        Box(modifier = Modifier) {
+            if (congregationEvent.eventType != Event.CONGREGATION) {
+                Badge(
+                    containerColor = if (congregationEvent.eventType == Event.MEMORIAL) {
+                        colorScheme.tertiaryContainer
+                    } else {
+                        colorScheme.primaryContainer
+                    },
+                    contentColor = if (congregationEvent.eventType == Event.MEMORIAL) {
+                        colorScheme.onTertiaryContainer
+                    } else {
+                        colorScheme.onPrimaryContainer
+                    }
+                ) {
+                    Text(
+                        text = stringProvider.getStringForEvent(congregationEvent.eventType)
+                    )
+                }
+            }
+        }
         Row(verticalAlignment = Alignment.CenterVertically) {
             val test = (
                 if (congregationEvent.speechNumber != null) {
@@ -86,26 +106,7 @@ fun CongregationEventListItem(
                     .fillMaxWidth()
                     .weight(1f)
             ) {
-                Box(modifier = Modifier.requiredHeight(18.dp)) {
-                    if (congregationEvent.eventType != Event.CONGREGATION) {
-                        Badge(
-                            containerColor = if (congregationEvent.eventType == Event.MEMORIAL) {
-                                colorScheme.tertiaryContainer
-                            } else {
-                                colorScheme.primaryContainer
-                            },
-                            contentColor = if (congregationEvent.eventType == Event.MEMORIAL) {
-                                colorScheme.onTertiaryContainer
-                            } else {
-                                colorScheme.onPrimaryContainer
-                            }
-                        ) {
-                            Text(
-                                text = stringProvider.getStringForEvent(congregationEvent.eventType)
-                            )
-                        }
-                    }
-                }
+
                 Text(
                     modifier = Modifier.fillMaxWidth(),
                     text = congregationEvent.speechSubject ?: "Ereignis ohne Thema",
@@ -234,7 +235,7 @@ fun CongregationEventListItem2Preview() = SpeechPlaningTheme {
         speechSubject = "Vortrag über Glauben",
         speakerName = null,
         speakerCongregationName = null,
-        eventType = Event.MISCELLANEOUS,
+        eventType = Event.CONGREGATION,
         speakerIsInformed = true
     )
     CongregationEventListItem(
