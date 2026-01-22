@@ -1,6 +1,7 @@
 package de.geosphere.speechplaning.data.usecases.speeches
 
-import de.geosphere.speechplaning.core.model.SpeechWithUsageCount
+import de.geosphere.speechplaning.core.model.data.SpeechUsageDetail
+import de.geosphere.speechplaning.core.model.data.SpeechWithUsageHistory
 import de.geosphere.speechplaning.data.usecases.congregationEvent.GetAllCongregationEventUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -14,7 +15,7 @@ class GetSpeechesWithUsageCountUseCase(
     private val getSpeechesUseCase: GetSpeechesUseCase,
     private val getAllCongregationEventUseCase: GetAllCongregationEventUseCase
 ) {
-    operator fun invoke(): Flow<Result<List<SpeechWithUsageCount>>> {
+    operator fun invoke(): Flow<Result<List<SpeechWithUsageHistory>>> {
         return combine(
             getSpeechesUseCase(),
             getAllCongregationEventUseCase()
@@ -23,22 +24,35 @@ class GetSpeechesWithUsageCountUseCase(
                 val speeches = speechesResult.getOrThrow()
                 val events = eventsResult.getOrThrow()
 
-                // Für jede Speech zählen, wie oft sie in Events verwendet wurde
-                val speechWithUsageCount = speeches.map { speech ->
-                    val timesUsed = events.count { event ->
-                        event.speechId == speech.id
-                    }
-                    SpeechWithUsageCount(speech, timesUsed)
+                val speechWithUsageHistory = speeches.map { speech ->
+                    val usageHistory = events
+                        .filter { it.speechId == speech.id }
+                        .mapNotNull { event ->
+                            // Nur Events mit beiden Daten hinzufügen
+                            if (!event.dateString.isNullOrBlank() && !event.speakerName.isNullOrBlank()) {
+                                SpeechUsageDetail(
+                                    dateString = event.dateString ?: "",
+                                    speakerName = event.speakerName ?: ""
+                                )
+                            } else {
+                                null
+                            }
+                        }
+                        .sortedByDescending { it.dateString }
+
+                    SpeechWithUsageHistory(
+                        speech = speech,
+                        timesUsed = usageHistory.size,
+                        usageHistory = usageHistory
+                    )
                 }
 
-                // Nach Sprachnummer sortieren
-                Result.success(speechWithUsageCount.sortedBy { it.speech.number.toIntOrNull() ?: 0 })
+                Result.success(speechWithUsageHistory.sortedBy { it.speech.number.toIntOrNull() ?: 0 })
             } catch (e: Exception) {
                 Result.failure(e)
             }
+        }.catch { exception ->
+            emit(Result.failure(exception))
         }
-            .catch { exception ->
-                emit(Result.failure(exception))
-            }
     }
 }

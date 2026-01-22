@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
@@ -64,7 +63,7 @@ fun CongregationEventListItem(
             )
     ) {
 
-        Box(modifier = Modifier) {
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             if (congregationEvent.eventType != Event.CONGREGATION) {
                 Badge(
                     containerColor = if (congregationEvent.eventType == Event.MEMORIAL) {
@@ -118,7 +117,6 @@ fun CongregationEventListItem(
                             wordBreak = LineBreak.WordBreak.Default
                         )
                     ),
-                    minLines = 2,
                     color = if (congregationEvent.speechSubject.isNullOrBlank() &&
                         congregationEvent.eventType == Event.CONGREGATION
                     ) {

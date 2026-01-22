@@ -23,7 +23,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.geosphere.speechplaning.core.model.Speech
-import de.geosphere.speechplaning.core.model.SpeechWithUsageCount
+import de.geosphere.speechplaning.core.model.data.SpeechWithUsageHistory
 import de.geosphere.speechplaning.theme.R
 import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
@@ -38,7 +38,10 @@ fun SpeechListScreen(viewModel: SpeechViewModel = koinViewModel()) {
         onSelectSpeech = viewModel::selectSpeech,
         onClearSelection = viewModel::clearSelection,
         onSaveSpeech = viewModel::saveSpeech,
-        onDeleteSpeech = viewModel::deleteSpeech
+        onDeleteSpeech = viewModel::deleteSpeech,
+        onFilterQueryChange = viewModel::updateFilterQuery,
+        onToggleFilterVisibility = viewModel::toggleFilterVisibility,
+        onToggleGroupByTimesUsed = viewModel::toggleGroupByTimesUsed
     )
 }
 
@@ -48,7 +51,10 @@ fun SpeechListScreenContent(
     onSelectSpeech: (Speech) -> Unit,
     onClearSelection: () -> Unit,
     onSaveSpeech: (Speech) -> Unit,
-    onDeleteSpeech: (String) -> Unit
+    onDeleteSpeech: (String) -> Unit,
+    onFilterQueryChange: (String) -> Unit,
+    onToggleFilterVisibility: () -> Unit,
+    onToggleGroupByTimesUsed: () -> Unit
 ) {
     when (val state = uiState) {
         is SpeechUiState.LoadingUIState -> {
@@ -88,6 +94,14 @@ fun SpeechListScreenContent(
                 ) {
                     SpeechListContent(
                         speeches = state.speeches,
+                        filterQuery = state.filterQuery,
+                        onFilterQueryChange = onFilterQueryChange,
+                        showFilterField = state.showFilterField,
+                        onToggleFilterVisibility = onToggleFilterVisibility,
+                        groupByTimesUsed = state.groupByTimesUsed,
+                        onToggleGroupByTimesUsed = onToggleGroupByTimesUsed,
+                        filteredSpeeches = state.filteredSpeeches,
+                        groupedSpeeches = state.groupedSpeeches,
                         onSelectSpeech = onSelectSpeech
                     )
 
@@ -126,16 +140,24 @@ private fun SpeechListScreen_Success_Preview() {
         SpeechListScreenContent(
             uiState = SpeechUiState.SuccessUIState(
                 speeches = listOf(
-                    SpeechWithUsageCount(Speech(id = "1", number = "1", subject = "Rede 1"), 3),
-                    SpeechWithUsageCount(Speech(id = "2", number = "2", subject = "Rede 2"), 5),
-                    SpeechWithUsageCount(Speech(id = "3", number = "3", subject = "Ein anderes Thema"), 1)
+                    SpeechWithUsageHistory(Speech(id = "1", number = "1", subject = "Rede 1"), 3),
+                    SpeechWithUsageHistory(Speech(id = "2", number = "2", subject = "Rede 2"), 5),
+                    SpeechWithUsageHistory(Speech(id = "3", number = "3", subject = "Ein anderes Thema"), 1)
                 ),
-                canEditSpeech = true
+                canEditSpeech = true,
+                filteredSpeeches = listOf(
+                    SpeechWithUsageHistory(Speech(id = "1", number = "1", subject = "Rede 1"), 3),
+                    SpeechWithUsageHistory(Speech(id = "2", number = "2", subject = "Rede 2"), 5),
+                    SpeechWithUsageHistory(Speech(id = "3", number = "3", subject = "Ein anderes Thema"), 1)
+                )
             ),
             onSelectSpeech = {},
             onClearSelection = {},
             onSaveSpeech = {},
-            onDeleteSpeech = {}
+            onDeleteSpeech = {},
+            onFilterQueryChange = {},
+            onToggleFilterVisibility = {},
+            onToggleGroupByTimesUsed = {}
         )
     }
 }
