@@ -43,6 +43,7 @@ import de.geosphere.speechplaning.data.usecases.speaker.GetSpeakersUseCase
 import de.geosphere.speechplaning.data.usecases.speaker.SaveSpeakerUseCase
 import de.geosphere.speechplaning.data.usecases.speeches.DeleteSpeechUseCase
 import de.geosphere.speechplaning.data.usecases.speeches.GetSpeechesUseCase
+import de.geosphere.speechplaning.data.usecases.speeches.GetSpeechesWithUsageCountUseCase
 import de.geosphere.speechplaning.data.usecases.speeches.SaveSpeechUseCase
 import de.geosphere.speechplaning.data.usecases.user.ObserveCurrentUserUseCase
 import de.geosphere.speechplaning.data.util.AndroidAppChecker
@@ -95,6 +96,7 @@ val dataModule = module {
     factoryOf(::GoogleIdTokenParser)
 
     factoryOf(::GetSpeechesUseCase)
+    factoryOf(::GetSpeechesWithUsageCountUseCase)
     factoryOf(::DeleteSpeechUseCase)
     factoryOf(::SaveSpeechUseCase)
 

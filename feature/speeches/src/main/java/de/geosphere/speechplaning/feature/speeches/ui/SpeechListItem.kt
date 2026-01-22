@@ -18,13 +18,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import de.geosphere.speechplaning.core.model.Speech
+import de.geosphere.speechplaning.core.model.SpeechWithUsageCount
 import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
 import de.geosphere.speechplaning.theme.extendedColorScheme
 
 @Composable
-fun SpeechListItem(speech: Speech, onClick: () -> Unit, onLongClick: (() -> Unit)?) {
-    val contentAlpha = if (speech.active) 1f else 0.38f
+fun SpeechListItem(speechWithUsage: SpeechWithUsageCount, onClick: () -> Unit, onLongClick: (() -> Unit)?) {
+    val contentAlpha = if (speechWithUsage.speech.active) 1f else 0.38f
     ListItem(
         modifier = Modifier
             .combinedClickable(
@@ -36,7 +37,7 @@ fun SpeechListItem(speech: Speech, onClick: () -> Unit, onLongClick: (() -> Unit
         leadingContent = {
             Text(
                 modifier = Modifier.defaultMinSize(34.dp),
-                text = speech.number,
+                text = speechWithUsage.speech.number,
                 maxLines = 1,
                 textAlign = TextAlign.Right,
                 color = MaterialTheme.extendedColorScheme.customColor4.color
@@ -47,7 +48,7 @@ fun SpeechListItem(speech: Speech, onClick: () -> Unit, onLongClick: (() -> Unit
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = speech.subject,
+                    text = speechWithUsage.speech.subject,
                     minLines = 1,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -62,7 +63,14 @@ fun SpeechListItem(speech: Speech, onClick: () -> Unit, onLongClick: (() -> Unit
                 )
             }
         },
-        trailingContent = { }
+        trailingContent = {
+            Text(
+                text = "${speechWithUsage.timesUsed}x",
+                maxLines = 1,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
     )
     HorizontalDivider()
 }
@@ -72,11 +80,14 @@ fun SpeechListItem(speech: Speech, onClick: () -> Unit, onLongClick: (() -> Unit
 fun SpeechListItemPreview() {
     SpeechPlaningTheme {
         SpeechListItem(
-            speech = Speech(
-                id = "123",
-                number = "142",
-                subject = "Ist die Hölle ein Ort der Qualen?",
-                active = true
+            speechWithUsage = SpeechWithUsageCount(
+                speech = Speech(
+                    id = "123",
+                    number = "142",
+                    subject = "Ist die Hölle ein Ort der Qualen?",
+                    active = true
+                ),
+                timesUsed = 5
             ),
             onClick = {},
             onLongClick = {}
@@ -89,11 +100,14 @@ fun SpeechListItemPreview() {
 fun SpeechListItemDisabledPreview() {
     SpeechPlaningTheme {
         SpeechListItem(
-            speech = Speech(
-                id = "124",
-                number = "99",
-                subject = "Dies ist eine inaktive Rede",
-                active = false
+            speechWithUsage = SpeechWithUsageCount(
+                speech = Speech(
+                    id = "124",
+                    number = "99",
+                    subject = "Dies ist eine inaktive Rede",
+                    active = false
+                ),
+                timesUsed = 2
             ),
             onClick = {},
             onLongClick = {}

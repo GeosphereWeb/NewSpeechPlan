@@ -3,9 +3,10 @@ package de.geosphere.speechplaning.feature.speeches.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.geosphere.speechplaning.core.model.Speech
+import de.geosphere.speechplaning.core.model.SpeechWithUsageCount
 import de.geosphere.speechplaning.data.authentication.permission.SpeechPermissionPolicy
 import de.geosphere.speechplaning.data.usecases.speeches.DeleteSpeechUseCase
-import de.geosphere.speechplaning.data.usecases.speeches.GetSpeechesUseCase
+import de.geosphere.speechplaning.data.usecases.speeches.GetSpeechesWithUsageCountUseCase
 import de.geosphere.speechplaning.data.usecases.speeches.SaveSpeechUseCase
 import de.geosphere.speechplaning.data.usecases.user.ObserveCurrentUserUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +29,7 @@ sealed interface SpeechUiState {
     // 'isActionInProgress' nutzen wir, um z.B. beim Speichern einen Ladebalken
     // ÜBER der Liste anzuzeigen, ohne die Liste verschwinden zu lassen.
     data class SuccessUIState(
-        val speeches: List<Speech> = emptyList(),
+        val speeches: List<SpeechWithUsageCount> = emptyList(),
         val selectedSpeech: Speech? = null,
         val isActionInProgress: Boolean = false,
         val actionError: String? = null,
@@ -42,7 +43,7 @@ sealed interface SpeechUiState {
 }
 
 class SpeechViewModel(
-    private val getSpeechesUseCase: GetSpeechesUseCase,
+    private val getSpeechesWithUsageCountUseCase: GetSpeechesWithUsageCountUseCase,
     private val saveSpeechUseCase: SaveSpeechUseCase,
     private val deleteSpeechUseCase: DeleteSpeechUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
@@ -54,17 +55,17 @@ class SpeechViewModel(
 
     /**
      * Der UI-Status ist eine Kombination aus drei Datenströmen:
-     * 1. Die Liste der Reden aus der Datenbank (GetSpeechesUseCase)
+     * 1. Die Liste der Reden mit Verwendungszähler (GetSpeechesWithUsageCountUseCase)
      * 2. Der aktuelle User und seine Rechte (ObserveCurrentUserUseCase)
      * 3. Der lokale View-Status (Selektion, Fehlertexte, Lade-Spinner)
      */
     val uiState: StateFlow<SpeechUiState> = combine(
-        getSpeechesUseCase(), // Ruft den Flow im UseCase auf
+        getSpeechesWithUsageCountUseCase(), // Ruft den Flow im UseCase auf
         observeCurrentUserUseCase(),
         _viewState
-    ) { speechesResult, appUser, viewState ->
+    ) { speechesWithUsageResult, appUser, viewState ->
 
-        val speechList = speechesResult.getOrElse { emptyList() }
+        val speechList = speechesWithUsageResult.getOrElse { emptyList() }
 
         // / 1. BERECHTIGUNGEN PRÜFEN MIT POLICY
         var canCreate = false
@@ -167,7 +168,8 @@ class SpeechViewModel(
             // Wir suchen die Rede in der aktuellen Liste.
             val speechToDelete = (uiState.value as? SpeechUiState.SuccessUIState)
                 ?.speeches
-                ?.find { it.id == speechId }
+                ?.find { it.speech.id == speechId }
+                ?.speech
 
             // Falls die Rede im State nicht gefunden wurde (z.B. durch Race Condition),
             // brechen wir sicherheitshalber ab oder laden sie notfalls nach.

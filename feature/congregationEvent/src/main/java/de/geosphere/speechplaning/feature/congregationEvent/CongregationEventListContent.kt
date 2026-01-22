@@ -78,7 +78,7 @@ fun CongregationEventListContent(
     var yearHeaderHeightPx by remember { mutableIntStateOf(0) }
     var monthHeaderHeightPx by remember { mutableIntStateOf(0) }
 
-    fun scrollToCurrentWeek() {
+    fun scrollToCurrentWeek(animated: Boolean = true) {
         val targetEvent = sortedEvents.find { it.date?.isInCurrentWeek() ?: false }
 
         if (targetEvent != null) {
@@ -107,10 +107,17 @@ fun CongregationEventListContent(
 
             if (targetFound) {
                 coroutineScope.launch {
-                    listState.animateScrollToItem(
-                        index = calculatedIndex,
-                        scrollOffset = -yearHeaderHeightPx
-                    )
+                    if (animated) {
+                        listState.animateScrollToItem(
+                            index = calculatedIndex,
+                            scrollOffset = -yearHeaderHeightPx
+                        )
+                    } else {
+                        listState.scrollToItem(
+                            index = calculatedIndex,
+                            scrollOffset = -yearHeaderHeightPx
+                        )
+                    }
                 }
             }
         }
@@ -118,7 +125,7 @@ fun CongregationEventListContent(
 
     LaunchedEffect(sortedEvents, yearHeaderHeightPx, monthHeaderHeightPx) {
         if (!initialScrollDone && sortedEvents.isNotEmpty() && yearHeaderHeightPx > 0 && monthHeaderHeightPx > 0) {
-            scrollToCurrentWeek()
+            scrollToCurrentWeek(false)
             initialScrollDone = true
         }
     }
@@ -129,7 +136,7 @@ fun CongregationEventListContent(
             horizontalArrangement = Arrangement.End
         ) {
             Button(
-                onClick = { scrollToCurrentWeek() },
+                onClick = { scrollToCurrentWeek(true) },
 
                 ) {
                 Row(modifier = Modifier) {
