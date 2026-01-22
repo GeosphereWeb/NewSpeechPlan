@@ -3,7 +3,7 @@ package de.geosphere.speechplaning.feature.speeches.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.geosphere.speechplaning.core.model.Speech
-import de.geosphere.speechplaning.core.model.SpeechWithUsageCount
+import de.geosphere.speechplaning.core.model.data.SpeechWithUsageHistory
 import de.geosphere.speechplaning.data.authentication.permission.SpeechPermissionPolicy
 import de.geosphere.speechplaning.data.usecases.speeches.DeleteSpeechUseCase
 import de.geosphere.speechplaning.data.usecases.speeches.GetSpeechesWithUsageCountUseCase
@@ -29,16 +29,18 @@ sealed interface SpeechUiState {
     // 'isActionInProgress' nutzen wir, um z.B. beim Speichern einen Ladebalken
     // ÜBER der Liste anzuzeigen, ohne die Liste verschwinden zu lassen.
     data class SuccessUIState(
-        val speeches: List<SpeechWithUsageCount> = emptyList(),
+        val speeches: List<SpeechWithUsageHistory> = emptyList(),
         val selectedSpeech: Speech? = null,
         val isActionInProgress: Boolean = false,
         val actionError: String? = null,
-
-        // --- HIER KOMMEN DIE NEUEN FELDER HIN ---
-        // Statt nur 'canEdit', splitten wir das auf:
-        val canCreateSpeech: Boolean = false, // Darf neue anlegen
-        val canEditSpeech: Boolean = false, // Darf existierende ändern
-        val canDeleteSpeech: Boolean = false // Darf löschen (nur Admin)
+        val canCreateSpeech: Boolean = false,
+        val canEditSpeech: Boolean = false,
+        val canDeleteSpeech: Boolean = false,
+        val filterQuery: String = "",
+        val showFilterField: Boolean = false,
+        val groupByTimesUsed: Boolean = false,
+        val filteredSpeeches: List<SpeechWithUsageHistory> = emptyList(),
+        val groupedSpeeches: Map<Int, List<SpeechWithUsageHistory>>? = null
     ) : SpeechUiState
 }
 
@@ -60,12 +62,31 @@ class SpeechViewModel(
      * 3. Der lokale View-Status (Selektion, Fehlertexte, Lade-Spinner)
      */
     val uiState: StateFlow<SpeechUiState> = combine(
-        getSpeechesWithUsageCountUseCase(), // Ruft den Flow im UseCase auf
+        getSpeechesWithUsageCountUseCase(),
         observeCurrentUserUseCase(),
         _viewState
     ) { speechesWithUsageResult, appUser, viewState ->
 
         val speechList = speechesWithUsageResult.getOrElse { emptyList() }
+
+        // Berechne gefilterte Liste
+        val filteredList = if (viewState.filterQuery.isBlank()) {
+            speechList
+        } else {
+            speechList.filter { speechWithUsage ->
+                speechWithUsage.speech.number.contains(viewState.filterQuery, ignoreCase = true) ||
+                    speechWithUsage.speech.subject.contains(viewState.filterQuery, ignoreCase = true)
+            }
+        }
+
+        // Berechne gruppierte Liste nach timesUsed
+        val groupedList = if (viewState.groupByTimesUsed) {
+            filteredList
+                .groupBy { it.timesUsed }
+                .toSortedMap(compareBy { it })
+        } else {
+            null
+        }
 
         // / 1. BERECHTIGUNGEN PRÜFEN MIT POLICY
         var canCreate = false
@@ -73,12 +94,7 @@ class SpeechViewModel(
         var canDelete = false
 
         if (appUser != null) {
-            // Darf er generell erstellen?
             canCreate = permissionPolicy.canCreate(appUser)
-
-            // Für die Liste: Darf er generell bearbeiten/löschen?
-            // (Hier nehmen wir an: Wer generell verwalten darf, bekommt die Buttons angezeigt.
-            // Die feine Prüfung pro Rede passiert beim Klick oder im Dialog)
             canEdit = permissionPolicy.canManageGeneral(appUser)
             canDelete = permissionPolicy.canManageGeneral(appUser)
         }
@@ -89,10 +105,14 @@ class SpeechViewModel(
             selectedSpeech = viewState.selectedSpeech,
             isActionInProgress = viewState.isActionInProgress,
             actionError = viewState.actionError,
-            // Zuweisung der berechneten Werte an den State
             canCreateSpeech = canCreate,
             canEditSpeech = canEdit,
-            canDeleteSpeech = canDelete
+            canDeleteSpeech = canDelete,
+            filterQuery = viewState.filterQuery,
+            showFilterField = viewState.showFilterField,
+            groupByTimesUsed = viewState.groupByTimesUsed,
+            filteredSpeeches = filteredList,
+            groupedSpeeches = groupedList
         )
     }.stateIn(
         scope = viewModelScope,
@@ -114,6 +134,27 @@ class SpeechViewModel(
      */
     fun clearSelection() {
         _viewState.value = _viewState.value.copy(selectedSpeech = null)
+    }
+
+    /**
+     * Aktualisiert die Filter-Query
+     */
+    fun updateFilterQuery(query: String) {
+        _viewState.value = _viewState.value.copy(filterQuery = query)
+    }
+
+    /**
+     * Schaltet die Filter-Feld-Sichtbarkeit um
+     */
+    fun toggleFilterVisibility() {
+        _viewState.value = _viewState.value.copy(showFilterField = !_viewState.value.showFilterField)
+    }
+
+    /**
+     * Schaltet die Gruppierung nach timesUsed um
+     */
+    fun toggleGroupByTimesUsed() {
+        _viewState.value = _viewState.value.copy(groupByTimesUsed = !_viewState.value.groupByTimesUsed)
     }
 
     /**
@@ -214,5 +255,8 @@ class SpeechViewModel(
 private data class SpeechViewState(
     val selectedSpeech: Speech? = null,
     val isActionInProgress: Boolean = false,
-    val actionError: String? = null
+    val actionError: String? = null,
+    val filterQuery: String = "",
+    val showFilterField: Boolean = false,
+    val groupByTimesUsed: Boolean = false
 )
