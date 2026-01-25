@@ -1,0 +1,28 @@
+name: "Commitlint Check"
+
+on:
+  pull_request:
+    types: [ opened, edited, synchronize, reopened ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Wichtig: Lädt die gesamte Historie für die Prüfung
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install commitlint
+        run: |
+          npm install --save-dev @commitlint/config-conventional @commitlint/cli
+
+      - name: Validate Commits
+        run: |
+          # Prüft alle Commits vom Startpunkt des PRs bis zum aktuellen Stand
+          npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
