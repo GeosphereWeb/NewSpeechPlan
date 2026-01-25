@@ -1,5 +1,6 @@
 package de.geosphere.speechplaning.feature.speeches.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.defaultMinSize
@@ -84,8 +85,8 @@ fun SpeechListItem(speechWithUsageHistory: SpeechWithUsageHistory, onLongClick: 
         },
         supportingContent = {
             // Letzte Verwendungen anzeigen
-            if (toggleZusatzinfo && speechWithUsageHistory.usageHistory.isNotEmpty()) {
-                Column() {
+            AnimatedVisibility(toggleZusatzinfo && speechWithUsageHistory.usageHistory.isNotEmpty()) {
+                Column {
                     Text(
                         text = "Letzte Verwendungen:",
                         style = MaterialTheme.typography.labelSmall,
@@ -102,6 +103,8 @@ fun SpeechListItem(speechWithUsageHistory: SpeechWithUsageHistory, onLongClick: 
                     }
                 }
             }
+            // if (toggleZusatzinfo && speechWithUsageHistory.usageHistory.isNotEmpty()) {
+            // }
         }
     )
     HorizontalDivider()

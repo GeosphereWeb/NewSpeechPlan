@@ -29,6 +29,7 @@ import de.geosphere.speechplaning.theme.R
 import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
 
+@Suppress("LongParameterList")
 @Composable
 fun SpeechListContent(
     speeches: List<SpeechWithUsageHistory>,
@@ -89,7 +90,7 @@ fun SpeechListContent(
             if (groupByTimesUsed && groupedSpeeches != null) {
                 groupedSpeeches.forEach { (timesUsed, speechList) ->
                     stickyHeader {
-                        SpeechGroupHeader(timesUsed.toString())
+                        SpeechGroupHeader(timesUsed.toString(), speechList.size)
                     }
                     items(speechList, key = { it.speech.id.ifBlank { it.hashCode() } }) { speechWithUsage ->
                         SpeechListItem(
