@@ -1,0 +1,28 @@
+name: "Compliance Check"
+
+on:
+  pull_request:
+    types: [ opened, edited, synchronize, reopened ]
+
+jobs:
+  check-compliance:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. PR-Titel Prüfung
+      - name: Check PR Title
+        uses: nicklegan/github-pull-request-naming-policy-action@v1.0.0
+        with:
+          # Erlaubt "SPECHPLAN-123..." oder "JDI..." am Anfang
+          title-regex: '^(SPECHPLAN-[0-9]+|JDI).*'
+          title-error-message: 'FEHLER: Der PR-Titel muss mit "SPECHPLAN-123" oder "JDI" beginnen.'
+
+      # 2. Commit-Message Prüfung
+      # Dieser Schritt stellt sicher, dass auch jeder einzelne Commit im PR das Format einhält
+      - name: Check Commit Messages
+        uses: gsactions/commit-message-checker@v2
+        with:
+          pattern: '^(SPECHPLAN-[0-9]+|JDI).*'
+          error: 'FEHLER: Einer deiner Commit-Header beginnt nicht mit "SPECHPLAN-123" oder "JDI".'
+          excludeDescription: 'true' # Prüft nur die erste Zeile (Header) des Commits
+          excludeTitle: 'true'       # Wir haben den Titel bereits oben geprüft
+          accessToken: ${{ secrets.GITHUB_TOKEN }}
