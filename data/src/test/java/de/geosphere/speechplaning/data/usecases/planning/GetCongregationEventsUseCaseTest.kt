@@ -1,22 +1,26 @@
 package de.geosphere.speechplaning.data.usecases.planning
 
+import app.cash.turbine.test
 import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.core.model.data.Event
 import de.geosphere.speechplaning.data.repository.CongregationEventRepository
+import de.geosphere.speechplaning.data.usecases.congregationEvent.ObserveAllEventsForCongregationUseCase
 import io.kotest.core.spec.style.BehaviorSpec
-import io.kotest.matchers.result.shouldBeFailure
-import io.kotest.matchers.result.shouldBeSuccess
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import java.time.LocalDate
 
 class GetCongregationEventsUseCaseTest : BehaviorSpec({
 
     lateinit var repository: CongregationEventRepository
+    lateinit var useCase: ObserveAllEventsForCongregationUseCase
 
     beforeTest {
         repository = mockk()
+        useCase = ObserveAllEventsForCongregationUseCase(repository)
     }
 
     given("a request to get all congregation events") {
@@ -39,32 +43,41 @@ class GetCongregationEventsUseCaseTest : BehaviorSpec({
                         speakerCongregationId = congregationId
                     )
                 )
-                coEvery { repository.getAllEventsForCongregation(districtId, congregationId) } returns events
 
-                val useCase = de.geosphere.speechplaning.data.usecases.congregationEvent.GetCongregationEventsUseCase(
-                    repository
-                )
+                coEvery {
+                    repository.getAllEventsForCongregation(districtId, congregationId)
+                } returns events
 
-                val result = useCase(districtId, congregationId)
+                // Mock the getAllFlow to return events as a Flow
+                coEvery {
+                    repository.getAllFlow(districtId, congregationId)
+                } returns flowOf(events)
 
-                result.shouldBeSuccess(events)
-                coVerify(exactly = 1) { repository.getAllEventsForCongregation(districtId, congregationId) }
+                useCase(districtId, congregationId).test {
+                    val result = awaitItem()
+                    result.isSuccess shouldBe true
+                    result.getOrNull() shouldBe events
+
+                    cancelAndIgnoreRemainingEvents()
+                }
             }
         }
 
         `when`("the repository throws an exception") {
             then("it should return failure") {
                 val exception = RuntimeException("Test exception")
-                coEvery { repository.getAllEventsForCongregation(districtId, congregationId) } throws exception
 
-                val useCase = de.geosphere.speechplaning.data.usecases.congregationEvent.GetCongregationEventsUseCase(
-                    repository
-                )
+                coEvery {
+                    repository.getAllFlow(districtId, congregationId)
+                } returns flow { throw exception }
 
-                val result = useCase(districtId, congregationId)
+                useCase(districtId, congregationId).test {
+                    val result = awaitItem()
+                    result.isFailure shouldBe true
+                    result.exceptionOrNull() shouldBe exception
 
-                result.shouldBeFailure(exception)
-                coVerify(exactly = 1) { repository.getAllEventsForCongregation(districtId, congregationId) }
+                    cancelAndIgnoreRemainingEvents()
+                }
             }
         }
     }

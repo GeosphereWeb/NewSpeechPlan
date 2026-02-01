@@ -31,6 +31,7 @@ import de.geosphere.speechplaning.theme.ThemePreviews
 import de.geosphere.speechplaning.theme.extendedColorScheme
 
 @Composable
+@Suppress("MagicNumber")
 fun SpeechListItem(speechWithUsageHistory: SpeechWithUsageHistory, onLongClick: (() -> Unit)?) {
     val contentAlpha = if (speechWithUsageHistory.speech.active) 1f else 0.38f
     var toggleZusatzinfo by remember { mutableStateOf(false) }
@@ -103,8 +104,6 @@ fun SpeechListItem(speechWithUsageHistory: SpeechWithUsageHistory, onLongClick: 
                     }
                 }
             }
-            // if (toggleZusatzinfo && speechWithUsageHistory.usageHistory.isNotEmpty()) {
-            // }
         }
     )
     HorizontalDivider()

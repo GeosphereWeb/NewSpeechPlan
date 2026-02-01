@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("jacoco")
+    alias(libs.plugins.kover)
 }
 android {
     namespace = "de.geosphere.speechplaning.feature.speaker"
@@ -96,6 +96,7 @@ dependencies {
     testImplementation(libs.kotest.assertions)
     testImplementation(libs.kotest.runner.junit5)
     testImplementation(libs.kotest.property)
+    testImplementation(libs.turbine)
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -1,7 +1,8 @@
 package de.geosphere.speechplaning.data.repository
 
 import de.geosphere.speechplaning.core.model.Congregation
-import de.geosphere.speechplaning.data.repository.services.IFirestoreService
+import de.geosphere.speechplaning.data.repository.services.IFlowActions
+import de.geosphere.speechplaning.data.repository.services.ISubcollectionActions
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
@@ -12,7 +13,8 @@ import io.mockk.mockk
 
 internal class CongregationRepositoryTest : BehaviorSpec({
 
-    lateinit var firestoreService: IFirestoreService
+    lateinit var subcollectionActions: ISubcollectionActions
+    lateinit var flowActions: IFlowActions
     lateinit var congregationRepository: CongregationRepository
 
     val districtId = "testDistrictId"
@@ -22,18 +24,19 @@ internal class CongregationRepositoryTest : BehaviorSpec({
     val districtsCollectionName = "districts"
 
     beforeEach {
-        firestoreService = mockk(relaxed = true)
-        congregationRepository = CongregationRepository(firestoreService)
+        subcollectionActions = mockk(relaxed = true)
+        flowActions = mockk(relaxed = true)
+        congregationRepository = CongregationRepository(subcollectionActions, flowActions)
     }
 
     given("SaveCongregation") {
         `when`("saving a new congregation") {
-            then("it should call firestoreService with correct paths and data") {
+            then("it should call subcollectionActions with correct paths and data") {
                 val congregationToSave = testCongregation.copy(id = "") // Neue Congregation
                 val expectedGeneratedId = "newCongregationId"
 
                 coEvery {
-                    firestoreService.addDocumentToSubcollection(
+                    subcollectionActions.addDocumentToSubcollection(
                         parentCollection = districtsCollectionName,
                         parentId = districtId,
                         subcollection = congregationsSubcollectionName,
@@ -45,7 +48,7 @@ internal class CongregationRepositoryTest : BehaviorSpec({
 
                 resultId shouldBe expectedGeneratedId
                 coVerify {
-                    firestoreService.addDocumentToSubcollection(
+                    subcollectionActions.addDocumentToSubcollection(
                         parentCollection = districtsCollectionName,
                         parentId = districtId,
                         subcollection = congregationsSubcollectionName,
@@ -54,11 +57,11 @@ internal class CongregationRepositoryTest : BehaviorSpec({
                 }
             }
 
-            then("it should throw an exception if firestoreService add fails") {
+            then("it should throw an exception if subcollectionActions add fails") {
                 val congregationToSave = testCongregation.copy(id = "")
                 val errorMessage = "Firestore add error"
                 coEvery {
-                    firestoreService.addDocumentToSubcollection(any(), any(), any(), any())
+                    subcollectionActions.addDocumentToSubcollection(any(), any(), any(), any())
                 } throws RuntimeException(errorMessage)
 
                 val exception = shouldThrow<RuntimeException> {
@@ -71,22 +74,22 @@ internal class CongregationRepositoryTest : BehaviorSpec({
         }
 
         `when`("saving an existing congregation") {
-            then("it should call firestoreService with correct paths and data") {
+            then("it should call subcollectionActions with correct paths and data") {
                 coEvery {
-                    firestoreService.setDocumentInSubcollection(
+                    subcollectionActions.setDocumentInSubcollection(
                         parentCollection = districtsCollectionName,
                         parentId = districtId,
                         subcollection = congregationsSubcollectionName,
                         documentId = testCongregation.id,
                         data = testCongregation
                     )
-                } returns Unit // Firestore setDocumentInSubcollection gibt nichts zurück
+                } returns Unit
 
                 val resultId = congregationRepository.saveCongregation(districtId, testCongregation)
 
                 resultId shouldBe testCongregation.id
                 coVerify {
-                    firestoreService.setDocumentInSubcollection(
+                    subcollectionActions.setDocumentInSubcollection(
                         parentCollection = districtsCollectionName,
                         parentId = districtId,
                         subcollection = congregationsSubcollectionName,
@@ -96,10 +99,10 @@ internal class CongregationRepositoryTest : BehaviorSpec({
                 }
             }
 
-            then("it should throw an exception if firestoreService set fails") {
+            then("it should throw an exception if subcollectionActions set fails") {
                 val errorMessage = "Firestore set error"
                 coEvery {
-                    firestoreService.setDocumentInSubcollection(any(), any(), any(), any(), any())
+                    subcollectionActions.setDocumentInSubcollection(any(), any(), any(), any(), any())
                 } throws RuntimeException(errorMessage)
 
                 val exception = shouldThrow<RuntimeException> {
@@ -112,54 +115,11 @@ internal class CongregationRepositoryTest : BehaviorSpec({
         }
     }
 
-    given("GetCongregationsForDistrict") {
-        `when`("called") {
-            then("it should call firestoreService with correct paths") {
-                val expectedCongregations = listOf(testCongregation, testCongregation.copy(id = "otherId"))
-
-                coEvery {
-                    firestoreService.getDocumentsFromSubcollection(
-                        parentCollection = districtsCollectionName,
-                        parentId = districtId,
-                        subcollection = congregationsSubcollectionName,
-                        objectClass = Congregation::class.java
-                    )
-                } returns expectedCongregations
-
-                val result = congregationRepository.getCongregationsForDistrict(districtId)
-
-                result shouldBe expectedCongregations
-                coVerify {
-                    firestoreService.getDocumentsFromSubcollection(
-                        parentCollection = districtsCollectionName,
-                        parentId = districtId,
-                        subcollection = congregationsSubcollectionName,
-                        objectClass = Congregation::class.java
-                    )
-                }
-            }
-
-            then("it should throw an exception if firestoreService fails") {
-                val errorMessage = "Firestore get all error"
-                coEvery {
-                    firestoreService.getDocumentsFromSubcollection(any(), any(), any(), eq(Congregation::class.java))
-                } throws RuntimeException(errorMessage)
-
-                val exception = shouldThrow<RuntimeException> {
-                    congregationRepository.getCongregationsForDistrict(districtId)
-                }
-                exception.message shouldBe "Failed to get all entities from subcollection " +
-                    "'$congregationsSubcollectionName' under parent '$districtId' in '$districtsCollectionName'"
-                exception.cause?.message shouldBe errorMessage
-            }
-        }
-    }
-
     given("DeleteCongregation") {
         `when`("deleting a congregation") {
-            then("it should call firestoreService with correct paths") {
+            then("it should call subcollectionActions with correct paths") {
                 coEvery {
-                    firestoreService.deleteDocumentFromSubcollection(
+                    subcollectionActions.deleteDocumentFromSubcollection(
                         parentCollection = districtsCollectionName,
                         parentId = districtId,
                         subcollection = congregationsSubcollectionName,
@@ -170,7 +130,7 @@ internal class CongregationRepositoryTest : BehaviorSpec({
                 congregationRepository.deleteCongregation(districtId, congregationId)
 
                 coVerify {
-                    firestoreService.deleteDocumentFromSubcollection(
+                    subcollectionActions.deleteDocumentFromSubcollection(
                         parentCollection = districtsCollectionName,
                         parentId = districtId,
                         subcollection = congregationsSubcollectionName,
@@ -179,10 +139,10 @@ internal class CongregationRepositoryTest : BehaviorSpec({
                 }
             }
 
-            then("it should throw an exception if firestoreService fails") {
+            then("it should throw an exception if subcollectionActions fails") {
                 val errorMessage = "Firestore delete error"
                 coEvery {
-                    firestoreService.deleteDocumentFromSubcollection(any(), any(), any(), any())
+                    subcollectionActions.deleteDocumentFromSubcollection(any(), any(), any(), any())
                 } throws RuntimeException(errorMessage)
 
                 val exception = shouldThrow<RuntimeException> {
@@ -198,7 +158,9 @@ internal class CongregationRepositoryTest : BehaviorSpec({
                     congregationRepository.deleteCongregation(districtId, "")
                 }
                 exception.message shouldBe "Document ID cannot be blank for deletion."
-                coVerify(exactly = 0) { firestoreService.deleteDocumentFromSubcollection(any(), any(), any(), any()) }
+                coVerify(
+                    exactly = 0
+                ) { subcollectionActions.deleteDocumentFromSubcollection(any(), any(), any(), any()) }
             }
         }
     }

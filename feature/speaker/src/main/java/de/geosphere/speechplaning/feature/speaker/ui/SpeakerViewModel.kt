@@ -59,6 +59,12 @@ class SpeakerViewModel(
         _viewState
     ) { allSpeaker, appUser, allCongregationsResult, allSpeechesResult, viewState ->
 
+        // Prüfe, ob das Laden der Sprecher fehlgeschlagen ist
+        if (allSpeaker.isFailure) {
+            val errorMessage = allSpeaker.exceptionOrNull()?.localizedMessage ?: "Fehler beim Laden der Sprecher"
+            return@combine SpeakerUiState.ErrorUIState(errorMessage)
+        }
+
         allSpeaker.onFailure { exception ->
             android.util.Log.e("SpeakerViewModel", "Fehler beim Laden aller Speaker", exception)
         }

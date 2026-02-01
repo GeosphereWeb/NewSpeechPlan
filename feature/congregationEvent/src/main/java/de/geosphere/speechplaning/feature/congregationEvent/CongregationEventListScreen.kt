@@ -41,18 +41,27 @@ fun CongregationEventListScreen(
 ) {
     val uiState by viewModel.filteredUiState.collectAsState()
 
-    when (val state = uiState) {
+    RenderCongregationEventUiState(uiState, viewModel, stringProvider)
+}
+
+@Composable
+private fun RenderCongregationEventUiState(
+    uiState: CongregationEventUiState,
+    viewModel: CongregationEventViewModel,
+    stringProvider: AppEventStringProvider
+) {
+    when (uiState) {
         is CongregationEventUiState.LoadingUiState -> {
             CongregationEventLoadingContent()
         }
 
         is CongregationEventUiState.ErrorUiState -> {
-            CongregationEventErrorContent(message = state.message)
+            CongregationEventErrorContent(message = uiState.message)
         }
 
         is CongregationEventUiState.SuccessUiState -> {
             CongregationEventSuccessContent(
-                state = state,
+                state = uiState,
                 stringProvider = stringProvider,
                 onNavigateToDetails = { viewModel.selectCongregationEvent(it) },
                 onEventSelect = { navController, event ->
@@ -162,12 +171,10 @@ fun CongregationEventSuccessContent(
                         CongregationEventEditDialog(
                             congregationEvent = state.selectedCongregationEvent,
                             allSpeakers = state.allSpeakers,
-                            allCongregations = state.allCongregations,
                             allSpeeches = state.allSpeeches,
                             onDismiss = onDismissEditDialog,
                             onSave = onSaveEvent,
                             onDelete = onDeleteEvent,
-                            stringProvider = stringProvider,
                             canEdit = state.canEditCongregationEvent,
                             canDelete = state.canDeleteCongregationEvent,
                             canToggleSpeakerInformed = state.canToggleSpeakerInformed
@@ -190,6 +197,7 @@ fun CongregationEventSuccessContent(
     }
 }
 
+@Suppress("MagicNumber")
 private fun createMockUiState(): CongregationEventUiState.SuccessUiState {
     val mockEvents = listOf(
         CongregationEvent(
@@ -230,7 +238,9 @@ private fun createMockUiState(): CongregationEventUiState.SuccessUiState {
         selectedCongregationEvent = null,
         allSpeakers = listOf(
             de.geosphere.speechplaning.core.model.Speaker(
-                id = "s1", firstName = "Max", lastName = "Müller",
+                id = "s1",
+                firstName = "Max",
+                lastName = "Müller",
                 speechNumberIds = listOf(1, 2, 3)
             )
         ),

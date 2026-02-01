@@ -2,7 +2,9 @@ package de.geosphere.speechplaning.data.repository
 
 import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.core.model.data.Event
-import de.geosphere.speechplaning.data.repository.services.IFirestoreService
+import de.geosphere.speechplaning.data.repository.services.ICollectionActions
+import de.geosphere.speechplaning.data.repository.services.IFlowActions
+import de.geosphere.speechplaning.data.repository.services.ISubcollectionActions
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.nulls.shouldBeNull
@@ -15,7 +17,9 @@ import java.time.LocalDate
 
 internal class CongregationEventRepositoryTest : BehaviorSpec({
 
-    lateinit var firestoreService: IFirestoreService
+    lateinit var collectionActions: ICollectionActions
+    lateinit var subcollectionActions: ISubcollectionActions
+    lateinit var flowActions: IFlowActions
     lateinit var repository: CongregationEventRepository
 
     val testDistrictId = "testDistrictId001"
@@ -33,8 +37,10 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
     val expectedParentDocumentIdForEvent = testCongregationId
 
     beforeEach {
-        firestoreService = mockk(relaxed = true)
-        repository = CongregationEventRepository(firestoreService)
+        collectionActions = mockk(relaxed = true)
+        subcollectionActions = mockk(relaxed = true)
+        flowActions = mockk(relaxed = true)
+        repository = CongregationEventRepository(collectionActions, subcollectionActions, flowActions)
 
         testEvent = CongregationEvent(
             id = testEventId,
@@ -57,10 +63,10 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
 
     given("SaveEvent") {
         `when`("saving a new event") {
-            then("it should call firestoreService add and return new id") {
+            then("it should call subcollectionActions add and return new id") {
                 val generatedId = "newGeneratedEventId"
                 coEvery {
-                    firestoreService.addDocumentToSubcollection(
+                    subcollectionActions.addDocumentToSubcollection(
                         parentCollection = expectedParentCollectionPathForEvent,
                         parentId = expectedParentDocumentIdForEvent,
                         subcollection = congregationEventsSubcollectionName,
@@ -72,7 +78,7 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
 
                 resultId shouldBe generatedId
                 coVerify {
-                    firestoreService.addDocumentToSubcollection(
+                    subcollectionActions.addDocumentToSubcollection(
                         expectedParentCollectionPathForEvent,
                         expectedParentDocumentIdForEvent,
                         congregationEventsSubcollectionName,
@@ -81,10 +87,10 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
                 }
             }
 
-            then("it should throw an exception if firestoreService add fails") {
+            then("it should throw an exception if subcollectionActions add fails") {
                 val errorMessage = "Firestore add operation failed"
                 coEvery {
-                    firestoreService.addDocumentToSubcollection(any(), any(), any(), any())
+                    subcollectionActions.addDocumentToSubcollection(any(), any(), any(), any())
                 } throws RuntimeException(errorMessage)
 
                 val exception = shouldThrow<RuntimeException> {
@@ -98,22 +104,22 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
         }
 
         `when`("saving an existing event") {
-            then("it should call firestoreService set and return existing id") {
+            then("it should call subcollectionActions set and return existing id") {
                 coEvery {
-                    firestoreService.setDocumentInSubcollection(
+                    subcollectionActions.setDocumentInSubcollection(
                         parentCollection = expectedParentCollectionPathForEvent,
                         parentId = expectedParentDocumentIdForEvent,
                         subcollection = congregationEventsSubcollectionName,
                         documentId = testEvent.id,
                         data = testEvent
                     )
-                } returns Unit // setDocumentInSubcollection gibt Unit zurück
+                } returns Unit
 
                 val resultId = repository.saveEvent(testDistrictId, testCongregationId, testEvent)
 
                 resultId shouldBe testEvent.id
                 coVerify {
-                    firestoreService.setDocumentInSubcollection(
+                    subcollectionActions.setDocumentInSubcollection(
                         expectedParentCollectionPathForEvent,
                         expectedParentDocumentIdForEvent,
                         congregationEventsSubcollectionName,
@@ -123,10 +129,10 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
                 }
             }
 
-            then("it should throw an exception if firestoreService set fails") {
+            then("it should throw an exception if subcollectionActions set fails") {
                 val errorMessage = "Firestore set operation failed"
                 coEvery {
-                    firestoreService.setDocumentInSubcollection(any(), any(), any(), any(), any())
+                    subcollectionActions.setDocumentInSubcollection(any(), any(), any(), any(), any())
                 } throws RuntimeException(errorMessage)
 
                 val exception = shouldThrow<RuntimeException> {
@@ -144,7 +150,7 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
         `when`("event is found") {
             then("it should return the event") {
                 coEvery {
-                    firestoreService.getDocumentFromSubcollection(
+                    subcollectionActions.getDocumentFromSubcollection(
                         parentCollectionPath = expectedParentCollectionPathForEvent,
                         parentDocumentId = expectedParentDocumentIdForEvent,
                         subcollectionName = congregationEventsSubcollectionName,
@@ -157,7 +163,7 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
 
                 result shouldBe testEvent
                 coVerify {
-                    firestoreService.getDocumentFromSubcollection(
+                    subcollectionActions.getDocumentFromSubcollection(
                         expectedParentCollectionPathForEvent,
                         expectedParentDocumentIdForEvent,
                         congregationEventsSubcollectionName,
@@ -173,7 +179,7 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
                 val result = repository.getEventById(testDistrictId, testCongregationId, "")
                 result.shouldBeNull()
                 coVerify(exactly = 0) {
-                    firestoreService.getDocumentFromSubcollection(
+                    subcollectionActions.getDocumentFromSubcollection(
                         any(),
                         any(),
                         any(),
@@ -184,10 +190,10 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
             }
         }
 
-        `when`("firestoreService returns null") {
+        `when`("subcollectionActions returns null") {
             then("it should return null") {
                 coEvery {
-                    firestoreService.getDocumentFromSubcollection(
+                    subcollectionActions.getDocumentFromSubcollection(
                         parentCollectionPath = expectedParentCollectionPathForEvent,
                         parentDocumentId = expectedParentDocumentIdForEvent,
                         subcollectionName = congregationEventsSubcollectionName,
@@ -202,11 +208,11 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
             }
         }
 
-        `when`("firestoreService fails") {
+        `when`("subcollectionActions fails") {
             then("it should throw an exception") {
                 val errorMessage = "Firestore get operation failed"
                 coEvery {
-                    firestoreService.getDocumentFromSubcollection(
+                    subcollectionActions.getDocumentFromSubcollection(
                         any(), any(), any(), eq(testEventId), eq(CongregationEvent::class.java)
                     )
                 } throws RuntimeException(errorMessage)
@@ -224,10 +230,10 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
 
     given("GetAllEventsForCongregation") {
         `when`("called") {
-            then("it should call firestoreService and return events list") {
+            then("it should call subcollectionActions and return events list") {
                 val expectedEvents = listOf(testEvent, newEventWithoutId.copy(id = "anotherEventId"))
                 coEvery {
-                    firestoreService.getDocumentsFromSubcollection(
+                    subcollectionActions.getDocumentsFromSubcollection(
                         parentCollection = expectedParentCollectionPathForEvent,
                         parentId = expectedParentDocumentIdForEvent,
                         subcollection = congregationEventsSubcollectionName,
@@ -239,7 +245,7 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
 
                 result shouldBe expectedEvents
                 coVerify {
-                    firestoreService.getDocumentsFromSubcollection(
+                    subcollectionActions.getDocumentsFromSubcollection(
                         expectedParentCollectionPathForEvent,
                         expectedParentDocumentIdForEvent,
                         congregationEventsSubcollectionName,
@@ -248,9 +254,9 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
                 }
             }
 
-            then("it should return an empty list if firestoreService returns an empty list") {
+            then("it should return an empty list if subcollectionActions returns an empty list") {
                 coEvery {
-                    firestoreService.getDocumentsFromSubcollection(
+                    subcollectionActions.getDocumentsFromSubcollection(
                         any(), any(), any(), eq(CongregationEvent::class.java)
                     )
                 } returns emptyList()
@@ -260,10 +266,10 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
                 result.size shouldBe 0
             }
 
-            then("it should throw an exception if firestoreService fails") {
+            then("it should throw an exception if subcollectionActions fails") {
                 val errorMessage = "Firestore get all operation failed"
                 coEvery {
-                    firestoreService.getDocumentsFromSubcollection(
+                    subcollectionActions.getDocumentsFromSubcollection(
                         any(), any(), any(), eq(CongregationEvent::class.java)
                     )
                 } throws RuntimeException(errorMessage)
@@ -281,9 +287,9 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
 
     given("DeleteEvent") {
         `when`("deleting an event") {
-            then("it should call firestoreService with correct paths") {
+            then("it should call subcollectionActions with correct paths") {
                 coEvery {
-                    firestoreService.deleteDocumentFromSubcollection(
+                    subcollectionActions.deleteDocumentFromSubcollection(
                         parentCollection = expectedParentCollectionPathForEvent,
                         parentId = expectedParentDocumentIdForEvent,
                         subcollection = congregationEventsSubcollectionName,
@@ -294,7 +300,7 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
                 repository.deleteEvent(testDistrictId, testCongregationId, testEventId)
 
                 coVerify {
-                    firestoreService.deleteDocumentFromSubcollection(
+                    subcollectionActions.deleteDocumentFromSubcollection(
                         expectedParentCollectionPathForEvent,
                         expectedParentDocumentIdForEvent,
                         congregationEventsSubcollectionName,
@@ -303,10 +309,10 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
                 }
             }
 
-            then("it should throw an exception if firestoreService fails") {
+            then("it should throw an exception if subcollectionActions fails") {
                 val errorMessage = "Firestore delete operation failed"
                 coEvery {
-                    firestoreService.deleteDocumentFromSubcollection(any(), any(), any(), any())
+                    subcollectionActions.deleteDocumentFromSubcollection(any(), any(), any(), any())
                 } throws RuntimeException(errorMessage)
 
                 val exception = shouldThrow<RuntimeException> {
@@ -325,7 +331,7 @@ internal class CongregationEventRepositoryTest : BehaviorSpec({
                 exception.message shouldBe "Document ID cannot be blank for deletion."
                 coVerify(
                     exactly = 0
-                ) { firestoreService.deleteDocumentFromSubcollection(any(), any(), any(), any()) }
+                ) { subcollectionActions.deleteDocumentFromSubcollection(any(), any(), any(), any()) }
             }
         }
     }

@@ -3,10 +3,11 @@ package de.geosphere.speechplaning.feature.speeches.ui
 import app.cash.turbine.test
 import de.geosphere.speechplaning.core.model.AppUser
 import de.geosphere.speechplaning.core.model.Speech
+import de.geosphere.speechplaning.core.model.data.SpeechWithUsageHistory
 import de.geosphere.speechplaning.core.model.data.UserRole
 import de.geosphere.speechplaning.data.authentication.permission.SpeechPermissionPolicy
 import de.geosphere.speechplaning.data.usecases.speeches.DeleteSpeechUseCase
-import de.geosphere.speechplaning.data.usecases.speeches.GetSpeechesUseCase
+import de.geosphere.speechplaning.data.usecases.speeches.GetSpeechesWithUsageCountUseCase
 import de.geosphere.speechplaning.data.usecases.speeches.SaveSpeechUseCase
 import de.geosphere.speechplaning.data.usecases.user.ObserveCurrentUserUseCase
 import io.kotest.core.spec.IsolationMode
@@ -23,7 +24,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -37,7 +38,7 @@ class SpeechViewModelTest : BehaviorSpec({
     val testDispatcher = UnconfinedTestDispatcher()
 
     // Mocks
-    lateinit var getSpeechesUseCase: GetSpeechesUseCase
+    lateinit var getSpeechesUseCase: GetSpeechesWithUsageCountUseCase
     lateinit var saveSpeechUseCase: SaveSpeechUseCase
     lateinit var deleteSpeechUseCase: DeleteSpeechUseCase
     lateinit var observeCurrentUserUseCase: ObserveCurrentUserUseCase
@@ -46,6 +47,7 @@ class SpeechViewModelTest : BehaviorSpec({
 
     // Test Data
     val dummySpeech = Speech(id = "1", number = "10", subject = "Test Speech")
+    val dummySpeechWithUsageHistory = SpeechWithUsageHistory(speech = dummySpeech)
     val dummyUser = AppUser(uid = "uid1", email = "test@test.com", displayName = "Tester", role = UserRole.ADMIN)
 
     beforeTest {
@@ -57,8 +59,8 @@ class SpeechViewModelTest : BehaviorSpec({
         observeCurrentUserUseCase = mockk()
         permissionPolicy = mockk()
 
-        every { getSpeechesUseCase() } returns MutableStateFlow(Result.success(listOf(dummySpeech)))
-        every { observeCurrentUserUseCase() } returns MutableStateFlow(dummyUser)
+        every { getSpeechesUseCase() } returns flowOf(Result.success(listOf(dummySpeechWithUsageHistory)))
+        every { observeCurrentUserUseCase() } returns flowOf(dummyUser)
 
         every { permissionPolicy.canCreate(any()) } returns true
         every { permissionPolicy.canManageGeneral(any()) } returns true
@@ -84,7 +86,7 @@ class SpeechViewModelTest : BehaviorSpec({
                 cut.uiState.test {
                     val successState = awaitItem().shouldBeInstanceOf<SpeechUiState.SuccessUIState>()
                     successState.speeches.size shouldBe 1
-                    successState.speeches.first() shouldBe dummySpeech
+                    successState.speeches.first() shouldBe dummySpeechWithUsageHistory
                     successState.canCreateSpeech.shouldBeTrue()
                     successState.canEditSpeech.shouldBeTrue()
                     successState.canDeleteSpeech.shouldBeTrue()
@@ -128,7 +130,8 @@ class SpeechViewModelTest : BehaviorSpec({
                         awaitItem() // Initial Success
                         cut.selectSpeech(dummySpeech)
                         val updatedState = awaitItem().shouldBeInstanceOf<SpeechUiState.SuccessUIState>()
-                        updatedState.selectedSpeech shouldBe dummySpeech
+                        updatedState.selectedSpeech shouldBe dummySpeechWithUsageHistory
+                        cancelAndIgnoreRemainingEvents()
                     }
                 }
             }
@@ -137,12 +140,26 @@ class SpeechViewModelTest : BehaviorSpec({
         When("clearSelection is called") {
             Then("selectedSpeech should be null") {
                 runTest {
-                    cut.selectSpeech(dummySpeech)
                     cut.uiState.test {
-                        awaitItem() // State with selection
+                        // 1. Initialen Zustand konsumieren
+                        awaitItem()
+
+                        // 2. Eine Rede auswählen
+                        cut.selectSpeech(dummySpeech)
+
+                        // 3. Überprüfen, ob die Auswahl erfolgreich war
+                        val selectedState = awaitItem().shouldBeInstanceOf<SpeechUiState.SuccessUIState>()
+                        selectedState.selectedSpeech shouldBe dummySpeechWithUsageHistory
+
+                        // 4. Auswahl aufheben
                         cut.clearSelection()
+
+                        // 5. Überprüfen, ob die Auswahl jetzt null ist
                         val finalState = awaitItem().shouldBeInstanceOf<SpeechUiState.SuccessUIState>()
                         finalState.selectedSpeech.shouldBeNull()
+
+                        // 6. Restliche Events ignorieren, um den Test sauber zu beenden
+                        cancelAndIgnoreRemainingEvents()
                     }
                 }
             }
@@ -240,14 +257,28 @@ class SpeechViewModelTest : BehaviorSpec({
                 runTest {
                     val newSpeech = Speech(id = "", number = "20", subject = "New")
                     // Mock: ObserveCurrentUserUseCase liefert null
-                    every { observeCurrentUserUseCase() } returns MutableStateFlow(null)
+                    every { observeCurrentUserUseCase() } returns flowOf(null)
 
-                    cut.uiState.test {
-                        awaitItem() // Initial Success
-                        cut.saveSpeech(newSpeech)
+                    // Wichtig: ViewModel muss mit dem neuen Mock neu erstellt werden,
+                    // damit es den neuen User-Status (null) mitbekommt.
+                    val loggedOutViewModel = SpeechViewModel(
+                        getSpeechesUseCase,
+                        saveSpeechUseCase,
+                        deleteSpeechUseCase,
+                        observeCurrentUserUseCase,
+                        permissionPolicy
+                    )
 
+                    loggedOutViewModel.uiState.test {
+                        // Der initiale State des neuen ViewModels wird geladen
+                        awaitItem()
+                        // Die Aktion wird ausgeführt
+                        loggedOutViewModel.saveSpeech(newSpeech)
+
+                        // Der State nach der Aktion (mit dem Fehler) wird geprüft
                         val errorState = awaitItem().shouldBeInstanceOf<SpeechUiState.SuccessUIState>()
                         errorState.actionError shouldBe "Keine Berechtigung!"
+                        cancelAndIgnoreRemainingEvents()
                     }
                     coVerify(exactly = 0) { saveSpeechUseCase(any()) }
                 }

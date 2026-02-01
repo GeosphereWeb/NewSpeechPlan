@@ -7,11 +7,6 @@ build:
     # style: 1
     # comments: 1
 
-formatting:
-  Indentation:
-    active: true
-    indentSize: 4
-
 config:
   validation: true
   warningsAsErrors: false
@@ -140,7 +135,7 @@ complexity:
     constructorThreshold: 7
     ignoreDefaultParameters: false
     ignoreDataClasses: true
-    ignoreAnnotatedParameter: []
+    ignoreAnnotatedParameter: ['Composable']
   MethodOverloading:
     active: false
     threshold: 6

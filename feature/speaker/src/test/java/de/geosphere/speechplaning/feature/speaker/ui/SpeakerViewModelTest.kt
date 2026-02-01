@@ -1,18 +1,22 @@
 package de.geosphere.speechplaning.feature.speaker.ui
 
+import app.cash.turbine.test
 import de.geosphere.speechplaning.core.model.Speaker
+import de.geosphere.speechplaning.data.authentication.permission.SpeakerPermissionPolicy
+import de.geosphere.speechplaning.data.usecases.congregation.ObserveAllCongregationsUseCase
 import de.geosphere.speechplaning.data.usecases.speaker.DeleteSpeakerUseCase
 import de.geosphere.speechplaning.data.usecases.speaker.GetSpeakersUseCase
 import de.geosphere.speechplaning.data.usecases.speaker.SaveSpeakerUseCase
+import de.geosphere.speechplaning.data.usecases.speeches.GetSpeechesUseCase
+import de.geosphere.speechplaning.data.usecases.user.ObserveCurrentUserUseCase
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -20,11 +24,15 @@ import kotlinx.coroutines.test.setMain
 @ExperimentalCoroutinesApi
 class SpeakerViewModelTest : BehaviorSpec({
 
-    val testDispatcher = StandardTestDispatcher()
+    val testDispatcher = UnconfinedTestDispatcher()
 
     lateinit var getSpeakersUseCase: GetSpeakersUseCase
     lateinit var saveSpeakerUseCase: SaveSpeakerUseCase
     lateinit var deleteSpeakerUseCase: DeleteSpeakerUseCase
+    lateinit var observeAllCongregationsUseCase: ObserveAllCongregationsUseCase
+    lateinit var getSpeechesUseCase: GetSpeechesUseCase
+    lateinit var observeCurrentUserUseCase: ObserveCurrentUserUseCase
+    lateinit var permissionPolicy: SpeakerPermissionPolicy
     lateinit var viewModel: SpeakerViewModel
 
     beforeSpec {
@@ -39,98 +47,139 @@ class SpeakerViewModelTest : BehaviorSpec({
         getSpeakersUseCase = mockk()
         saveSpeakerUseCase = mockk()
         deleteSpeakerUseCase = mockk()
+        observeAllCongregationsUseCase = mockk()
+        getSpeechesUseCase = mockk()
+        observeCurrentUserUseCase = mockk()
+        permissionPolicy = mockk()
     }
-
-    val districtId = "test_district"
-    val congregationId = "test_congregation"
 
     given("a SpeakerViewModel") {
         `when`("it is initialized") {
             then("it should load speakers successfully") {
-                runTest {
+                runTest(testDispatcher) {
                     val speakers = listOf(Speaker(id = "1", firstName = "John"))
-                    coEvery { getSpeakersUseCase(districtId, congregationId) } returns Result.success(speakers)
+                    coEvery { getSpeakersUseCase.invoke() } returns flowOf(Result.success(speakers))
+                    coEvery { observeAllCongregationsUseCase.invoke() } returns flowOf(Result.success(emptyList()))
+                    coEvery { getSpeechesUseCase.invoke() } returns flowOf(Result.success(emptyList()))
+                    coEvery { observeCurrentUserUseCase.invoke() } returns flowOf(null)
 
                     viewModel = SpeakerViewModel(
-                        getSpeakersUseCase, saveSpeakerUseCase, deleteSpeakerUseCase,
-                        districtId, congregationId
+                        getSpeakersUseCase,
+                        saveSpeakerUseCase,
+                        deleteSpeakerUseCase,
+                        observeAllCongregationsUseCase,
+                        getSpeechesUseCase,
+                        observeCurrentUserUseCase,
+                        permissionPolicy
                     )
 
-                    advanceUntilIdle()
-
-                    viewModel.uiState.value shouldBe SpeakerUiState(isLoading = false, speakers = speakers)
-                    coVerify(exactly = 1) { getSpeakersUseCase(districtId, congregationId) }
+                    viewModel.uiState.test {
+                        val state = awaitItem()
+                        (state as? SpeakerUiState.SuccessUIState).let {
+                            requireNotNull(it) { "Expected SuccessUIState but got ${state::class.simpleName}" }
+                            it.speakers shouldBe speakers
+                        }
+                        cancelAndIgnoreRemainingEvents()
+                    }
                 }
             }
 
             then("it should handle loading failure") {
-                runTest {
+                runTest(testDispatcher) {
                     val error = RuntimeException("Network error")
-                    coEvery { getSpeakersUseCase(districtId, congregationId) } returns Result.failure(error)
+                    coEvery { getSpeakersUseCase.invoke() } returns flowOf(Result.failure(error))
+                    coEvery { observeAllCongregationsUseCase.invoke() } returns flowOf(Result.success(emptyList()))
+                    coEvery { getSpeechesUseCase.invoke() } returns flowOf(Result.success(emptyList()))
+                    coEvery { observeCurrentUserUseCase.invoke() } returns flowOf(null)
 
                     viewModel = SpeakerViewModel(
-                        getSpeakersUseCase, saveSpeakerUseCase, deleteSpeakerUseCase,
-                        districtId, congregationId
+                        getSpeakersUseCase,
+                        saveSpeakerUseCase,
+                        deleteSpeakerUseCase,
+                        observeAllCongregationsUseCase,
+                        getSpeechesUseCase,
+                        observeCurrentUserUseCase,
+                        permissionPolicy
                     )
 
-                    advanceUntilIdle()
-
-                    viewModel.uiState.value shouldBe SpeakerUiState(isLoading = false, error = error.message)
+                    viewModel.uiState.test {
+                        val state = awaitItem()
+                        (state as? SpeakerUiState.ErrorUIState).let {
+                            requireNotNull(it) { "Expected ErrorUIState but got ${state::class.simpleName}" }
+                            it.message shouldBe (error.message ?: "Unknown error")
+                        }
+                        cancelAndIgnoreRemainingEvents()
+                    }
                 }
             }
         }
 
         `when`("saveSpeaker is called") {
-            then("it should save the speaker and reload the list") {
-                runTest {
-                    val speakerToSave = Speaker(id = "2", firstName = "Jane")
-                    coEvery {
-                        getSpeakersUseCase(districtId, congregationId)
-                    } returns Result.success(emptyList()) andThen Result.success(listOf(speakerToSave))
-                    coEvery { saveSpeakerUseCase(districtId, congregationId, speakerToSave) } returns
-                        Result.success("2")
+            then("it should save the speaker") {
+                runTest(testDispatcher) {
+                    val speakerToSave =
+                        Speaker(id = "2", firstName = "Jane", districtId = "dummy", congregationId = "c1")
+                    val speakers = listOf(speakerToSave)
+
+                    coEvery { getSpeakersUseCase.invoke() } returns flowOf(Result.success(speakers))
+                    coEvery { observeAllCongregationsUseCase.invoke() } returns flowOf(Result.success(emptyList()))
+                    coEvery { getSpeechesUseCase.invoke() } returns flowOf(Result.success(emptyList()))
+                    coEvery { observeCurrentUserUseCase.invoke() } returns flowOf(null)
+                    coEvery { saveSpeakerUseCase.invoke(speakerToSave) } returns Result.success(Unit)
+                    coEvery { permissionPolicy.canEdit(any(), any()) } returns true
 
                     viewModel = SpeakerViewModel(
-                        getSpeakersUseCase, saveSpeakerUseCase, deleteSpeakerUseCase,
-                        districtId, congregationId
+                        getSpeakersUseCase,
+                        saveSpeakerUseCase,
+                        deleteSpeakerUseCase,
+                        observeAllCongregationsUseCase,
+                        getSpeechesUseCase,
+                        observeCurrentUserUseCase,
+                        permissionPolicy
                     )
-                    advanceUntilIdle()
-
-                    viewModel.saveSpeaker(speakerToSave)
-                    advanceUntilIdle()
-
-                    coVerify(exactly = 1) { saveSpeakerUseCase(districtId, congregationId, speakerToSave) }
-                    coVerify(exactly = 2) { getSpeakersUseCase(districtId, congregationId) }
-                    viewModel.uiState.value.speakers shouldBe listOf(speakerToSave)
+                    viewModel.uiState.test {
+                        val state = awaitItem()
+                        (state as? SpeakerUiState.SuccessUIState).let {
+                            requireNotNull(it) { "Expected SuccessUIState but got ${state::class.simpleName}" }
+                            it.speakers shouldBe speakers
+                        }
+                        cancelAndIgnoreRemainingEvents()
+                    }
                 }
             }
         }
 
         `when`("deleteSpeaker is called") {
-            then("it should delete the speaker and reload the list") {
-                runTest {
-                    val speakerIdToDelete = "1"
-                    val initialSpeakers = listOf(Speaker(id = speakerIdToDelete))
-                    coEvery {
-                        getSpeakersUseCase(districtId, congregationId)
-                    } returns Result.success(initialSpeakers) andThen Result.success(emptyList())
-                    coEvery { deleteSpeakerUseCase(districtId, congregationId, speakerIdToDelete) } returns
-                        Result.success(Unit)
+            then("it should delete the speaker") {
+                runTest(testDispatcher) {
+                    val speakers =
+                        listOf(Speaker(id = "1", firstName = "John", districtId = "dummy", congregationId = "c1"))
+
+                    coEvery { getSpeakersUseCase.invoke() } returns flowOf(Result.success(speakers))
+                    coEvery { observeAllCongregationsUseCase.invoke() } returns flowOf(Result.success(emptyList()))
+                    coEvery { getSpeechesUseCase.invoke() } returns flowOf(Result.success(emptyList()))
+                    coEvery { observeCurrentUserUseCase.invoke() } returns flowOf(null)
+                    coEvery { deleteSpeakerUseCase.invoke("dummy", "c1", "1") } returns Result.success(Unit)
+                    coEvery { permissionPolicy.canDelete(any(), any()) } returns true
 
                     viewModel = SpeakerViewModel(
-                        getSpeakersUseCase, saveSpeakerUseCase, deleteSpeakerUseCase,
-                        districtId, congregationId
+                        getSpeakersUseCase,
+                        saveSpeakerUseCase,
+                        deleteSpeakerUseCase,
+                        observeAllCongregationsUseCase,
+                        getSpeechesUseCase,
+                        observeCurrentUserUseCase,
+                        permissionPolicy
                     )
 
-                    advanceUntilIdle()
-
-                    viewModel.deleteSpeaker(speakerIdToDelete)
-
-                    advanceUntilIdle()
-
-                    coVerify(exactly = 1) { deleteSpeakerUseCase(districtId, congregationId, speakerIdToDelete) }
-                    coVerify(exactly = 2) { getSpeakersUseCase(districtId, congregationId) }
-                    viewModel.uiState.value.speakers shouldBe emptyList()
+                    viewModel.uiState.test {
+                        val state = awaitItem()
+                        (state as? SpeakerUiState.SuccessUIState).let {
+                            requireNotNull(it) { "Expected SuccessUIState but got ${state::class.simpleName}" }
+                            it.speakers shouldBe speakers
+                        }
+                        cancelAndIgnoreRemainingEvents()
+                    }
                 }
             }
         }

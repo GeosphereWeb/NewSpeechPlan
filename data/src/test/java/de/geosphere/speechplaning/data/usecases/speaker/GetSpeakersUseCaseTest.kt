@@ -1,13 +1,14 @@
 package de.geosphere.speechplaning.data.usecases.speaker
 
+import app.cash.turbine.test
 import de.geosphere.speechplaning.core.model.Speaker
 import de.geosphere.speechplaning.data.repository.SpeakerRepository
 import io.kotest.core.spec.style.BehaviorSpec
-import io.kotest.matchers.result.shouldBeFailure
-import io.kotest.matchers.result.shouldBeSuccess
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 
 class GetSpeakersUseCaseTest : BehaviorSpec({
 
@@ -25,25 +26,69 @@ class GetSpeakersUseCaseTest : BehaviorSpec({
 
         `when`("the repository returns a list of speakers") {
             then("it should return a success result with the speaker list") {
-                val speakers = listOf(Speaker(id = "1", firstName = "John"))
-                coEvery { repository.getSpeakersForCongregation(districtId, congregationId) } returns speakers
+                val speakers = listOf(
+                    Speaker(id = "1", firstName = "John", lastName = "Doe"),
+                    Speaker(id = "2", firstName = "Jane", lastName = "Smith")
+                )
+                coEvery { repository.getAllFlow(districtId, congregationId) } returns flowOf(speakers)
 
-                val result = useCase(districtId, congregationId)
+                useCase(districtId, congregationId).test {
+                    val result = awaitItem()
+                    result.isSuccess shouldBe true
+                    result.getOrNull() shouldBe speakers.sortedBy { it.lastName }
 
-                result.shouldBeSuccess(speakers)
-                coVerify(exactly = 1) { repository.getSpeakersForCongregation(districtId, congregationId) }
+                    cancelAndIgnoreRemainingEvents()
+                }
             }
         }
 
         `when`("the repository throws an exception") {
             then("it should return a failure result") {
                 val exception = RuntimeException("Database error")
-                coEvery { repository.getSpeakersForCongregation(districtId, congregationId) } throws exception
+                coEvery { repository.getAllFlow(districtId, congregationId) } returns flow { throw exception }
 
-                val result = useCase(districtId, congregationId)
+                useCase(districtId, congregationId).test {
+                    val result = awaitItem()
+                    result.isFailure shouldBe true
+                    result.exceptionOrNull() shouldBe exception
 
-                result.shouldBeFailure(exception)
-                coVerify(exactly = 1) { repository.getSpeakersForCongregation(districtId, congregationId) }
+                    cancelAndIgnoreRemainingEvents()
+                }
+            }
+        }
+    }
+
+    given("a request to get all speakers globally") {
+        `when`("no parent IDs are provided") {
+            then("it should use the global speaker flow") {
+                val speakers = listOf(
+                    Speaker(id = "1", firstName = "John", lastName = "Doe"),
+                    Speaker(id = "2", firstName = "Jane", lastName = "Smith")
+                )
+                coEvery { repository.getAllSpeakersGlobalFlow() } returns flowOf(speakers)
+
+                useCase().test {
+                    val result = awaitItem()
+                    result.isSuccess shouldBe true
+                    result.getOrNull() shouldBe speakers.sortedBy { it.lastName }
+
+                    cancelAndIgnoreRemainingEvents()
+                }
+            }
+        }
+
+        `when`("the global repository throws an exception") {
+            then("it should return a failure result") {
+                val exception = RuntimeException("Database error")
+                coEvery { repository.getAllSpeakersGlobalFlow() } returns flow { throw exception }
+
+                useCase().test {
+                    val result = awaitItem()
+                    result.isFailure shouldBe true
+                    result.exceptionOrNull() shouldBe exception
+
+                    cancelAndIgnoreRemainingEvents()
+                }
             }
         }
     }

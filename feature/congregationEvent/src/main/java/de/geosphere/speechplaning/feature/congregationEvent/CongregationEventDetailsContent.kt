@@ -31,7 +31,6 @@ fun CongregationEventDetailsContent(
     onEdit: () -> Unit,
     stringProvider: AppEventStringProvider
 ) {
-
     Card(
         modifier = Modifier
             .fillMaxWidth()

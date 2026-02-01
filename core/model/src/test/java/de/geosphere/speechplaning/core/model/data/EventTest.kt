@@ -12,12 +12,16 @@ class EventTest : BehaviorSpec({
         `when`("accessing its entries") {
             then("it should contain all defined events") {
                 val expectedValues = listOf(
-                    Event.CIRCUIT_ASSEMBLY_WITH_CIRCUIT_OVERSEER,
+                    Event.CONGREGATION,
                     Event.CIRCUIT_OVERSEER_CONGREGATION_VISIT,
+                    Event.CIRCUIT_ASSEMBLY,
                     Event.CONVENTION,
                     Event.MEMORIAL,
                     Event.SPECIAL_LECTURE,
                     Event.MISCELLANEOUS,
+                    Event.BRANCH_CONVENTION,
+                    Event.STREAM,
+                    Event.SPECIAL_CONVENTION,
                     Event.UNKNOWN,
                 )
                 Event.entries shouldContainExactlyInAnyOrder expectedValues
@@ -27,12 +31,16 @@ class EventTest : BehaviorSpec({
         `when`("using valueOf with valid strings") {
             withData(
                 nameFn = { (stringValue, enumValue) -> "it should return ${enumValue.name} for string '$stringValue'" },
-                "CIRCUIT_ASSEMBLY_WITH_CIRCUIT_OVERSEER" to Event.CIRCUIT_ASSEMBLY_WITH_CIRCUIT_OVERSEER,
+                "CONGREGATION" to Event.CONGREGATION,
                 "CIRCUIT_OVERSEER_CONGREGATION_VISIT" to Event.CIRCUIT_OVERSEER_CONGREGATION_VISIT,
+                "CIRCUIT_ASSEMBLY" to Event.CIRCUIT_ASSEMBLY,
                 "CONVENTION" to Event.CONVENTION,
                 "MEMORIAL" to Event.MEMORIAL,
                 "SPECIAL_LECTURE" to Event.SPECIAL_LECTURE,
                 "MISCELLANEOUS" to Event.MISCELLANEOUS,
+                "BRANCH_CONVENTION" to Event.BRANCH_CONVENTION,
+                "STREAM" to Event.STREAM,
+                "SPECIAL_CONVENTION" to Event.SPECIAL_CONVENTION,
                 "UNKNOWN" to Event.UNKNOWN
             ) { (stringValue, enumValue) ->
                 Event.valueOf(stringValue) shouldBe enumValue

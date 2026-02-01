@@ -378,4 +378,3 @@ val greenDarkHighContrast = greenDark
 val onGreenDarkHighContrast = onGreenDark
 val greenContainerDarkHighContrast = greenContainerDark
 val onGreenContainerDarkHighContrast = onGreenContainerDark
-
