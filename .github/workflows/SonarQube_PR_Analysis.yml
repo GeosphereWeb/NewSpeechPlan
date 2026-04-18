@@ -29,13 +29,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          PR_KEY: ${{ github.event.pull_request.number }}
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+          PR_BASE: ${{ github.event.pull_request.base.ref }}
+          PR_REPO: ${{ github.repository }}
           # SONAR_HOST_URL wird aus build.gradle.kts verwendet, falls dort konfiguriert,
           # oder Sie können es hier explizit setzen, wenn nötig:
           # SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: |
           ./gradlew sonar --stacktrace \
-            -Dsonar.pullrequest.key=${{ github.event.pull_request.number }} \
-            -Dsonar.pullrequest.branch=${{ github.event.pull_request.head.ref }} \
-            -Dsonar.pullrequest.base=${{ github.event.pull_request.base.ref }} \
-            -Dsonar.pullrequest.github.repository=${{ github.repository }} \
+            -Dsonar.pullrequest.key=$PR_KEY \
+            -Dsonar.pullrequest.branch=$PR_BRANCH \
+            -Dsonar.pullrequest.base=$PR_BASE \
+            -Dsonar.pullrequest.github.repository=$PR_REPO \
             -Dsonar.pullrequest.provider=github
