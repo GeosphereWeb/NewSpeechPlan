@@ -18,7 +18,7 @@ class CongregationEventRepository(
     collectionActions: ICollectionActions,
     private val subcollectionActions: ISubcollectionActions,
     private val flowActions: IFlowActions
-) : FirestoreRepository<CongregationEvent, String>(
+) : FirestoreRepository<CongregationEvent>(
     collectionActions = collectionActions,
     flowActions = flowActions,
     collectionPath = CONGREGATION_EVENTS_COLLECTION,

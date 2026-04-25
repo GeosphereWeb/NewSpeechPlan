@@ -1,3 +1,5 @@
+@file:Suppress("MatchingDeclarationName")
+
 package de.geosphere.speechplaning.feature.congregationEvent
 
 import androidx.compose.foundation.clickable
@@ -15,11 +17,11 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -30,21 +32,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import de.geosphere.speechplaning.core.model.Congregation
 import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.core.model.Speaker
 import de.geosphere.speechplaning.core.model.Speech
+import de.geosphere.speechplaning.core.model.annotations.ExcludeFromCoverage
 import de.geosphere.speechplaning.core.model.data.Event
-import de.geosphere.speechplaning.core.ui.provider.AppEventStringProvider
 import de.geosphere.speechplaning.theme.R
 import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
@@ -53,6 +52,7 @@ import java.time.LocalDate
 /**
  * Data class für den State des Edit Dialogs
  */
+@ExcludeFromCoverage
 data class CongregationEventEditDialogState(
     val date: LocalDate?,
     val speakerId: String?,
@@ -70,12 +70,10 @@ data class CongregationEventEditDialogState(
 fun CongregationEventEditDialog(
     congregationEvent: CongregationEvent?,
     allSpeakers: List<Speaker>,
-    allCongregations: List<Congregation>,
     allSpeeches: List<Speech>,
     onDismiss: () -> Unit,
     onSave: (CongregationEvent) -> Unit,
     onDelete: (String) -> Unit,
-    stringProvider: AppEventStringProvider,
     canEdit: Boolean = true,
     canToggleSpeakerInformed: Boolean = false,
     canDelete: Boolean
@@ -149,7 +147,6 @@ fun CongregationEventEditDialog(
             onSave(finalEvent)
         },
         onDelete = { onDelete(initialEvent.id) },
-        stringProvider = stringProvider,
         canDelete = canDelete
     )
 }
@@ -176,7 +173,6 @@ private fun CongregationEventEditDialogContent(
     onDismiss: () -> Unit,
     onSave: () -> Unit,
     onDelete: () -> Unit,
-    stringProvider: AppEventStringProvider
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Surface {
@@ -301,7 +297,6 @@ private fun DateSelector(
                 java.time.ZoneId.systemDefault()
             )?.toInstant()?.toEpochMilli()
         )
-        val coroutineScope = rememberCoroutineScope()
 
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
@@ -347,7 +342,7 @@ private fun SpeakerSelector(
         onExpandedChange = { if (enabled) speakerExpanded = it }
     ) {
         OutlinedTextField(
-            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryEditable, true),
+            modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable, true),
             readOnly = true,
             enabled = enabled,
             value = selectedSpeaker?.let { "${it.lastName}, ${it.firstName}" } ?: "",
@@ -388,7 +383,7 @@ private fun SpeechSelector(
         onExpandedChange = { if (enabled) speechExpanded = it }
     ) {
         OutlinedTextField(
-            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryEditable, true),
+            modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable, true),
             readOnly = true,
             enabled = enabled,
             value = selectedSpeech?.let { "#${it.number} - ${it.subject}" } ?: "",
@@ -446,7 +441,6 @@ private fun CongregationEventEditDialogContentPreview() = SpeechPlaningTheme {
         onDismiss = {},
         onSave = {},
         onDelete = {},
-        stringProvider = AppEventStringProvider(LocalContext.current),
         canDelete = false,
     )
 }

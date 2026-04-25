@@ -18,19 +18,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 sealed interface SpeechUiState {
-    // Zustand 1: Initiales Laden der Liste
     data object LoadingUIState : SpeechUiState
-
-    // Zustand 2: Fehler beim Laden
     data class ErrorUIState(val message: String) : SpeechUiState
-
-    // Zustand 3: Daten erfolgreich geladen
-    // Hier packen wir alles rein, was wir sehen, wenn die Liste da ist.
-    // 'isActionInProgress' nutzen wir, um z.B. beim Speichern einen Ladebalken
-    // ÜBER der Liste anzuzeigen, ohne die Liste verschwinden zu lassen.
     data class SuccessUIState(
         val speeches: List<SpeechWithUsageHistory> = emptyList(),
-        val selectedSpeech: Speech? = null,
+        val selectedSpeech: SpeechWithUsageHistory? = null, // KORRIGIERT: Muss der volle Objekttyp sein
         val isActionInProgress: Boolean = false,
         val actionError: String? = null,
         val canCreateSpeech: Boolean = false,
@@ -49,18 +41,11 @@ class SpeechViewModel(
     private val saveSpeechUseCase: SaveSpeechUseCase,
     private val deleteSpeechUseCase: DeleteSpeechUseCase,
     private val observeCurrentUserUseCase: ObserveCurrentUserUseCase,
-    private val permissionPolicy: SpeechPermissionPolicy // <-- NEU: Injiziert
+    private val permissionPolicy: SpeechPermissionPolicy
 ) : ViewModel() {
 
-    // Lokaler State für UI-Dinge, die nicht in der DB stehen (Dialoge, Ladeanzeigen bei Aktionen)
     private val _viewState = MutableStateFlow(SpeechViewState())
 
-    /**
-     * Der UI-Status ist eine Kombination aus drei Datenströmen:
-     * 1. Die Liste der Reden mit Verwendungszähler (GetSpeechesWithUsageCountUseCase)
-     * 2. Der aktuelle User und seine Rechte (ObserveCurrentUserUseCase)
-     * 3. Der lokale View-Status (Selektion, Fehlertexte, Lade-Spinner)
-     */
     val uiState: StateFlow<SpeechUiState> = combine(
         getSpeechesWithUsageCountUseCase(),
         observeCurrentUserUseCase(),
@@ -69,7 +54,6 @@ class SpeechViewModel(
 
         val speechList = speechesWithUsageResult.getOrElse { emptyList() }
 
-        // Berechne gefilterte Liste
         val filteredList = if (viewState.filterQuery.isBlank()) {
             speechList
         } else {
@@ -79,7 +63,6 @@ class SpeechViewModel(
             }
         }
 
-        // Berechne gruppierte Liste nach timesUsed
         val groupedList = if (viewState.groupByTimesUsed) {
             filteredList
                 .groupBy { it.timesUsed }
@@ -88,7 +71,6 @@ class SpeechViewModel(
             null
         }
 
-        // / 1. BERECHTIGUNGEN PRÜFEN MIT POLICY
         var canCreate = false
         var canEdit = false
         var canDelete = false
@@ -99,7 +81,6 @@ class SpeechViewModel(
             canDelete = permissionPolicy.canManageGeneral(appUser)
         }
 
-        // 3. Alles zum UI State zusammenbauen
         SpeechUiState.SuccessUIState(
             speeches = speechList,
             selectedSpeech = viewState.selectedSpeech,
@@ -120,60 +101,37 @@ class SpeechViewModel(
         initialValue = SpeechUiState.LoadingUIState
     )
 
-    // --- User Aktionen ---
-
-    /**
-     * Wird aufgerufen, wenn eine Rede angeklickt wird (zum Bearbeiten)
-     */
     fun selectSpeech(speech: Speech) {
-        _viewState.value = _viewState.value.copy(selectedSpeech = speech)
+        // KORRIGIERT: Finde das vollständige SpeechWithUsageHistory-Objekt, das zur
+        // übergebenen Rede gehört, und speichere dieses im State.
+        val fullSpeechObject = (uiState.value as? SpeechUiState.SuccessUIState)
+            ?.speeches
+            ?.find { it.speech.id == speech.id }
+        _viewState.value = _viewState.value.copy(selectedSpeech = fullSpeechObject)
     }
 
-    /**
-     * Schließt den Dialog / hebt die Auswahl auf
-     */
     fun clearSelection() {
         _viewState.value = _viewState.value.copy(selectedSpeech = null)
     }
 
-    /**
-     * Aktualisiert die Filter-Query
-     */
     fun updateFilterQuery(query: String) {
         _viewState.value = _viewState.value.copy(filterQuery = query)
     }
 
-    /**
-     * Schaltet die Filter-Feld-Sichtbarkeit um
-     */
     fun toggleFilterVisibility() {
         _viewState.value = _viewState.value.copy(showFilterField = !_viewState.value.showFilterField)
     }
 
-    /**
-     * Schaltet die Gruppierung nach timesUsed um
-     */
     fun toggleGroupByTimesUsed() {
         _viewState.value = _viewState.value.copy(groupByTimesUsed = !_viewState.value.groupByTimesUsed)
     }
 
-    /**
-     * Speichert eine Rede. Prüft vorher zur Sicherheit noch einmal die Admin-Rechte.
-     */
     fun saveSpeech(speech: Speech) {
         viewModelScope.launch {
             val currentUser = observeCurrentUserUseCase().firstOrNull()
-
-            // 1. SICHERHEITSCHECK MIT POLICY
-            // Wir unterscheiden: Ist es eine neue Rede (ID leer) oder ein Update?
-            val isNew = speech.id.isBlank() // oder speech.id == ""
-
+            val isNew = speech.id.isBlank()
             val hasPermission = if (currentUser != null) {
-                if (isNew) {
-                    permissionPolicy.canCreate(currentUser)
-                } else {
-                    permissionPolicy.canEdit(currentUser, speech)
-                }
+                if (isNew) permissionPolicy.canCreate(currentUser) else permissionPolicy.canEdit(currentUser, speech)
             } else {
                 false
             }
@@ -183,7 +141,6 @@ class SpeechViewModel(
                 return@launch
             }
 
-            // ... (Rest wie gehabt: Loading setzen, saveSpeechUseCase aufrufen) ...
             _viewState.value = _viewState.value.copy(isActionInProgress = true, actionError = null)
             saveSpeechUseCase(speech)
                 .onSuccess {
@@ -196,30 +153,19 @@ class SpeechViewModel(
         }
     }
 
-    /**
-     * Löscht eine Rede nach strenger Prüfung.
-     */
     fun deleteSpeech(speechId: String) {
         viewModelScope.launch {
-            // 1. Aktuellen User laden
             val currentUser = observeCurrentUserUseCase().firstOrNull()
-
-            // 2. Die zu löschende Rede aus dem aktuellen UI-State holen
-            // Da wir reaktiv sind, haben wir die Liste meistens schon im Speicher.
-            // Wir suchen die Rede in der aktuellen Liste.
             val speechToDelete = (uiState.value as? SpeechUiState.SuccessUIState)
                 ?.speeches
                 ?.find { it.speech.id == speechId }
                 ?.speech
 
-            // Falls die Rede im State nicht gefunden wurde (z.B. durch Race Condition),
-            // brechen wir sicherheitshalber ab oder laden sie notfalls nach.
             if (speechToDelete == null) {
                 _viewState.value = _viewState.value.copy(actionError = "Rede nicht gefunden.")
                 return@launch
             }
 
-            // 3. Strenge Prüfung mit der Policy und dem ECHTEN Speech-Objekt
             val hasPermission = currentUser != null && permissionPolicy.canDelete(currentUser, speechToDelete)
 
             if (!hasPermission) {
@@ -227,10 +173,8 @@ class SpeechViewModel(
                 return@launch
             }
 
-            // 4. Loading setzen
             _viewState.value = _viewState.value.copy(isActionInProgress = true, actionError = null)
 
-            // 5. Löschen ausführen
             deleteSpeechUseCase(speechId)
                 .onSuccess {
                     _viewState.value = _viewState.value.copy(
@@ -248,12 +192,8 @@ class SpeechViewModel(
     }
 }
 
-/**
- * Interne Hilfsklasse für den lokalen View-Status.
- * Diese Daten kommen nicht aus der DB, sondern entstehen durch UI-Interaktion.
- */
 private data class SpeechViewState(
-    val selectedSpeech: Speech? = null,
+    val selectedSpeech: SpeechWithUsageHistory? = null, // KORRIGIERT: Muss der volle Objekttyp sein
     val isActionInProgress: Boolean = false,
     val actionError: String? = null,
     val filterQuery: String = "",

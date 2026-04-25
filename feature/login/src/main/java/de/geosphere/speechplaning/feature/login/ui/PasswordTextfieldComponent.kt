@@ -29,7 +29,10 @@ import de.geosphere.speechplaning.theme.R
  */
 @Composable
 fun PasswordTextfieldComponent(
-    value: String, onValueChange: (String) -> Unit, label: String, modifier: Modifier = Modifier
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier
 ) {
     var passwortSichtbar by remember { mutableStateOf(false) }
 
@@ -45,8 +48,11 @@ fun PasswordTextfieldComponent(
             PasswordVisualTransformation()
         },
         trailingIcon = {
-            val image = if (passwortSichtbar) ImageVector.vectorResource(R.drawable.visibility)
-            else ImageVector.vectorResource(R.drawable.visibility_off)
+            val image = if (passwortSichtbar) {
+                ImageVector.vectorResource(R.drawable.visibility)
+            } else {
+                ImageVector.vectorResource(R.drawable.visibility_off)
+            }
             val description = if (passwortSichtbar) "Passwort ausblenden" else "Passwort anzeigen"
             IconButton(onClick = { passwortSichtbar = !passwortSichtbar }) {
                 Icon(imageVector = image, contentDescription = description)

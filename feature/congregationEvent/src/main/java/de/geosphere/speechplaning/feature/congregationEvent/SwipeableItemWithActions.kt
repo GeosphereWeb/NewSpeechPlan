@@ -38,6 +38,7 @@ import kotlin.math.roundToInt
 private const val SWIPE_THRESHOLD = 3
 private const val CLOSE_ANIMATION_THRESHOLD = 0.25 // 25% der Strecke, bevor animiert wird
 
+@Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 fun SwipeableItemWithActions(
     isRevealed: Boolean,
@@ -111,7 +112,7 @@ fun SwipeableItemWithActions(
                             // swipeDirection NICHT zurücksetzen - wir wollen wissen ob bereits eine Seite offen ist
                             totalDragAmount = 0f
                         },
-                        onHorizontalDrag = { change, dragAmount ->
+                        onHorizontalDrag = { _, dragAmount ->
                             scope.launch {
                                 totalDragAmount += dragAmount
 
@@ -123,7 +124,8 @@ fun SwipeableItemWithActions(
                                     }
                                     val newOffset = (offset.value + dragAmount).coerceIn(0f, maxOffset)
 
-                                    // Wenn RECHTE Seite offen (SwipeDirection.LEFT, offset negativ) und wir nach rechts wischen
+                                    // Wenn RECHTE Seite offen (SwipeDirection.LEFT, offset negativ) und wir nach
+                                    // rechts wischen
                                     // Nach 25% des Weges → animiert zurück zur Mitte
                                     if (swipeDirection == SwipeDirection.LEFT &&
                                         actionsRightWidth > 0 &&
@@ -147,7 +149,8 @@ fun SwipeableItemWithActions(
                                     }
                                     val newOffset = (offset.value + dragAmount).coerceIn(minOffset, 0f)
 
-                                    // Wenn LINKE Seite offen (SwipeDirection.RIGHT, offset positiv) und wir nach links wischen
+                                    // Wenn LINKE Seite offen (SwipeDirection.RIGHT, offset positiv) und wir nach links
+                                    // wischen
                                     // Nach 25% des Weges → animiert zurück zur Mitte
                                     if (swipeDirection == SwipeDirection.RIGHT &&
                                         actionsLeftWidth > 0 &&
@@ -224,32 +227,42 @@ private fun SwipeBothDirectionsPreview() {
     SwipeableItemWithActions(
         isRevealed = false,
         actionsLeft = {
-            Box(modifier = Modifier
-                .size(40.dp)
-                .padding(horizontal = 2.dp)
-                .background(Color.Green))
-            Box(modifier = Modifier
-                .size(40.dp)
-                .padding(horizontal = 2.dp)
-                .background(Color.Red))
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .padding(horizontal = 2.dp)
+                    .background(Color.Green)
+            )
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .padding(horizontal = 2.dp)
+                    .background(Color.Red)
+            )
         },
         actionsRight = {
-            Box(modifier = Modifier
-                .size(40.dp)
-                .padding(horizontal = 2.dp)
-                .background(Color.Blue))
-            Box(modifier = Modifier
-                .size(40.dp)
-                .padding(horizontal = 2.dp)
-                .background(Color.Yellow))
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .padding(horizontal = 2.dp)
+                    .background(Color.Blue)
+            )
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .padding(horizontal = 2.dp)
+                    .background(Color.Yellow)
+            )
         },
         modifier = Modifier,
         onExpanded = {},
         onCollapsed = {}
     ) {
-        Box(modifier = Modifier
-            .size(200.dp, 50.dp)
-            .background(Color.Gray))
+        Box(
+            modifier = Modifier
+                .size(200.dp, 50.dp)
+                .background(Color.Gray)
+        )
     }
 }
 

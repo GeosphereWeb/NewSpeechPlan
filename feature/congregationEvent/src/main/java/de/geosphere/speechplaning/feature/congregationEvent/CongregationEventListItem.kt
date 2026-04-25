@@ -1,3 +1,4 @@
+@file:Suppress("TooManyFunctions")
 package de.geosphere.speechplaning.feature.congregationEvent
 
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -5,7 +6,9 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
@@ -62,143 +66,206 @@ fun CongregationEventListItem(
                 onLongClick = onLongClick
             )
     ) {
+        EventBadge(congregationEvent, stringProvider)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            SpeechNumberText(congregationEvent)
+            SpeechAndSpeakerInfo(congregationEvent)
+            DateAndIcons(congregationEvent, formatter, formatter2, isSameKW)
+        }
+    }
+}
 
+@Composable
+private fun EventBadge(congregationEvent: CongregationEvent, stringProvider: AppEventStringProvider) {
+    if (congregationEvent.eventType != Event.CONGREGATION) {
+        val (containerColor, contentColor) = getBadgeColors(congregationEvent.eventType)
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            if (congregationEvent.eventType != Event.CONGREGATION) {
-                Badge(
-                    containerColor = if (congregationEvent.eventType == Event.MEMORIAL) {
-                        colorScheme.tertiaryContainer
-                    } else {
-                        colorScheme.primaryContainer
-                    },
-                    contentColor = if (congregationEvent.eventType == Event.MEMORIAL) {
-                        colorScheme.onTertiaryContainer
-                    } else {
-                        colorScheme.onPrimaryContainer
-                    }
-                ) {
-                    Text(
-                        text = stringProvider.getStringForEvent(congregationEvent.eventType)
-                    )
-                }
+            Badge(
+                containerColor = containerColor,
+                contentColor = contentColor
+            ) {
+                Text(text = stringProvider.getStringForEvent(congregationEvent.eventType))
             }
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            val test = (
-                if (congregationEvent.speechNumber != null) {
-                    if (congregationEvent.speechNumber!!.toInt() < 900) {
-                        congregationEvent.speechNumber
-                    } else {
-                        ""
-                    }
-                } else {
-                    "-"
-                }
-                ).toString()
-            Text(
-                modifier = Modifier.defaultMinSize(34.dp),
-                text = test,
-                color = MaterialTheme.colorScheme.primary
+    }
+}
+
+@Composable
+private fun getBadgeColors(eventType: Event): Pair<Color, Color> {
+    return if (eventType == Event.MEMORIAL) {
+        colorScheme.tertiaryContainer to colorScheme.onTertiaryContainer
+    } else {
+        colorScheme.primaryContainer to colorScheme.onPrimaryContainer
+    }
+}
+
+@Composable
+private fun RowScope.SpeechNumberText(congregationEvent: CongregationEvent) {
+    val speechNumberText = getSpeechNumberText(congregationEvent)
+    Text(
+        modifier = Modifier.defaultMinSize(34.dp),
+        text = speechNumberText,
+        color = colorScheme.primary
+    )
+}
+
+private const val VISIBLE_SPEECH_NUMBERS = 900
+
+private fun getSpeechNumberText(congregationEvent: CongregationEvent): String {
+    return if (congregationEvent.speechNumber != null) {
+        if (congregationEvent.speechNumber!!.toInt() < VISIBLE_SPEECH_NUMBERS) {
+            congregationEvent.speechNumber!!
+        } else {
+            ""
+        }
+    } else {
+        "-"
+    }
+}
+
+@Composable
+private fun RowScope.SpeechAndSpeakerInfo(congregationEvent: CongregationEvent) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .weight(1f)
+    ) {
+        SpeechSubjectText(congregationEvent)
+        SpeakerInfoRow(congregationEvent)
+    }
+}
+
+@Composable
+private fun ColumnScope.SpeechSubjectText(congregationEvent: CongregationEvent) {
+    val textColor = getSpeechSubjectColor(congregationEvent)
+    Text(
+        modifier = Modifier.fillMaxWidth(),
+        text = congregationEvent.speechSubject ?: "Ereignis ohne Thema",
+        style = TextStyle(
+            hyphens = Hyphens.Auto,
+            lineBreak = LineBreak(
+                strategy = LineBreak.Strategy.HighQuality,
+                strictness = LineBreak.Strictness.Normal,
+                wordBreak = LineBreak.WordBreak.Default
             )
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-            ) {
+        ),
+        color = textColor
+    )
+}
 
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = congregationEvent.speechSubject ?: "Ereignis ohne Thema",
-                    style = TextStyle(
-                        hyphens = Hyphens.Auto,
-                        lineBreak = LineBreak(
-                            strategy = LineBreak.Strategy.HighQuality,
-                            strictness = LineBreak.Strictness.Normal,
-                            wordBreak = LineBreak.WordBreak.Default
-                        )
-                    ),
-                    color = if (congregationEvent.speechSubject.isNullOrBlank() &&
-                        congregationEvent.eventType == Event.CONGREGATION
-                    ) {
-                        colorScheme.error
-                    } else {
-                        MaterialTheme.colorScheme.primary
-                    }
+@Composable
+private fun getSpeechSubjectColor(congregationEvent: CongregationEvent): Color {
+    return if (congregationEvent.speechSubject.isNullOrBlank() && congregationEvent.eventType == Event.CONGREGATION) {
+        colorScheme.error
+    } else {
+        colorScheme.primary
+    }
+}
+
+@Composable
+private fun ColumnScope.SpeakerInfoRow(congregationEvent: CongregationEvent) {
+    val (speakerColor, congregationColor) = getSpeakerColors(congregationEvent)
+    val fontStyle = if (congregationEvent.speakerName == null) FontStyle.Italic else FontStyle.Normal
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.End
+    ) {
+        Text(
+            modifier = Modifier.padding(end = 8.dp),
+            text = congregationEvent.speakerName ?: "Kein Redner zugewiesen",
+            style = TextStyle(
+                hyphens = Hyphens.Auto,
+                lineBreak = LineBreak.Paragraph
+            ),
+            fontStyle = fontStyle,
+            color = speakerColor
+        )
+        Text(
+            modifier = Modifier,
+            text = "(${congregationEvent.speakerCongregationName ?: "Unbekannt"})",
+            style = TextStyle(
+                hyphens = Hyphens.Auto,
+                lineBreak = LineBreak.Paragraph
+            ),
+            fontStyle = fontStyle,
+            color = congregationColor
+        )
+    }
+}
+
+@Composable
+private fun getSpeakerColors(congregationEvent: CongregationEvent): Pair<Color, Color> {
+    val baseColor = if (congregationEvent.speakerName != null) {
+        colorScheme.tertiary
+    } else {
+        colorScheme.tertiary.copy(alpha = 0.3f)
+    }
+    val congregationColor = if (congregationEvent.speakerName != null) {
+        colorScheme.tertiary.copy(alpha = 0.7f)
+    } else {
+        colorScheme.tertiary.copy(alpha = 0.3f)
+    }
+    return baseColor to congregationColor
+}
+
+@Composable
+private fun DateAndIcons(
+    congregationEvent: CongregationEvent,
+    formatter: DateTimeFormatter,
+    formatter2: DateTimeFormatter,
+    isSameKW: Boolean
+) {
+    Row(modifier = Modifier) {
+        DateText(congregationEvent, formatter, formatter2)
+        IconsColumn(congregationEvent, isSameKW)
+    }
+}
+
+@Composable
+private fun DateText(
+    congregationEvent: CongregationEvent,
+    formatter: DateTimeFormatter,
+    formatter2: DateTimeFormatter
+) {
+    val myText = congregationEvent.date?.format(formatter) ?: ""
+    val myText2 = congregationEvent.date?.format(formatter2) ?: ""
+    val myTextUhr = "17:30 Uhr"
+
+    Column {
+        Text(
+            modifier = Modifier.padding(start = 8.dp),
+            text = "$myText\n$myText2\n$myTextUhr",
+            fontSize = MaterialTheme.typography.bodySmall.fontSize.value.sp,
+            color = MaterialTheme.extendedColorScheme.customColor4.color,
+            textAlign = TextAlign.End,
+            style = TextStyle(
+                platformStyle = PlatformTextStyle(
+                    includeFontPadding = false
                 )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    Text(
-                        modifier = Modifier.padding(end = 8.dp),
-                        text = congregationEvent.speakerName ?: "Kein Redner zugewiesen",
-                        style = TextStyle(
-                            hyphens = Hyphens.Auto,
-                            lineBreak = LineBreak.Paragraph
-                        ),
-                        fontStyle = if (congregationEvent.speakerName == null) FontStyle.Italic else FontStyle.Normal,
-                        color = if (congregationEvent.speakerName != null) {
-                            colorScheme.tertiary
-                        } else {
-                            colorScheme.tertiary.copy(alpha = 0.3f)
-                        }
-                    )
-                    Text(
-                        modifier = Modifier,
-                        text = "(${congregationEvent.speakerCongregationName ?: "Unbekannt"})",
-                        style = TextStyle(
-                            hyphens = Hyphens.Auto,
-                            lineBreak = LineBreak.Paragraph
-                        ),
-                        fontStyle = if (congregationEvent.speakerName == null) FontStyle.Italic else FontStyle.Normal,
-                        color = if (congregationEvent.speakerName != null) {
-                            colorScheme.tertiary.copy(alpha = 0.7f)
-                        } else {
-                            colorScheme.tertiary.copy(alpha = 0.3f)
-                        }
-                    )
-                }
-            }
+            )
+        )
+    }
+}
 
-            Row(modifier = Modifier) {
-                val myText = congregationEvent.date?.format(formatter) ?: ""
-                val myText2 = congregationEvent.date?.format(formatter2) ?: ""
-                val myTextUhr = "17:30" + " Uhr"
-
-                Column {
-                    Text(
-                        modifier = Modifier.padding(start = 8.dp),
-                        text = "$myText\n$myText2\n$myTextUhr",
-                        fontSize = MaterialTheme.typography.bodySmall.fontSize.value.sp,
-                        color = MaterialTheme.extendedColorScheme.customColor4.color,
-                        textAlign = TextAlign.End,
-                        style = TextStyle(
-                            platformStyle = PlatformTextStyle(
-                                includeFontPadding = false
-                            )
-                        )
-                    )
-                }
-                Column(modifier = Modifier.padding(start = 8.dp)) {
-                    if (congregationEvent.speakerIsInformed) {
-                        Icon(
-                            imageVector = ImageVector.vectorResource(R.drawable.verified),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(22.dp),
-                            tint = MaterialTheme.extendedColorScheme.gruen.color
-                        )
-                    }
-                    if (isSameKW) {
-                        Icon(
-                            imageVector = ImageVector.vectorResource(R.drawable.today),
-                            contentDescription = null,
-                            modifier = Modifier.size(22.dp),
-                            tint = MaterialTheme.extendedColorScheme.customColor4.color.copy(alpha = 0.7f)
-                        )
-                    }
-                }
-            }
+@Composable
+private fun IconsColumn(congregationEvent: CongregationEvent, isSameKW: Boolean) {
+    Column(modifier = Modifier.padding(start = 8.dp)) {
+        if (congregationEvent.speakerIsInformed) {
+            Icon(
+                imageVector = ImageVector.vectorResource(R.drawable.verified),
+                contentDescription = null,
+                modifier = Modifier.size(22.dp),
+                tint = MaterialTheme.extendedColorScheme.gruen.color
+            )
+        }
+        if (isSameKW) {
+            Icon(
+                imageVector = ImageVector.vectorResource(R.drawable.today),
+                contentDescription = null,
+                modifier = Modifier.size(22.dp),
+                tint = MaterialTheme.extendedColorScheme.customColor4.color.copy(alpha = 0.7f)
+            )
         }
     }
 }

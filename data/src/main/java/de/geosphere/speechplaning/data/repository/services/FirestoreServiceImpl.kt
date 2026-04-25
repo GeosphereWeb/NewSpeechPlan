@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
+@Suppress("TooManyFunctions")
 open class FirestoreServiceImpl(
     private val firestore: FirebaseFirestore
 ) : ICollectionActions, ISubcollectionActions, IFlowActions {
@@ -117,8 +118,13 @@ open class FirestoreServiceImpl(
             .await()
     }
 
-    override fun getSubcollection(parentCollection: String, parentId: String, subcollection: String): CollectionReference {
-        return firestore.collection(parentCollection).document(parentId).collection(subcollection)
+    override fun getSubcollection(
+        parentCollection: String,
+        parentId: String,
+        subcollection: String
+    ): CollectionReference {
+        return firestore.collection(parentCollection).document(parentId)
+            .collection(subcollection)
     }
 
     // Project-specific helpers
@@ -135,7 +141,8 @@ open class FirestoreServiceImpl(
         }
     }
 
-    override fun <T : Any> getCollectionGroupFlow(subcollectionName: String, objectClass: Class<T>): Flow<List<T>> = callbackFlow {
+    override fun <T : Any> getCollectionGroupFlow(subcollectionName: String, objectClass: Class<T>):
+        Flow<List<T>> = callbackFlow {
         val listener = firestore.collectionGroup(subcollectionName).addSnapshotListener { snap, err ->
             if (err != null) {
                 close(err)
@@ -150,18 +157,19 @@ open class FirestoreServiceImpl(
         awaitClose { listener.remove() }
     }
 
-    override fun <T : Any> getCollectionFlow(collectionPath: String, objectClass: Class<T>): Flow<List<T>> = callbackFlow {
-        val listener = firestore.collection(collectionPath).addSnapshotListener { snap, err ->
-            if (err != null) {
-                close(err)
-                return@addSnapshotListener
+    override fun <T : Any> getCollectionFlow(collectionPath: String, objectClass: Class<T>): Flow<List<T>> =
+        callbackFlow {
+            val listener = firestore.collection(collectionPath).addSnapshotListener { snap, err ->
+                if (err != null) {
+                    close(err)
+                    return@addSnapshotListener
+                }
+                if (snap != null) {
+                    val data = snap.toObjects(objectClass)
+                    trySend(data)
+                }
             }
-            if (snap != null) {
-                val data = snap.toObjects(objectClass)
-                trySend(data)
-            }
-        }
 
-        awaitClose { listener.remove() }
-    }
+            awaitClose { listener.remove() }
+        }
 }

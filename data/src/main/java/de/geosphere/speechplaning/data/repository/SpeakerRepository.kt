@@ -14,9 +14,8 @@ private const val CONGREGATIONS_SUBCOLLECTION = "congregations"
 class SpeakerRepository(
     subcollectionActions: ISubcollectionActions,
     private val flowActions: IFlowActions
-) : FirestoreSubcollectionRepository<Speaker, String, String>(
+) : FirestoreSubcollectionRepository<Speaker, String>(
     subcollectionActions = subcollectionActions,
-    flowActions = flowActions,
     subcollectionName = SPEAKERS_SUBCOLLECTION,
     clazz = Speaker::class.java
 ) {

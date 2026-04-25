@@ -5,6 +5,7 @@ import com.google.cloud.firestore.annotation.Exclude
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.cloud.FirestoreClient
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -67,13 +68,13 @@ fun main() = runBlocking {
 }
 
 @Suppress("MagicNumber")
-class CsvVortragsplanungImporter {
+class CsvVortragsplanungImporter(private val dispatcher: CoroutineDispatcher = Dispatchers.IO) {
 
-    @Suppress("LongMethod", "TooGenericExceptionCaught")
+    @Suppress("LongMethod", "TooGenericExceptionCaught", "CyclomaticComplexMethod")
     suspend fun importData(serviceAccountPath: String, csvFilePath: String) {
         // --- 1. Initialize Firebase Admin SDK ---
         if (FirebaseApp.getApps().isEmpty()) {
-            val serviceAccount = withContext(Dispatchers.IO) {
+            val serviceAccount = withContext(dispatcher) {
                 FileInputStream(serviceAccountPath)
             }
             val options = FirebaseOptions.builder()

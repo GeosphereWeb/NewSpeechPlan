@@ -12,7 +12,8 @@ import de.geosphere.speechplaning.core.model.data.Event
  * It is primarily used to display event types in the UI and to parse user input or stored
  * string values back into the corresponding enum.
  *
- * @param stringProvider An implementation that provides the localized string for a given [de.geosphere.speechplaning.core.model.data.Event].
+ * @param stringProvider An implementation that provides the localized string for a given
+ * [de.geosphere.speechplaning.core.model.data.Event].
  */
 @Suppress("SwallowedException")
 class EventMapper(private val stringProvider: EventStringProvider) {

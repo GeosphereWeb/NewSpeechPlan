@@ -1,5 +1,8 @@
+@file:Suppress("MatchingDeclarationName", "TooManyFunctions")
+
 package de.geosphere.speechplaning.feature.congregationEvent
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
@@ -7,10 +10,12 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -46,6 +51,7 @@ import de.geosphere.speechplaning.theme.R
 import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
 import de.geosphere.speechplaning.theme.surfaceVariantLightHighContrast
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.Month
 
@@ -58,246 +64,253 @@ fun CongregationEventListContent(
     isWhatsAppInstalled: Boolean
 ) {
     var initialScrollDone by rememberSaveable { mutableStateOf(false) }
-
-    val sortedEvents = remember(congregationEvents) {
-        congregationEvents.sortedBy { it.date }
-    }
-
-    val groupedEvents = remember(sortedEvents) {
-        sortedEvents
-            .groupBy { it.date?.year ?: 0 }
-            .mapValues { entry ->
-                entry.value.groupBy { it.date?.month ?: Month.JANUARY }
-            }
-    }
+    val sortedEvents = remember(congregationEvents) { congregationEvents.sortedBy { it.date } }
+    val groupedEvents = remember(sortedEvents) { groupEventsByYearAndMonth(sortedEvents) }
 
     val context = LocalContext.current
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
     var yearHeaderHeightPx by remember { mutableIntStateOf(0) }
-    var monthHeaderHeightPx by remember { mutableIntStateOf(0) }
 
-    fun scrollToCurrentWeek(animated: Boolean = true) {
-        val targetEvent = sortedEvents.find { it.date?.isInCurrentWeek() ?: false }
-
-        if (targetEvent != null) {
-            var calculatedIndex = 0
-            var targetFound = false
-
-            groupedEvents.forEach { (year, eventsByMonth) ->
-                if (targetFound) return@forEach
-
-                calculatedIndex++ // Year header
-
-                eventsByMonth.forEach { (month, eventsInMonth) ->
-                    if (targetFound) return@forEach
-
-                    calculatedIndex++ // Month header
-
-                    val indexInMonth = eventsInMonth.indexOf(targetEvent)
-                    if (indexInMonth != -1) {
-                        calculatedIndex += indexInMonth
-                        targetFound = true
-                    } else {
-                        calculatedIndex += eventsInMonth.size
-                    }
-                }
-            }
-
-            if (targetFound) {
-                coroutineScope.launch {
-                    if (animated) {
-                        listState.animateScrollToItem(
-                            index = calculatedIndex,
-                            scrollOffset = -yearHeaderHeightPx
-                        )
-                    } else {
-                        listState.scrollToItem(
-                            index = calculatedIndex,
-                            scrollOffset = -yearHeaderHeightPx
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    LaunchedEffect(sortedEvents, yearHeaderHeightPx, monthHeaderHeightPx) {
-        if (!initialScrollDone && sortedEvents.isNotEmpty() && yearHeaderHeightPx > 0 && monthHeaderHeightPx > 0) {
-            scrollToCurrentWeek(false)
+    LaunchedEffect(sortedEvents, yearHeaderHeightPx) {
+        if (!initialScrollDone && sortedEvents.isNotEmpty() && yearHeaderHeightPx > 0) {
+            scrollToCurrentWeek(
+                sortedEvents,
+                groupedEvents,
+                listState,
+                coroutineScope,
+                yearHeaderHeightPx,
+                animated = false
+            )
             initialScrollDone = true
         }
     }
 
     Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
-        ) {
-            Button(
-                onClick = { scrollToCurrentWeek(true) },
-
-                ) {
-                Row(modifier = Modifier) {
-                    Text(text = "Scroll to...")
-                    Icon(imageVector = ImageVector.vectorResource(R.drawable.today), contentDescription = null)
-                }
-            }
+        ScrollToCurrentWeekButton {
+            scrollToCurrentWeek(
+                sortedEvents,
+                groupedEvents,
+                listState,
+                coroutineScope,
+                yearHeaderHeightPx,
+                animated = true
+            )
         }
+        EventsList(
+            groupedEvents,
+            yearHeaderHeightPx,
+            { yearHeaderHeightPx = it },
+            context,
+            stringProvider,
+            isWhatsAppInstalled,
+            onSelectCongregationEvent,
+            listState
+        )
+    }
+}
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            state = listState
-        ) {
-            groupedEvents.forEach { (year, eventsByMonth) ->
+@Composable
+private fun ScrollToCurrentWeekButton(onClick: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.End
+    ) {
+        Button(onClick = onClick) {
+            Text(text = "Scroll to...")
+            Icon(imageVector = ImageVector.vectorResource(R.drawable.today), contentDescription = null)
+        }
+    }
+}
+
+@Suppress("UnusedParameter")
+@Composable
+private fun EventsList(
+    groupedEvents: Map<Int, Map<Month, List<CongregationEvent>>>,
+    yearHeaderHeightPx: Int,
+    onYearHeaderHeightChanged: (Int) -> Unit,
+    context: Context,
+    stringProvider: AppEventStringProvider,
+    isWhatsAppInstalled: Boolean,
+    onSelectCongregationEvent: (CongregationEvent) -> Unit,
+    listState: LazyListState
+) {
+    LazyColumn(modifier = Modifier.fillMaxSize(), state = listState) {
+        groupedEvents.forEach { (year, eventsByMonth) ->
+            stickyHeader {
+                YearHeader(
+                    year = year,
+                    modifier = Modifier.onSizeChanged { size -> onYearHeaderHeightChanged(size.height) }
+                )
+            }
+            eventsByMonth.forEach { (month, eventsInMonth) ->
                 stickyHeader {
-                    YearHeader(
-                        year = year,
-                        modifier = Modifier.onSizeChanged { size ->
-                            yearHeaderHeightPx = size.height
-                        }
-                    )
+                    MonthHeader(month = month, year = year, modifier = Modifier)
                 }
-
-                eventsByMonth.forEach { (month, eventsInMonth) ->
-                    stickyHeader {
-                        MonthHeader(
-                            month = month,
-                            year = year,
-                            modifier = Modifier.onSizeChanged { size ->
-                                monthHeaderHeightPx = size.height
-                            }
-                        )
-                    }
-
-                    items(eventsInMonth, key = { it.id.ifBlank { it.hashCode() } }) { event ->
-                        SwipeableItemWithActions(
-                            isRevealed = false,
-                            actionsLeft = {
-                                if (!event.speakerMobile.isNullOrEmpty()) {
-                                    FilledIconButton(
-                                        modifier = Modifier.size(50.dp),
-                                        shape = RoundedCornerShape(10.dp),
-                                        colors = IconButtonDefaults.filledIconButtonColors(
-                                            containerColor = Color(0xFF01C040),
-                                            contentColor = de.geosphere.speechplaning.theme.surfaceVariantLightHighContrast
-                                        ),
-                                        onClick = {
-                                            val intent =
-                                                Intent(Intent.ACTION_DIAL, Uri.parse("tel:${event.speakerMobile}"))
-                                            context.startActivity(intent)
-                                        }
-                                    ) {
-                                        Icon(
-                                            modifier = Modifier.size(40.dp),
-                                            imageVector = ImageVector.vectorResource(R.drawable.send_to_mobile),
-                                            contentDescription = null
-                                        )
-                                    }
-                                }
-                                if (!event.speakerPhone.isNullOrEmpty()) {
-                                    FilledIconButton(
-                                        modifier = Modifier.size(50.dp),
-                                        shape = RoundedCornerShape(10.dp),
-                                        colors = IconButtonDefaults.filledIconButtonColors(
-                                            containerColor = Color(0xFF01C040),
-                                            contentColor = de.geosphere.speechplaning.theme.surfaceVariantLightHighContrast
-                                        ),
-                                        onClick = {
-                                            val intent =
-                                                Intent(Intent.ACTION_DIAL, Uri.parse("tel:${event.speakerPhone}"))
-                                            context.startActivity(intent)
-                                        }
-                                    ) {
-                                        FilledIconButton(
-                                            modifier = Modifier.size(50.dp),
-                                            shape = RoundedCornerShape(10.dp),
-                                            colors = IconButtonDefaults.filledIconButtonColors(
-                                                containerColor = Color(0xFF01C040),
-                                                contentColor = surfaceVariantLightHighContrast
-                                            ),
-                                            onClick = {
-                                                val intent =
-                                                    Intent(
-                                                        Intent.ACTION_DIAL,
-                                                        Uri.parse("tel:${event.speakerPhone}")
-                                                    )
-                                                context.startActivity(intent)
-                                            }
-                                        ) {
-                                            Icon(
-                                                modifier = Modifier.size(40.dp),
-                                                imageVector = ImageVector.vectorResource(R.drawable.phone_forwarded),
-                                                contentDescription = null
-                                            )
-                                        }
-                                    }
-                                }
-                            },
-                            actionsRight = {
-                                val rawPhoneNumber = event.speakerMobile?.takeIf { it.isNotBlank() }
-                                if (isWhatsAppInstalled && !rawPhoneNumber.isNullOrBlank()) {
-                                    FilledIconButton(
-                                        modifier = Modifier.size(50.dp),
-                                        shape = RoundedCornerShape(10.dp),
-                                        colors = IconButtonDefaults.filledIconButtonColors(
-                                            containerColor = Color(0xFF01C040),
-                                            contentColor = de.geosphere.speechplaning.theme.surfaceVariantLightHighContrast
-                                        ),
-                                        onClick = {
-                                            val normalizedNumber = rawPhoneNumber
-                                                .replace(Regex("[^0-9]"), "")
-                                                .removePrefix("00")
-
-                                            val intent = Intent(
-                                                Intent.ACTION_VIEW,
-                                                Uri.parse("smsto:$normalizedNumber")
-                                            )
-
-                                            val message =
-                                                "Hallo ${event.speakerName}, es geht um den Vortrag " +
-                                                    "'${event.speechSubject}' am ${event.dateString}."
-                                            intent.putExtra("sms_body", message)
-
-                                            intent.setPackage("com.whatsapp")
-
-                                            try {
-                                                context.startActivity(intent)
-                                            } catch (e: Exception) {
-                                                Toast.makeText(
-                                                    context,
-                                                    "WhatsApp konnte nicht geöffnet werden.",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
-                                            }
-                                        }
-                                    ) {
-                                        Icon(
-                                            modifier = Modifier.size(40.dp),
-                                            painter = painterResource(R.drawable.whatsapp_icon),
-                                            contentDescription = null
-                                        )
-                                    }
-                                }
-                            },
-                            modifier = Modifier,
-                            onExpanded = { },
-                            onCollapsed = { }
-                        ) {
-                            CongregationEventListItem(
-                                congregationEvent = event,
-                                onClick = { onSelectCongregationEvent(event) },
-                                onLongClick = null,
-                                stringProvider = stringProvider
-                            )
-                        }
-
-                        HorizontalDivider()
-                    }
+                items(eventsInMonth, key = { it.id.ifBlank { it.hashCode() } }) { event ->
+                    EventRow(event, context, stringProvider, isWhatsAppInstalled, onSelectCongregationEvent)
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun EventRow(
+    event: CongregationEvent,
+    context: Context,
+    stringProvider: AppEventStringProvider,
+    isWhatsAppInstalled: Boolean,
+    onSelectCongregationEvent: (CongregationEvent) -> Unit
+) {
+    SwipeableItemWithActions(
+        isRevealed = false,
+        actionsLeft = { LeftActionButtons(event, context) },
+        actionsRight = { RightActionButtons(event, context, isWhatsAppInstalled) },
+        modifier = Modifier,
+        onExpanded = { },
+        onCollapsed = { }
+    ) {
+        CongregationEventListItem(
+            congregationEvent = event,
+            onClick = { onSelectCongregationEvent(event) },
+            onLongClick = null,
+            stringProvider = stringProvider
+        )
+    }
+    HorizontalDivider()
+}
+
+private fun groupEventsByYearAndMonth(sortedEvents: List<CongregationEvent>): Map<
+    Int,
+    Map<Month, List<CongregationEvent>>
+    > {
+    return sortedEvents
+        .groupBy { it.date?.year ?: 0 }
+        .mapValues { entry ->
+            entry.value.groupBy { it.date?.month ?: Month.JANUARY }
+        }
+}
+
+private fun scrollToCurrentWeek(
+    sortedEvents: List<CongregationEvent>,
+    groupedEvents: Map<Int, Map<Month, List<CongregationEvent>>>,
+    listState: LazyListState,
+    coroutineScope: CoroutineScope,
+    yearHeaderHeightPx: Int,
+    animated: Boolean = true
+) {
+    val targetEvent = sortedEvents.find { it.date?.isInCurrentWeek() ?: false } ?: return
+
+    var index = 0
+    var found = false
+
+    groupedEvents.forEach { (_, eventsByMonth) ->
+        if (found) return@forEach
+        index++ // Year header
+
+        eventsByMonth.forEach { (_, eventsInMonth) ->
+            if (found) return@forEach
+            index++ // Month header
+
+            val indexInMonth = eventsInMonth.indexOf(targetEvent)
+            if (indexInMonth != -1) {
+                index += indexInMonth
+                found = true
+            } else {
+                index += eventsInMonth.size
+            }
+        }
+    }
+
+    if (found) {
+        coroutineScope.launch {
+            if (animated) {
+                listState.animateScrollToItem(index = index, scrollOffset = -yearHeaderHeightPx)
+            } else {
+                listState.scrollToItem(index = index, scrollOffset = -yearHeaderHeightPx)
+            }
+        }
+    }
+}
+
+@Composable
+private fun LeftActionButtons(event: CongregationEvent, context: Context) {
+    Row {
+        if (!event.speakerMobile.isNullOrEmpty()) {
+            SimpleCallButton(event.speakerMobile!!, R.drawable.send_to_mobile, context)
+        }
+        if (!event.speakerPhone.isNullOrEmpty()) {
+            SimpleCallButton(event.speakerPhone!!, R.drawable.phone_forwarded, context)
+        }
+    }
+}
+
+@Composable
+private fun RightActionButtons(event: CongregationEvent, context: Context, isWhatsAppInstalled: Boolean) {
+    if (isWhatsAppInstalled && !event.speakerMobile.isNullOrBlank()) {
+        SimpleWhatsAppButton(event, context)
+    }
+}
+
+private const val CONTAINER_COLOR = 0xFF01C040
+
+@Composable
+private fun RowScope.SimpleCallButton(phoneNumber: String, iconRes: Int, context: Context) {
+    FilledIconButton(
+        modifier = Modifier.size(50.dp),
+        shape = RoundedCornerShape(10.dp),
+        colors = IconButtonDefaults.filledIconButtonColors(
+            containerColor = Color(CONTAINER_COLOR),
+            contentColor = surfaceVariantLightHighContrast
+        ),
+        onClick = {
+            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phoneNumber"))
+            context.startActivity(intent)
+        }
+    ) {
+        Icon(
+            modifier = Modifier.size(40.dp),
+            imageVector = ImageVector.vectorResource(iconRes),
+            contentDescription = null
+        )
+    }
+}
+
+@Suppress("SwallowedException")
+@Composable
+private fun SimpleWhatsAppButton(event: CongregationEvent, context: Context) {
+    FilledIconButton(
+        modifier = Modifier.size(50.dp),
+        shape = RoundedCornerShape(10.dp),
+        colors = IconButtonDefaults.filledIconButtonColors(
+            containerColor = Color(CONTAINER_COLOR),
+            contentColor = surfaceVariantLightHighContrast
+        ),
+        onClick = {
+            try {
+                val normalizedNumber = event.speakerMobile
+                    ?.replace(Regex("[^0-9]"), "")
+                    ?.removePrefix("00") ?: return@FilledIconButton
+
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("smsto:$normalizedNumber"))
+                val message =
+                    "Hallo ${event.speakerName}, es geht um den Vortrag '${event.speechSubject}' " +
+                        "am ${event.dateString}."
+                intent.putExtra("sms_body", message)
+                intent.setPackage("com.whatsapp")
+                context.startActivity(intent)
+            } catch (e: Exception) {
+                Toast.makeText(context, "WhatsApp konnte nicht geöffnet werden.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    ) {
+        Icon(
+            modifier = Modifier.size(40.dp),
+            painter = painterResource(R.drawable.whatsapp_icon),
+            contentDescription = null
+        )
     }
 }
 
