@@ -6,8 +6,9 @@ import de.geosphere.speechplaning.core.model.Congregation
 import de.geosphere.speechplaning.core.model.data.UserRole
 import de.geosphere.speechplaning.data.authentication.permission.CongregationPermissionPolicy
 import de.geosphere.speechplaning.data.usecases.congregation.DeleteCongregationUseCase
-import de.geosphere.speechplaning.data.usecases.congregation.GetCongregationUseCase
+import de.geosphere.speechplaning.data.usecases.congregation.GetAllCongregationsUseCase
 import de.geosphere.speechplaning.data.usecases.congregation.SaveCongregationUseCase
+import de.geosphere.speechplaning.data.usecases.districts.GetAllDistrictsUseCase
 import de.geosphere.speechplaning.data.usecases.user.ObserveCurrentUserUseCase
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.BehaviorSpec
@@ -39,27 +40,30 @@ class CongregationViewModelTest : BehaviorSpec({
     val testDispatcher = UnconfinedTestDispatcher()
 
     // Mocks
-    lateinit var getCongregationUseCase: GetCongregationUseCase
     lateinit var saveCongregationUseCase: SaveCongregationUseCase
     lateinit var deleteCongregationUseCase: DeleteCongregationUseCase
+    lateinit var getAllCongregationsUseCase: GetAllCongregationsUseCase
+    lateinit var getAllDistrictsUseCase: GetAllDistrictsUseCase
     lateinit var observeCurrentUserUseCase: ObserveCurrentUserUseCase
     lateinit var permissionPolicy: CongregationPermissionPolicy
     lateinit var viewModel: CongregationViewModel
 
     // Test Data
-    val dummyCongregation = Congregation(id = "1", name = "Test Congregation")
+    val dummyCongregation = Congregation(id = "1", districtId = "district1", name = "Test Congregation")
     val dummyUser = AppUser(uid = "uid1", email = "test@test.com", displayName = "Tester", role = UserRole.ADMIN)
 
     beforeTest {
         Dispatchers.setMain(testDispatcher)
 
-        getCongregationUseCase = mockk()
         saveCongregationUseCase = mockk()
         deleteCongregationUseCase = mockk()
+        getAllCongregationsUseCase = mockk()
+        getAllDistrictsUseCase = mockk()
         observeCurrentUserUseCase = mockk()
         permissionPolicy = mockk()
 
-        every { getCongregationUseCase() } returns flowOf(Result.success(listOf(dummyCongregation)))
+        every { getAllCongregationsUseCase() } returns flowOf(Result.success(listOf(dummyCongregation)))
+        every { getAllDistrictsUseCase() } returns flowOf(Result.success(emptyList()))
         every { observeCurrentUserUseCase() } returns MutableStateFlow(dummyUser)
 
         every { permissionPolicy.canCreate(any()) } returns true
@@ -68,9 +72,10 @@ class CongregationViewModelTest : BehaviorSpec({
         every { permissionPolicy.canDelete(any(), any()) } returns true
 
         viewModel = CongregationViewModel(
-            getCongregationUseCase,
             saveCongregationUseCase,
             deleteCongregationUseCase,
+            getAllCongregationsUseCase,
+            getAllDistrictsUseCase,
             observeCurrentUserUseCase,
             permissionPolicy
         )
@@ -103,9 +108,10 @@ class CongregationViewModelTest : BehaviorSpec({
 
             // Re-create ViewModel to apply new permission mocks
             val restrictedViewModel = CongregationViewModel(
-                getCongregationUseCase,
                 saveCongregationUseCase,
                 deleteCongregationUseCase,
+                getAllCongregationsUseCase,
+                getAllDistrictsUseCase,
                 observeCurrentUserUseCase,
                 permissionPolicy
             )
@@ -154,13 +160,13 @@ class CongregationViewModelTest : BehaviorSpec({
     }
 
     Given("Save Congregation Logic") {
-        val newCongregation = Congregation(id = "", name = "New")
+        val newCongregation = Congregation(id = "", districtId = "district1", name = "New")
 
         When("User has permission and saves a NEW congregation") {
             Then("it should call saveUseCase and clear selection") {
                 runTest {
                     every { permissionPolicy.canCreate(dummyUser) } returns true
-                    coEvery { saveCongregationUseCase(newCongregation) } coAnswers {
+                    coEvery { saveCongregationUseCase(newCongregation.districtId, newCongregation) } coAnswers {
                         delay(10)
                         Result.success(Unit)
                     }
@@ -176,7 +182,7 @@ class CongregationViewModelTest : BehaviorSpec({
                         finalState.isActionInProgress.shouldBeFalse()
                         finalState.selectedCongregation.shouldBeNull()
                     }
-                    coVerify(exactly = 1) { saveCongregationUseCase(newCongregation) }
+                    coVerify(exactly = 1) { saveCongregationUseCase(newCongregation.districtId, newCongregation) }
                 }
             }
         }
@@ -184,11 +190,11 @@ class CongregationViewModelTest : BehaviorSpec({
         When("Save congregation FAILS") {
             Then("it should set error message in state and reset progress") {
                 runTest {
-                    val newCongregation = Congregation(id = "", name = "New")
+                    val newCongregation = Congregation(id = "", districtId = "district1", name = "New")
                     val errorMessage = "Datenbankfehler"
                     every { permissionPolicy.canCreate(dummyUser) } returns true
 
-                    coEvery { saveCongregationUseCase(newCongregation) } coAnswers {
+                    coEvery { saveCongregationUseCase(newCongregation.districtId, newCongregation) } coAnswers {
                         delay(10)
                         Result.failure(Exception(errorMessage))
                     }
@@ -221,7 +227,7 @@ class CongregationViewModelTest : BehaviorSpec({
                         val errorState = awaitItem().shouldBeInstanceOf<CongregationUiState.SuccessUIState>()
                         errorState.actionError.shouldNotBeBlank()
                     }
-                    coVerify(exactly = 0) { saveCongregationUseCase(any()) }
+                    coVerify(exactly = 0) { saveCongregationUseCase(any(), any()) }
                 }
             }
         }
@@ -232,7 +238,7 @@ class CongregationViewModelTest : BehaviorSpec({
             Then("it should call deleteUseCase") {
                 runTest {
                     val idToDelete = dummyCongregation.id
-                    coEvery { deleteCongregationUseCase(idToDelete, congregationToDelete.district) } coAnswers {
+                    coEvery { deleteCongregationUseCase(idToDelete, dummyCongregation.districtId) } coAnswers {
                         delay(10)
                         Result.success(Unit)
                     }
@@ -252,7 +258,7 @@ class CongregationViewModelTest : BehaviorSpec({
                     coVerify(exactly = 1) {
                         deleteCongregationUseCase(
                             idToDelete,
-                            congregationToDelete.district
+                            dummyCongregation.districtId
                         )
                     }
                 }
@@ -272,7 +278,7 @@ class CongregationViewModelTest : BehaviorSpec({
                         coVerify(exactly = 0) {
                             deleteCongregationUseCase(
                                 any(),
-                                congregationToDelete.district
+                                dummyCongregation.districtId
                             )
                         }
                     }

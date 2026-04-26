@@ -5,9 +5,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
-    // alias(libs.plugins.ktlint)
+    alias(libs.plugins.kover)
     alias(libs.plugins.kotlin.serialization)
-    id("jacoco")
 }
 
 android {
@@ -22,6 +21,11 @@ android {
         versionName = "0.0.1_alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    lint {
+        xmlReport = true
+        xmlOutput = file("${layout.buildDirectory.get()}/reports/lint-results-debug.xml")
     }
 
     buildTypes {

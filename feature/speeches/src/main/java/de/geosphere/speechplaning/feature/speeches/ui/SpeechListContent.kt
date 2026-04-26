@@ -32,7 +32,6 @@ import de.geosphere.speechplaning.theme.ThemePreviews
 @Suppress("LongParameterList")
 @Composable
 fun SpeechListContent(
-    speeches: List<SpeechWithUsageHistory>,
     filterQuery: String,
     onFilterQueryChange: (String) -> Unit,
     showFilterField: Boolean,
@@ -121,7 +120,6 @@ private fun SpeechListContentPreview() {
     )
     SpeechPlaningTheme {
         SpeechListContent(
-            speeches = speeches,
             filterQuery = "",
             onFilterQueryChange = {},
             showFilterField = false,

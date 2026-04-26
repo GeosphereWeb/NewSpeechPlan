@@ -13,9 +13,8 @@ private const val DISTRICTS_COLLECTION = "districts"
 class CongregationRepository(
     subcollectionActions: ISubcollectionActions,
     private val flowActions: IFlowActions
-) : FirestoreSubcollectionRepository<Congregation, String, String>(
+) : FirestoreSubcollectionRepository<Congregation, String>(
     subcollectionActions = subcollectionActions,
-    flowActions = flowActions,
     subcollectionName = CONGREGATIONS_SUBCOLLECTION,
     clazz = Congregation::class.java
 ) {

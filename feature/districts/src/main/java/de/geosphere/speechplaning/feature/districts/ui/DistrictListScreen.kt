@@ -76,9 +76,11 @@ fun DistrictListScreenContent(
                     }
                 }
             ) { padding ->
-                Box(modifier = Modifier
-                    .padding(padding)
-                    .fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .padding(padding)
+                        .fillMaxSize()
+                ) {
                     DistrictListContent(
                         districts = uiState.districts,
                         onSelectDistrict = onSelectDistrict

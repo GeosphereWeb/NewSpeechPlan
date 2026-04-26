@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package de.geosphere.speechplaning.tools.importer
 
 import com.google.auth.oauth2.GoogleCredentials

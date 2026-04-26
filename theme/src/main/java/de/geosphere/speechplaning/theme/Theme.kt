@@ -1,3 +1,5 @@
+@file:Suppress("TopLevelPropertyNaming", "UnusedPrivateProperty")
+
 package de.geosphere.speechplaning.theme
 
 import android.os.Build
@@ -522,7 +524,7 @@ fun SpeechPlaningTheme(
     dynamicColor: Boolean = true,
     content:
     @Composable()
-        () -> Unit
+    () -> Unit
 ) {
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {

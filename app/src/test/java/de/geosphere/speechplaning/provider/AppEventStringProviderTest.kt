@@ -20,13 +20,25 @@ class AppEventStringProviderTest : StringSpec({
         stringProvider = AppEventStringProvider(mockContext)
     }
 
-    "getStringForEvent with CIRCUIT_ASSEMBLY_WITH_CIRCUIT_OVERSEER returns correct string" {
+    "getStringForEvent with CIRCUIT_ASSEMBLY returns correct string" {
         // Given
-        val expectedString = "Circuit Assembly With Circuit Overseer"
-        every { mockContext.getString(R.string.event_circuit_assembly_with_circuit_overseer) } returns expectedString
+        val expectedString = "Circuit Assembly"
+        every { mockContext.getString(R.string.event_circuit_assembly) } returns expectedString
 
         // When
-        val result = stringProvider.getStringForEvent(Event.CIRCUIT_ASSEMBLY_WITH_CIRCUIT_OVERSEER)
+        val result = stringProvider.getStringForEvent(Event.CIRCUIT_ASSEMBLY)
+
+        // Then
+        result shouldBe expectedString
+    }
+
+    "getStringForEvent with CONGREGATION returns correct string" {
+        // Given
+        val expectedString = "Congregation"
+        every { mockContext.getString(R.string.event_congregation) } returns expectedString
+
+        // When
+        val result = stringProvider.getStringForEvent(Event.CONGREGATION)
 
         // Then
         result shouldBe expectedString
@@ -75,6 +87,42 @@ class AppEventStringProviderTest : StringSpec({
 
         // When
         val result = stringProvider.getStringForEvent(Event.SPECIAL_LECTURE)
+
+        // Then
+        result shouldBe expectedString
+    }
+
+    "getStringForEvent with BRANCH_CONVENTION returns correct string" {
+        // Given
+        val expectedString = "Branch Convention"
+        every { mockContext.getString(R.string.event_branch_convention) } returns expectedString
+
+        // When
+        val result = stringProvider.getStringForEvent(Event.BRANCH_CONVENTION)
+
+        // Then
+        result shouldBe expectedString
+    }
+
+    "getStringForEvent with STREAM returns correct string" {
+        // Given
+        val expectedString = "Stream"
+        every { mockContext.getString(R.string.event_stream) } returns expectedString
+
+        // When
+        val result = stringProvider.getStringForEvent(Event.STREAM)
+
+        // Then
+        result shouldBe expectedString
+    }
+
+    "getStringForEvent with SPECIAL_CONVENTION returns correct string" {
+        // Given
+        val expectedString = "Special Convention"
+        every { mockContext.getString(R.string.event_special_convention) } returns expectedString
+
+        // When
+        val result = stringProvider.getStringForEvent(Event.SPECIAL_CONVENTION)
 
         // Then
         result shouldBe expectedString

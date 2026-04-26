@@ -93,7 +93,6 @@ fun SpeechListScreenContent(
                         .fillMaxSize()
                 ) {
                     SpeechListContent(
-                        speeches = state.speeches,
                         filterQuery = state.filterQuery,
                         onFilterQueryChange = onFilterQueryChange,
                         showFilterField = state.showFilterField,
@@ -121,7 +120,7 @@ fun SpeechListScreenContent(
 
                     state.selectedSpeech?.let { speech ->
                         SpeechEditDialog(
-                            speech = speech,
+                            speech = speech.speech,
                             onDismiss = onClearSelection,
                             onSave = onSaveSpeech,
                             onDelete = onDeleteSpeech

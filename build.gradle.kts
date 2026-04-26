@@ -1,10 +1,21 @@
-
-import io.gitlab.arturbosch.detekt.Detekt
+import com.intellij.rt.coverage.report.api.ReportApi.xmlReport
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
+
+plugins {
+    alias(this.libs.plugins.android.application) apply false
+    alias(this.libs.plugins.kotlin.android) apply false
+    alias(this.libs.plugins.kotlin.compose) apply false
+    alias(this.libs.plugins.google.services) apply false
+    alias(this.libs.plugins.ktlint)
+    alias(this.libs.plugins.detekt)
+    alias(this.libs.plugins.sonarcube) apply true
+    alias(this.libs.plugins.android.library) apply false // Überprüfe die neueste Version
+    alias(this.libs.plugins.kover) // Add Kover plugin
+}
 
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
-val libsws = extensions.getByType<VersionCatalogsExtension>().named("libs")
+val libsWS = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
 fun loadPatternsFromFile(filePath: String, descriptionForWarning: String): String {
     val exclusionFile = rootProject.file(filePath) // rootProject is available in this script's scope
@@ -28,18 +39,6 @@ val duplicationExclusionPatterns = loadPatternsFromFile(
     "config/sonar/duplication_exclusions.txt",
     "SonarQube duplication exclusion" // Corrected description
 )
-
-plugins {
-    alias(libs.plugins.android.application) apply false
-    alias(libs.plugins.kotlin.android) apply false
-    alias(libs.plugins.kotlin.compose) apply false
-    alias(libs.plugins.google.services) apply false
-    alias(libs.plugins.ktlint)
-    alias(libs.plugins.detekt)
-    alias(libs.plugins.sonarcube) apply true
-    alias(libs.plugins.android.library) apply false // Überprüfe die neueste Version
-    alias(libs.plugins.kover) // Add Kover plugin
-}
 
 buildscript {
     repositories {
@@ -69,89 +68,97 @@ sonarqube {
             property("sonar.cpd.exclusions", duplicationExclusionPatterns)
         }
 
-        // property(
-        //     "sonar.coverage.jacoco.xmlReportPaths",
-        //     "$buildDir/reports/kover/report.xml" // Point Sonar to Kover report
-        // )
+        property("sonar.coverage.jacoco.xmlReportPaths", "${layout.buildDirectory.get()}/reports/kover/report.xml")
         property(
-            "sonar.coverage.jacoco.xmlReportPaths",
-            "**/build/reports/kover/report.xml,**/build/reports/kover/reportDebug.xml"
+            "sonar.kotlin.detekt.reportPaths",
+            subprojects.joinToString(",") {
+                "${it.layout.buildDirectory.get()}/reports/detekt/detekt.xml"
+            }
         )
-
-        property("sonar.androidLint.reportPaths", "**/build/reports/lint-results-*.xml")
-
+        property(
+            "sonar.androidLint.reportPaths",
+            subprojects.mapNotNull {
+                val reportPath = file("${it.layout.buildDirectory.get()}/app/reports/lint-results-debug.xml")
+                if (reportPath.exists()) reportPath.absolutePath else null
+            }.joinToString(",")
+        )
         property("sonar.gradle.skipCompile", "true")
+        property("sonar.sources", "src/main/java,src/main/kotlin")
+        property("sonar.tests", "src/test/java,src/test/kotlin,src/androidTest/kotlin,src/androidTest/java")
+        property("sonar.sourceEncoding", "UTF-8")
         // property("sonar.kotlin.rules.S107.max", "10") // Erlaube bis zu 10 Parameter
     }
 }
 
 subprojects {
     apply(plugin = "io.gitlab.arturbosch.detekt")
-    // Kover wird automatisch vom Plugin verwaltet, wenn es auf root-Ebene angewendet wird.
-    // Es sammelt Daten aus allen Modulen.
+    apply(plugin = "org.jlleitschuh.gradle.ktlint")
 
-    // --- FIX: Kover für ALLE Module aktivieren, nicht nur für Android ---
-    apply(plugin = "org.jetbrains.kotlinx.kover")
+    configure<io.gitlab.arturbosch.detekt.extensions.DetektExtension> {
+        config.setFrom(file("${rootProject.projectDir}/config/detekt/detekt.yml"))
+        buildUponDefaultConfig = true
+        parallel = true
+        // debug = true
+    }
+
+    tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+        reports {
+            xml.required.set(true)
+            html.required.set(true)
+            txt.required.set(true)
+            sarif.required.set(true)
+            md.required.set(true)
+        }
+    }
 
     detekt {
-        toolVersion = libsws.findVersion("detekt").get().toString()
+        toolVersion = libsWS.findVersion("detekt").get().toString()
         config.setFrom(file("$rootDir/config/detekt/detekt.yml"))
         source.setFrom(files("src/main/java", "src/test/java", "src/main/kotlin", "src/test/kotlin"))
         buildUponDefaultConfig = true
     }
 
-    // Jacoco Konfiguration entfernen wir hier
-
-    plugins.withId("org.jetbrains.kotlin.android") {
-        apply(plugin = "org.jlleitschuh.gradle.ktlint")
-
-        ktlint {
-            android.set(true)
-            outputColorName.set("RED")
-            ignoreFailures.set(false)
-            enableExperimentalRules.set(true)
+    configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+        android.set(true)
+        outputToConsole.set(true)
+        ignoreFailures.set(true)
+        debug.set(true)
+        outputColorName.set("RED")
+        enableExperimentalRules.set(true)
+        reporters {
+            reporter(ReporterType.CHECKSTYLE)
+            reporter(ReporterType.HTML)
+            reporter(ReporterType.PLAIN)
         }
-        configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
-            debug.set(true)
-            reporters {
-                reporter(ReporterType.PLAIN)
-                reporter(ReporterType.CHECKSTYLE)
-            }
-            kotlinScriptAdditionalPaths {
-                include(fileTree("scripts/"))
-            }
-            filter {
-                exclude("**/generated/**")
-                include("**/kotlin/**")
-            }
-        }
-    }
-
-    dependencies {
-        detekt(libsws.findLibrary("detekt-cli").get())
-        detektPlugins(libsws.findLibrary("detekt-formatting").get())
-    }
-}
-
-tasks.withType<Detekt>().configureEach {
-    reports {
-        xml.required.set(true)
-        html.required.set(true)
-        txt.required.set(true)
-        sarif.required.set(true)
-        md.required.set(true)
     }
 }
 
 // Kover Configuration
 kover {
     // useJacoco() // EMPFEHLUNG: Auskommentieren. Die Standard Kover-Engine ist für Kotlin meist präziser.
+    merge {
+        subprojects()
+    }
 
     reports {
+        total {
+            html { onCheck = true }
+            xml { onCheck = true }
+        }
         // Filterung (optional, hast du schon auskommentiert)
         filters {
             excludes {
-                classes("*.BuildConfig", "*_Factory", "*_MembersInjector", "*Hilt*")
+                classes(
+                    "*.BuildConfig",
+                    "*_Factory",
+                    "*_MembersInjector",
+                    "*Hilt*",
+                    "MainActivity",
+                    "MainActivityKt",
+                    "MyApplication"
+                )
+                packages("*.di", " de.geosphere.speechplaning.theme"/*"com.example.ui", "com.example.generated"*/)
+                annotatedBy("kotlin.Deprecated", "androidx.compose.runtime.Composable")
             }
         }
 
@@ -173,7 +180,7 @@ dependencies {
     kover(project(":feature:congregation"))
     kover(project(":feature:home"))
     kover(project(":feature:login"))
-    "kover"(project(":feature:congregationEvent"))
+    kover(project(":feature:congregationEvent"))
     kover(project(":feature:profile"))
     kover(project(":feature:settings"))
     kover(project(":feature:speaker"))

@@ -6,6 +6,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -30,6 +31,7 @@ import de.geosphere.speechplaning.theme.SpeechPlaningTheme
 import de.geosphere.speechplaning.theme.ThemePreviews
 
 @Composable
+@Suppress("LongMethod", "MagicNumber")
 fun SpeakerListItem(
     modifier: Modifier,
     speaker: Speaker,
@@ -53,71 +55,94 @@ fun SpeakerListItem(
                 .padding(16.dp)
                 .fillMaxWidth()
         ) {
+            SpeakerAvatar(speaker)
+            SpeakerInfo(speaker, isExpanded)
+            SpeakerActionButton(speaker, isExpanded)
+        }
+    }
+}
+
+@Composable
+private fun SpeakerAvatar(speaker: Speaker) {
+    Icon(
+        modifier = Modifier.size(40.dp),
+        painter = painterResource(
+            id = AvatarProvider(AppAvatarResourceProvider()).getAvatar(
+                speaker.spiritualStatus
+            )
+        ),
+        contentDescription = "Avatar für ${speaker.spiritualStatus}",
+        tint = Color.Unspecified
+    )
+}
+
+@Composable
+private fun RowScope.SpeakerInfo(speaker: Speaker, isExpanded: Boolean) {
+    Column(
+        modifier = Modifier
+            .padding(start = 16.dp)
+            .weight(1f)
+    ) {
+        Text(
+            text = "${speaker.firstName} ${speaker.lastName}",
+            style = MaterialTheme.typography.titleMedium
+        )
+        SpeakerDetails(speaker, isExpanded)
+    }
+}
+
+@Composable
+private fun SpeakerDetails(speaker: Speaker, isExpanded: Boolean) {
+    AnimatedVisibility(visible = isExpanded) {
+        Column(modifier = Modifier.padding(top = 8.dp)) {
+            if (speaker.mobile.isNotBlank()) {
+                Text(
+                    text = "Mobil: ${speaker.mobile}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            if (speaker.phone.isNotBlank()) {
+                Text(
+                    text = "Telefon: ${speaker.phone}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            if (speaker.email.isNotBlank()) {
+                Text(
+                    text = "E-Mail: ${speaker.email}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            Text(
+                text = "Status: ${speaker.spiritualStatus.name}",
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+    }
+}
+
+@Composable
+@Suppress("MagicNumber")
+private fun SpeakerActionButton(speaker: Speaker, isExpanded: Boolean) {
+    val context = LocalContext.current
+    val hasPhoneNumber = speaker.mobile.isNotBlank()
+
+    if (isExpanded && hasPhoneNumber) {
+        val numberToDial = speaker.mobile.ifBlank { speaker.phone }
+        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$numberToDial"))
+
+        IconButton(
+            modifier = Modifier.padding(start = 8.dp),
+            onClick = {
+                context.startActivity(intent)
+            }
+        ) {
             Icon(
                 modifier = Modifier.size(40.dp),
-                painter = painterResource(
-                    id = AvatarProvider(AppAvatarResourceProvider()).getAvatar(
-                        speaker.spiritualStatus
-                    )
-                ),
-                contentDescription = "Avatar für ${speaker.spiritualStatus}",
-                tint = Color.Unspecified
+                tint = Color(0xFF19812A),
+                imageVector = ImageVector.vectorResource(R.drawable.phone_forwarded),
+                contentDescription = null
             )
-            Column(modifier = Modifier
-                .padding(start = 16.dp)
-                .weight(1f)) {
-                Text(
-                    text = "${speaker.firstName} ${speaker.lastName}",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                AnimatedVisibility(visible = isExpanded) {
-                    Column(modifier = Modifier.padding(top = 8.dp)) {
-                        if (speaker.mobile.isNotBlank()) {
-                            Text(
-                                text = "Mobil: ${speaker.mobile}",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                        if (speaker.phone.isNotBlank()) {
-                            Text(
-                                text = "Telefon: ${speaker.phone}",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                        if (speaker.email.isNotBlank()) {
-                            Text(
-                                text = "E-Mail: ${speaker.email}",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                        Text(
-                            text = "Status: ${speaker.spiritualStatus.name}",
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                }
-
-            }
-            val context = LocalContext.current
-            val hasPhoneNumber = speaker.mobile.isNotBlank()
-
-            if (isExpanded && hasPhoneNumber) {
-                val numberToDail = speaker.mobile.ifBlank { speaker.phone }
-                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$numberToDail"))
-
-                IconButton(
-                    modifier = Modifier.padding(start = 8.dp),
-                    onClick = {
-                        context.startActivity(intent)
-                    }
-                ) {
-                    Icon(
-                        modifier = Modifier.size(40.dp),
-                        tint = Color(0xFF19812A),
-                        imageVector = ImageVector.vectorResource(R.drawable.phone_forwarded), contentDescription = null
-                    )
-                }
-            }
         }
     }
 }

@@ -1,3 +1,4 @@
 **/mocking/src/main/java/de/geosphere/speechplaning/**/*.kt
 #**/mocking/src/main/java/de/geosphere/speechplaning/mocking/**/*.kt
 #**/app/src/main/res/values/**/*.xml
+**/theme/**
