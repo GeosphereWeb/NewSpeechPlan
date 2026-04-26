@@ -29,7 +29,7 @@ jobs:
           echo "$GOOGLE_SERVICES_JSON" > app/google-services.json
 
       - name: Build, generate JaCoCo and Lint reports
-        run: ./gradlew lintDebug koverXmlReport --stacktrace
+        run: ./gradlew :app:lintDebug :feature:home:lintDebug :feature:settings:lintDebug :feature:profile:lintDebug :feature:login:lintDebug :feature:congregationEvent:lintDebug :feature:speeches:lintDebug :feature:districts:lintDebug :feature:congregation:lintDebug :feature:speaker:lintDebug :core:ui:lintDebug :core:model:lintDebug :core:navigation:lintDebug :data:lintDebug :theme:lintDebug koverXmlReport --stacktrace
 
       - name: SonarQube Analysis 
         env:
