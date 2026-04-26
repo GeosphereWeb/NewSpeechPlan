@@ -78,7 +78,7 @@ sonarqube {
         property(
             "sonar.androidLint.reportPaths",
             subprojects.mapNotNull {
-                val reportPath = file("${it.layout.buildDirectory.get()}/app/reports/lint-results-debug.xml")
+                val reportPath = file("${it.layout.buildDirectory.get()}/reports/lint-results-debug.xml")
                 if (reportPath.exists()) reportPath.absolutePath else null
             }.joinToString(",")
         )
