@@ -71,13 +71,19 @@ sonarqube {
         property("sonar.coverage.jacoco.xmlReportPaths", "${layout.buildDirectory.get()}/reports/kover/report.xml")
         property(
             "sonar.kotlin.detekt.reportPaths",
-            subprojects.joinToString(",") {
-                "${it.layout.buildDirectory.get()}/reports/detekt/detekt.xml"
-            }
+            subprojects
+                .filter { it.plugins.hasPlugin("io.gitlab.arturbosch.detekt") }
+                .joinToString(",") {
+                    "${it.layout.buildDirectory.get()}/reports/detekt/detekt.xml"
+                }
         )
         property(
             "sonar.androidLint.reportPaths",
-            "${layout.buildDirectory.file("app-lint-reports/merged-lint-report.xml").get().asFile.absolutePath}"
+            subprojects
+                .filter { it.plugins.hasPlugin("com.android.application") || it.plugins.hasPlugin("com.android.library") }
+                .joinToString(",") {
+                    "${it.layout.buildDirectory.get()}/reports/lint-results-debug.xml"
+                }
         )
         property("sonar.gradle.skipCompile", "true")
         property("sonar.sources", "src/main/java,src/main/kotlin")
