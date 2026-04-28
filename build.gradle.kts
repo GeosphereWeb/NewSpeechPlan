@@ -77,10 +77,7 @@ sonarqube {
         )
         property(
             "sonar.androidLint.reportPaths",
-            subprojects.mapNotNull {
-                val reportPath = file("${it.layout.buildDirectory.get()}/app/reports/lint-results-debug.xml")
-                if (reportPath.exists()) reportPath.absolutePath else null
-            }.joinToString(",")
+            "${layout.buildDirectory.file("app-lint-reports/merged-lint-report.xml").get().asFile.absolutePath}"
         )
         property("sonar.gradle.skipCompile", "true")
         property("sonar.sources", "src/main/java,src/main/kotlin")
@@ -187,3 +184,61 @@ dependencies {
     kover(project(":feature:speeches"))
     kover(project(":theme"))
 }
+
+// Task zum Sammeln aller Android Lint Reports
+tasks.register("collectLintReports") {
+    description = "Sammelt alle Android Lint Reports aus allen Submodulen in ein zentrales Verzeichnis"
+    group = "reporting"
+
+    // Automatisch alle lintDebug Tasks als Abhängigkeiten hinzufügen
+    val modules = listOf(
+        "app",
+        "feature:home", "feature:settings", "feature:profile", "feature:login",
+        "feature:congregationEvent", "feature:speeches", "feature:districts",
+        "feature:congregation", "feature:speaker",
+        "core:ui", "core:model", "core:navigation",
+        "data", "theme"
+    )
+
+    modules.forEach { moduleName ->
+        dependsOn(":${moduleName}:lintDebug")
+    }
+
+    doLast {
+        val collectDir = layout.buildDirectory.file("app-lint-reports").get().asFile
+        collectDir.mkdirs()
+
+        val allReports = StringBuilder()
+        allReports.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+        allReports.append("<issues>\n")
+
+        modules.forEach { moduleName ->
+            val moduleProject = rootProject.findProject(":${moduleName}")
+            if (moduleProject != null) {
+                val reportFile = moduleProject.layout.buildDirectory.file("reports/lint-results-debug.xml").get().asFile
+                if (reportFile.exists()) {
+                    try {
+                        val content = reportFile.readText()
+                        // Extrahiere nur die <issue>-Elemente
+                        val issuePattern = Regex("<issue[^>]*>.*?</issue>", RegexOption.DOT_MATCHES_ALL)
+                        val matches = issuePattern.findAll(content)
+                        val issueCount = matches.count()
+                        matches.forEach { match ->
+                            allReports.append(match.value).append("\n")
+                        }
+                        println("✓ Lint Report gefunden: $moduleName ($issueCount Issues)")
+                    } catch (e: Exception) {
+                        println("⚠ Fehler beim Verarbeiten des Reports von $moduleName: ${e.message}")
+                    }
+                }
+            }
+        }
+
+        allReports.append("</issues>\n")
+
+        val mergedReport = File(collectDir, "merged-lint-report.xml")
+        mergedReport.writeText(allReports.toString())
+        println("✓ Zusammengefasster Lint-Report erstellt: ${mergedReport.absolutePath}")
+    }
+}
+

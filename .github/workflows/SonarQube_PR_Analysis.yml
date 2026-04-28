@@ -29,9 +29,9 @@ jobs:
           echo "$GOOGLE_SERVICES_JSON" > app/google-services.json
 
       - name: Build, generate JaCoCo and Lint reports
-        run: ./gradlew lintDebug koverXmlReport --stacktrace
+        run: ./gradlew collectLintReports koverXmlReport --stacktrace
 
-      - name: SonarQube Analysis 
+      - name: SonarQube Analysis
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
