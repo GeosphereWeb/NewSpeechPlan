@@ -11,22 +11,31 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import de.geosphere.speechplaning.core.model.Congregation
 import de.geosphere.speechplaning.core.model.CongregationEvent
+import de.geosphere.speechplaning.core.model.Speaker
+import de.geosphere.speechplaning.core.model.Speech
+import de.geosphere.speechplaning.core.model.data.Event
 import de.geosphere.speechplaning.core.ui.provider.AppEventStringProvider
 import de.geosphere.speechplaning.theme.R
 import de.geosphere.speechplaning.theme.SpeechPlaningTheme
@@ -100,12 +109,12 @@ fun CongregationEventErrorContent(message: String) {
         Icon(
             imageVector = ImageVector.vectorResource(R.drawable.warning),
             contentDescription = "Error",
-            tint = androidx.compose.material3.MaterialTheme.colorScheme.error
+            tint = MaterialTheme.colorScheme.error
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = message,
-            color = androidx.compose.material3.MaterialTheme.colorScheme.error
+            color = MaterialTheme.colorScheme.error
         )
         Spacer(modifier = Modifier.height(8.dp))
         TextButton(onClick = {}) {
@@ -122,8 +131,8 @@ fun CongregationEventSuccessContent(
     state: CongregationEventUiState.SuccessUiState,
     stringProvider: AppEventStringProvider,
     onNavigateToDetails: (CongregationEvent?) -> Unit,
-    onEventSelect: (androidx.navigation.NavController, CongregationEvent) -> Unit,
-    onEditEvent: (androidx.navigation.NavController, CongregationEvent?) -> Unit,
+    onEventSelect: (NavController, CongregationEvent) -> Unit,
+    onEditEvent: (NavController, CongregationEvent?) -> Unit,
     onDismissEditDialog: () -> Unit,
     onSaveEvent: (CongregationEvent) -> Unit,
     onDeleteEvent: (String) -> Unit
@@ -146,11 +155,15 @@ fun CongregationEventSuccessContent(
                         .padding(padding)
                         .fillMaxSize()
                 ) {
+                    var showUnplannedOnly by rememberSaveable { mutableStateOf(false) }
+
                     CongregationEventListContent(
                         congregationEvents = state.congregationEvents,
                         onSelectCongregationEvent = { onEventSelect(navController, it) },
                         stringProvider = stringProvider,
-                        isWhatsAppInstalled = state.isWhatsAppInstalled
+                        isWhatsAppInstalled = state.isWhatsAppInstalled,
+                        onToggleShowPlanedItems = { { showUnplannedOnly = !showUnplannedOnly } },
+                        selectedShowPlanedItems = showUnplannedOnly,
                     )
 
                     if (state.isActionInProgress) {
@@ -160,7 +173,7 @@ fun CongregationEventSuccessContent(
                     state.actionError?.let {
                         Text(
                             text = it,
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.error,
+                            color = MaterialTheme.colorScheme.error,
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
                                 .padding(16.dp)
@@ -207,7 +220,7 @@ private fun createMockUiState(): CongregationEventUiState.SuccessUiState {
             speechSubject = "Vortrag über Glauben",
             speakerName = "Müller, Max",
             speakerCongregationName = "Berlin-Mitte",
-            eventType = de.geosphere.speechplaning.core.model.data.Event.MEMORIAL
+            eventType = Event.MEMORIAL
         ),
         CongregationEvent(
             id = "2",
@@ -216,7 +229,7 @@ private fun createMockUiState(): CongregationEventUiState.SuccessUiState {
             speechSubject = "Hoffnung für die Zukunft",
             speakerName = "Schmidt, Lisa",
             speakerCongregationName = "Hamburg-Nord",
-            eventType = de.geosphere.speechplaning.core.model.data.Event.MEMORIAL
+            eventType = Event.MEMORIAL
         ),
         CongregationEvent(
             id = "3",
@@ -225,7 +238,7 @@ private fun createMockUiState(): CongregationEventUiState.SuccessUiState {
             speechSubject = "Gottes Königreich",
             speakerName = "Weber, Thomas",
             speakerCongregationName = "München-Süd",
-            eventType = de.geosphere.speechplaning.core.model.data.Event.CIRCUIT_ASSEMBLY
+            eventType = Event.CIRCUIT_ASSEMBLY
         )
     )
 
@@ -237,7 +250,7 @@ private fun createMockUiState(): CongregationEventUiState.SuccessUiState {
         showEditDialog = false,
         selectedCongregationEvent = null,
         allSpeakers = listOf(
-            de.geosphere.speechplaning.core.model.Speaker(
+            Speaker(
                 id = "s1",
                 firstName = "Max",
                 lastName = "Müller",
@@ -245,10 +258,10 @@ private fun createMockUiState(): CongregationEventUiState.SuccessUiState {
             )
         ),
         allCongregations = listOf(
-            de.geosphere.speechplaning.core.model.Congregation(id = "c1", name = "Berlin-Mitte")
+            Congregation(id = "c1", name = "Berlin-Mitte")
         ),
         allSpeeches = listOf(
-            de.geosphere.speechplaning.core.model.Speech(id = "sp1", number = "123", subject = "Vortrag über Glauben")
+            Speech(id = "sp1", number = "123", subject = "Vortrag über Glauben")
         )
     )
 }
@@ -273,10 +286,11 @@ fun CongregationEventErrorContentPreview() = SpeechPlaningTheme {
 @Composable
 fun CongregationEventSuccessListPreview() = SpeechPlaningTheme {
     val mockState = createMockUiState()
+    var showUnplannedOnly by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         floatingActionButton = {
-            androidx.compose.material3.FloatingActionButton(onClick = {}) {
+            FloatingActionButton(onClick = {}) {
                 Icon(ImageVector.vectorResource(R.drawable.add), contentDescription = "Neues Ereignis")
             }
         }
@@ -290,7 +304,9 @@ fun CongregationEventSuccessListPreview() = SpeechPlaningTheme {
                 congregationEvents = mockState.congregationEvents,
                 onSelectCongregationEvent = {},
                 stringProvider = AppEventStringProvider(context = LocalContext.current),
-                isWhatsAppInstalled = true
+                isWhatsAppInstalled = true,
+                onToggleShowPlanedItems = { { showUnplannedOnly = !showUnplannedOnly } },
+                selectedShowPlanedItems = showUnplannedOnly,
             )
         }
     }

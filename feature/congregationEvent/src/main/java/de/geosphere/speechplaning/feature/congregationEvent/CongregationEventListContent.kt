@@ -22,6 +22,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
@@ -35,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -53,6 +56,7 @@ import de.geosphere.speechplaning.theme.ThemePreviews
 import de.geosphere.speechplaning.theme.surfaceVariantLightHighContrast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import java.time.Month
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
@@ -61,11 +65,30 @@ fun CongregationEventListContent(
     congregationEvents: List<CongregationEvent>,
     onSelectCongregationEvent: (CongregationEvent) -> Unit,
     stringProvider: AppEventStringProvider,
-    isWhatsAppInstalled: Boolean
+    isWhatsAppInstalled: Boolean,
+    onToggleShowPlanedItems: () -> () -> Unit,
+    selectedShowPlanedItems: Boolean
 ) {
     var initialScrollDone by rememberSaveable { mutableStateOf(false) }
-    val sortedEvents = remember(congregationEvents) { congregationEvents.sortedBy { it.date } }
-    val groupedEvents = remember(sortedEvents) { groupEventsByYearAndMonth(sortedEvents) }
+
+    val filteredEvents = remember(congregationEvents, selectedShowPlanedItems) {
+        if (selectedShowPlanedItems) {
+            val today = LocalDate.now()
+            // Finde den Montag der aktuellen Woche
+            val startOfCurrentWeek = today.minusDays((today.dayOfWeek.value - 1).toLong())
+
+            congregationEvents.filter {
+                val isUnplanned = it.speechSubject.isNullOrBlank() || it.speakerName.isNullOrBlank()
+                val isFromThisWeekOrFuture = it.date?.let { date -> !date.isBefore(startOfCurrentWeek) } ?: false
+                
+                isUnplanned && isFromThisWeekOrFuture
+            }
+        } else {
+            congregationEvents
+        }
+    }
+
+    val groupedEvents = remember(filteredEvents) { groupEventsByYearAndMonth(filteredEvents) }
 
     val context = LocalContext.current
     val listState = rememberLazyListState()
@@ -73,31 +96,41 @@ fun CongregationEventListContent(
 
     var yearHeaderHeightPx by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(sortedEvents, yearHeaderHeightPx) {
-        if (!initialScrollDone && sortedEvents.isNotEmpty() && yearHeaderHeightPx > 0) {
+    LaunchedEffect(filteredEvents, yearHeaderHeightPx) {
+        if (!initialScrollDone && filteredEvents.isNotEmpty() && yearHeaderHeightPx > 0) {
             scrollToCurrentWeek(
-                sortedEvents,
-                groupedEvents,
-                listState,
-                coroutineScope,
-                yearHeaderHeightPx,
+                sortedEvents = filteredEvents,
+                groupedEvents = groupedEvents,
+                listState = listState,
+                coroutineScope = coroutineScope,
+                yearHeaderHeightPx = yearHeaderHeightPx,
                 animated = false
             )
             initialScrollDone = true
         }
     }
 
-    Column {
-        ScrollToCurrentWeekButton {
-            scrollToCurrentWeek(
-                sortedEvents,
-                groupedEvents,
-                listState,
-                coroutineScope,
-                yearHeaderHeightPx,
-                animated = true
-            )
+    LaunchedEffect(selectedShowPlanedItems) {
+        if (selectedShowPlanedItems && filteredEvents.isNotEmpty()) {
+            listState.animateScrollToItem(0)
         }
+    }
+
+    Column {
+        ScrollToCurrentWeekButton(
+            onToggleShowPlanedItems = onToggleShowPlanedItems(),
+            selectedShowPlanedItems = selectedShowPlanedItems,
+            onClick = {
+                scrollToCurrentWeek(
+                    sortedEvents = filteredEvents,
+                    groupedEvents = groupedEvents,
+                    listState = listState,
+                    coroutineScope = coroutineScope,
+                    yearHeaderHeightPx = yearHeaderHeightPx,
+                    animated = true
+                )
+            }
+        )
         EventsList(
             groupedEvents,
             yearHeaderHeightPx,
@@ -112,13 +145,36 @@ fun CongregationEventListContent(
 }
 
 @Composable
-private fun ScrollToCurrentWeekButton(onClick: () -> Unit) {
+private fun ScrollToCurrentWeekButton(
+    onToggleShowPlanedItems: () -> Unit,
+    selectedShowPlanedItems: Boolean,
+    onClick: () -> Unit,
+) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.End
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        FilterChip(
+            modifier = Modifier,
+            onClick = { onToggleShowPlanedItems() },
+            label = { Text("Nur ungeplante") },
+            selected = selectedShowPlanedItems,
+            leadingIcon = if (selectedShowPlanedItems) {
+                {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(R.drawable.check_small),
+                        contentDescription = "Done icon",
+                        modifier = Modifier.size(FilterChipDefaults.IconSize)
+                    )
+                }
+            } else {
+                null
+            },
+        )
         Button(onClick = onClick) {
-            Text(text = "Scroll to...")
+            Text(text = "Heute")
             Icon(imageVector = ImageVector.vectorResource(R.drawable.today), contentDescription = null)
         }
     }
@@ -350,6 +406,8 @@ fun CongregationEventListContentPreview() = SpeechPlaningTheme {
         congregationEvents = mockEvents,
         onSelectCongregationEvent = { },
         stringProvider = AppEventStringProvider(context = LocalContext.current),
-        isWhatsAppInstalled = true
+        isWhatsAppInstalled = true,
+        onToggleShowPlanedItems = { {} },
+        selectedShowPlanedItems = true
     )
 }

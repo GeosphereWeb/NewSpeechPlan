@@ -60,7 +60,7 @@ class CongregationEventViewModel(
                 Log.w(TAG, "combine: failed to log congregationEventResult", e)
             }
 
-            val congregationEvents = congregationEventResult.getOrElse { emptyList() }
+            val congregationEvents = congregationEventResult.getOrElse { emptyList() }.sortedBy { it.date }
             val allSpeakers = speakersResult.getOrElse { emptyList() }
             val allCongregations = congregationsResult?.getOrElse { emptyList() } ?: emptyList()
             val allSpeeches = speechesResult.getOrElse { emptyList() }
