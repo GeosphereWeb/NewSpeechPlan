@@ -66,27 +66,12 @@ fun CongregationEventListContent(
     onSelectCongregationEvent: (CongregationEvent) -> Unit,
     stringProvider: AppEventStringProvider,
     isWhatsAppInstalled: Boolean,
-    onToggleShowPlanedItems: () -> () -> Unit,
+    onToggleShowPlanedItems: () -> Unit,
     selectedShowPlanedItems: Boolean
 ) {
     var initialScrollDone by rememberSaveable { mutableStateOf(false) }
 
-    val filteredEvents = remember(congregationEvents, selectedShowPlanedItems) {
-        if (selectedShowPlanedItems) {
-            val today = LocalDate.now()
-            // Finde den Montag der aktuellen Woche
-            val startOfCurrentWeek = today.minusDays((today.dayOfWeek.value - 1).toLong())
-
-            congregationEvents.filter {
-                val isUnplanned = it.speechSubject.isNullOrBlank() || it.speakerName.isNullOrBlank()
-                val isFromThisWeekOrFuture = it.date?.let { date -> !date.isBefore(startOfCurrentWeek) } ?: false
-                
-                isUnplanned && isFromThisWeekOrFuture
-            }
-        } else {
-            congregationEvents
-        }
-    }
+    val filteredEvents = congregationEvents
 
     val groupedEvents = remember(filteredEvents) { groupEventsByYearAndMonth(filteredEvents) }
 
@@ -118,7 +103,7 @@ fun CongregationEventListContent(
 
     Column {
         ScrollToCurrentWeekButton(
-            onToggleShowPlanedItems = onToggleShowPlanedItems(),
+            onToggleShowPlanedItems = onToggleShowPlanedItems,
             selectedShowPlanedItems = selectedShowPlanedItems,
             onClick = {
                 scrollToCurrentWeek(
@@ -407,7 +392,7 @@ fun CongregationEventListContentPreview() = SpeechPlaningTheme {
         onSelectCongregationEvent = { },
         stringProvider = AppEventStringProvider(context = LocalContext.current),
         isWhatsAppInstalled = true,
-        onToggleShowPlanedItems = { {} },
+        onToggleShowPlanedItems = { },
         selectedShowPlanedItems = true
     )
 }

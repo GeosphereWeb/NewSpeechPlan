@@ -82,7 +82,8 @@ private fun RenderCongregationEventUiState(
                 },
                 onDismissEditDialog = viewModel::clearSelection,
                 onSaveEvent = viewModel::saveCongregationEvent,
-                onDeleteEvent = viewModel::deleteCongregationEvent
+                onDeleteEvent = viewModel::deleteCongregationEvent,
+                onToggleShowUnplannedOnly = viewModel::toggleShowUnplannedOnly
             )
         }
     }
@@ -135,7 +136,8 @@ fun CongregationEventSuccessContent(
     onEditEvent: (NavController, CongregationEvent?) -> Unit,
     onDismissEditDialog: () -> Unit,
     onSaveEvent: (CongregationEvent) -> Unit,
-    onDeleteEvent: (String) -> Unit
+    onDeleteEvent: (String) -> Unit,
+    onToggleShowUnplannedOnly: () -> Unit
 ) {
     val navController = rememberNavController()
 
@@ -155,15 +157,13 @@ fun CongregationEventSuccessContent(
                         .padding(padding)
                         .fillMaxSize()
                 ) {
-                    var showUnplannedOnly by rememberSaveable { mutableStateOf(false) }
-
                     CongregationEventListContent(
                         congregationEvents = state.congregationEvents,
                         onSelectCongregationEvent = { onEventSelect(navController, it) },
                         stringProvider = stringProvider,
                         isWhatsAppInstalled = state.isWhatsAppInstalled,
-                        onToggleShowPlanedItems = { { showUnplannedOnly = !showUnplannedOnly } },
-                        selectedShowPlanedItems = showUnplannedOnly,
+                        onToggleShowPlanedItems = onToggleShowUnplannedOnly,
+                        selectedShowPlanedItems = state.showUnplannedOnly,
                     )
 
                     if (state.isActionInProgress) {
