@@ -38,8 +38,8 @@ data class BottomNavigationItem(
             ),
             BottomNavigationItem(
                 label = R.string.congregation_lb,
-                selectedIcon = R.drawable.warehouse,
-                unselectedIcon = R.drawable.warehouse,
+                selectedIcon = R.drawable.assembly_hall,
+                unselectedIcon = R.drawable.assembly_hall,
                 hasNews = false,
                 route = Screen.CongregationRoute,
                 badgeCount = null
