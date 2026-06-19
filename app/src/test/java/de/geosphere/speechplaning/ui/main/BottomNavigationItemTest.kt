@@ -11,16 +11,16 @@ class BottomNavigationItemTest : ShouldSpec({
     should("have correct properties on creation") {
         val testItem = BottomNavigationItem(
             label = R.string.planning_lb,
-            selectedIcon = R.drawable.calendar_month,
-            unselectedIcon = R.drawable.calendar_month,
+            selectedIcon = R.drawable.calendar__fill,
+            unselectedIcon = R.drawable.calendar,
             hasNews = true,
             route = Screen.PlaningRoute,
             badgeCount = 5
         )
 
         testItem.label shouldBe R.string.planning_lb
-        testItem.selectedIcon shouldBe R.drawable.calendar_month
-        testItem.unselectedIcon shouldBe R.drawable.calendar_month
+        testItem.selectedIcon shouldBe R.drawable.calendar__fill
+        testItem.unselectedIcon shouldBe R.drawable.calendar
         testItem.hasNews shouldBe true
         testItem.route shouldBe Screen.PlaningRoute
         testItem.badgeCount shouldBe 5
@@ -33,7 +33,7 @@ class BottomNavigationItemTest : ShouldSpec({
         // Test Plan tab
         val planTab = tabs[0]
         planTab.label shouldBe R.string.planning_lb
-        planTab.selectedIcon shouldBe R.drawable.calendar_month
+        planTab.selectedIcon shouldBe R.drawable.calendar__fill
         planTab.route shouldBe Screen.PlaningRoute
         planTab.hasNews shouldBe true
         planTab.badgeCount shouldBe null
@@ -41,7 +41,7 @@ class BottomNavigationItemTest : ShouldSpec({
         // Test Speakers tab
         val speakersTab = tabs[1]
         speakersTab.label shouldBe R.string.speakers_lb
-        speakersTab.selectedIcon shouldBe R.drawable.interpreter
+        speakersTab.selectedIcon shouldBe R.drawable.speaker__fill
         speakersTab.route shouldBe Screen.SpeakerRoute
         speakersTab.hasNews shouldBe false
         speakersTab.badgeCount shouldBe null
@@ -49,7 +49,7 @@ class BottomNavigationItemTest : ShouldSpec({
         // Test Speeches tab
         val speechesTab = tabs[2]
         speechesTab.label shouldBe R.string.speeches_lb
-        speechesTab.selectedIcon shouldBe R.drawable.speaker_notes
+        speechesTab.selectedIcon shouldBe R.drawable.document_speaker__fill
         speechesTab.route shouldBe Screen.SpeechesRoute
         speechesTab.hasNews shouldBe false
         speechesTab.badgeCount shouldBe null
@@ -57,7 +57,7 @@ class BottomNavigationItemTest : ShouldSpec({
         // Test Congregation tab
         val congregationTab = tabs[3]
         congregationTab.label shouldBe R.string.congregation_lb
-        congregationTab.selectedIcon shouldBe R.drawable.warehouse
+        congregationTab.selectedIcon shouldBe R.drawable.assembly_hall__fill
         congregationTab.route shouldBe Screen.CongregationRoute
         congregationTab.hasNews shouldBe false
         congregationTab.badgeCount shouldBe null
@@ -65,7 +65,7 @@ class BottomNavigationItemTest : ShouldSpec({
         // Test Districts tab
         val districtsTab = tabs[4]
         districtsTab.label shouldBe R.string.districts_lb
-        districtsTab.selectedIcon shouldBe R.drawable.apartment
+        districtsTab.selectedIcon shouldBe R.drawable.grid_squares_tipped__fill
         districtsTab.route shouldBe Screen.DistrictsRoute
         districtsTab.hasNews shouldBe false
         districtsTab.badgeCount shouldBe null
@@ -74,8 +74,8 @@ class BottomNavigationItemTest : ShouldSpec({
     should("copy data class with new value") {
         val originalItem = BottomNavigationItem(
             label = R.string.planning_lb,
-            selectedIcon = R.drawable.calendar_month,
-            unselectedIcon = R.drawable.calendar_month,
+            selectedIcon = R.drawable.calendar__fill,
+            unselectedIcon = R.drawable.calendar,
             hasNews = false,
             route = Screen.SpeakerRoute
         )
