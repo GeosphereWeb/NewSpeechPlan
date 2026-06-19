@@ -16,22 +16,22 @@ data class BottomNavigationItem(
         val tabs = listOf(
             BottomNavigationItem(
                 label = R.string.planning_lb,
-                selectedIcon = R.drawable.calendar_month,
-                unselectedIcon = R.drawable.calendar_month,
+                selectedIcon = R.drawable.calendar__fill,
+                unselectedIcon = R.drawable.calendar,
                 route = Screen.PlaningRoute,
                 hasNews = true,
             ),
             BottomNavigationItem(
                 label = R.string.speakers_lb,
-                selectedIcon = R.drawable.interpreter,
-                unselectedIcon = R.drawable.interpreter,
+                selectedIcon = R.drawable.speaker__fill,
+                unselectedIcon = R.drawable.speaker,
                 route = Screen.SpeakerRoute,
                 hasNews = false,
             ),
             BottomNavigationItem(
                 label = R.string.speeches_lb,
-                selectedIcon = R.drawable.speaker_notes,
-                unselectedIcon = R.drawable.speaker_notes,
+                selectedIcon = R.drawable.document_speaker__fill,
+                unselectedIcon = R.drawable.document_speaker,
                 hasNews = false,
                 route = Screen.SpeechesRoute,
                 badgeCount = null
@@ -46,8 +46,8 @@ data class BottomNavigationItem(
             ),
             BottomNavigationItem(
                 label = R.string.districts_lb,
-                selectedIcon = R.drawable.apartment,
-                unselectedIcon = R.drawable.apartment,
+                selectedIcon = R.drawable.grid_squares_tipped__fill,
+                unselectedIcon = R.drawable.grid_squares_tipped,
                 hasNews = false,
                 route = Screen.DistrictsRoute,
                 badgeCount = null
