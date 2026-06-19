@@ -104,7 +104,8 @@ class CongregationEventViewModel(
                 canEditCongregationEvent = canEdit,
                 canDeleteCongregationEvent = canDelete,
                 canToggleSpeakerInformed = canToggleSpeakerInformed,
-                isWhatsAppInstalled = isWhatsAppInstalled
+                isWhatsAppInstalled = isWhatsAppInstalled,
+                showUnplannedOnly = viewState.showUnplannedOnly
             )
         }.stateIn(
             scope = viewModelScope,
@@ -117,7 +118,7 @@ class CongregationEventViewModel(
         observeCurrentUserUseCase()
     ) { currentState, appUser ->
         if (currentState is CongregationEventUiState.SuccessUiState) {
-            val filteredEvents = when (appUser?.role) {
+            var filteredEvents = when (appUser?.role) {
                 UserRole.ADMIN -> {
                     // Admin sieht alle Termine
                     currentState.congregationEvents
@@ -142,6 +143,15 @@ class CongregationEventViewModel(
                 }
             }
 
+            if (currentState.showUnplannedOnly) {
+                val today = LocalDate.now()
+                filteredEvents = filteredEvents.filter { event ->
+                    val isUnplanned = event.speechSubject.isNullOrBlank() || event.speakerName.isNullOrBlank()
+                    val isCurrentOrFuture = event.date?.let { it >= today } ?: false
+                    isUnplanned && isCurrentOrFuture
+                }
+            }
+
             currentState.copy(
                 congregationEvents = filteredEvents
             )
@@ -160,6 +170,12 @@ class CongregationEventViewModel(
         _viewState.value = _viewState.value.copy(
             selectedCongregationEvent = congregationEvent,
             showEditDialog = true
+        )
+    }
+
+    fun toggleShowUnplannedOnly() {
+        _viewState.value = _viewState.value.copy(
+            showUnplannedOnly = !_viewState.value.showUnplannedOnly
         )
     }
 
@@ -299,5 +315,6 @@ private data class CongregationEventViewState(
     val selectedCongregationEvent: CongregationEvent? = null,
     val showEditDialog: Boolean = false,
     val isActionInProgress: Boolean = false,
-    val actionError: String? = null
+    val actionError: String? = null,
+    val showUnplannedOnly: Boolean = false
 )
