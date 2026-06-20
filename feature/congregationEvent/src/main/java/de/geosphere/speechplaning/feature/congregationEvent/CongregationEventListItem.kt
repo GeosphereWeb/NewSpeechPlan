@@ -1,4 +1,5 @@
 @file:Suppress("TooManyFunctions")
+
 package de.geosphere.speechplaning.feature.congregationEvent
 
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.core.model.data.Event
+import de.geosphere.speechplaning.core.ui.provider.AppEventIconProvider
 import de.geosphere.speechplaning.core.ui.provider.AppEventStringProvider
 import de.geosphere.speechplaning.data.util.isInCurrentWeek
 import de.geosphere.speechplaning.theme.R
@@ -50,7 +52,8 @@ fun CongregationEventListItem(
     congregationEvent: CongregationEvent,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)?,
-    stringProvider: AppEventStringProvider
+    stringProvider: AppEventStringProvider,
+    iconProvider: AppEventIconProvider
 ) {
     val formatter = remember { DateTimeFormatter.ofPattern("dd. MMM yy") }
     val formatter2 = remember { DateTimeFormatter.ofPattern("EEEE") }
@@ -66,7 +69,7 @@ fun CongregationEventListItem(
                 onLongClick = onLongClick
             )
     ) {
-        EventBadge(congregationEvent, stringProvider)
+        EventBadge(congregationEvent, stringProvider, iconProvider)
         Row(verticalAlignment = Alignment.CenterVertically) {
             SpeechNumberText(congregationEvent)
             SpeechAndSpeakerInfo(congregationEvent)
@@ -76,15 +79,33 @@ fun CongregationEventListItem(
 }
 
 @Composable
-private fun EventBadge(congregationEvent: CongregationEvent, stringProvider: AppEventStringProvider) {
+private fun EventBadge(
+    congregationEvent: CongregationEvent,
+    stringProvider: AppEventStringProvider,
+    iconProvider: AppEventIconProvider
+) {
     if (congregationEvent.eventType != Event.CONGREGATION) {
         val (containerColor, contentColor) = getBadgeColors(congregationEvent.eventType)
+        val iconresource = iconProvider.getIconForEvent(congregationEvent.eventType)
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Badge(
                 containerColor = containerColor,
-                contentColor = contentColor
-            ) {
-                Text(text = stringProvider.getStringForEvent(congregationEvent.eventType))
+                contentColor = contentColor) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 10.dp)
+                ) {
+                    if(iconresource != -1) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(id = iconresource),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Text(text = stringProvider.getStringForEvent(congregationEvent.eventType))
+                }
+
             }
         }
     }
@@ -286,7 +307,8 @@ fun CongregationEventListItemPreview() = SpeechPlaningTheme {
         congregationEvent = mockEvent,
         onClick = {},
         onLongClick = null,
-        stringProvider = AppEventStringProvider(LocalContext.current)
+        stringProvider = AppEventStringProvider(LocalContext.current),
+        iconProvider = AppEventIconProvider(LocalContext.current),
     )
 }
 
@@ -307,6 +329,7 @@ fun CongregationEventListItem2Preview() = SpeechPlaningTheme {
         congregationEvent = mockEvent,
         onClick = {},
         onLongClick = null,
-        stringProvider = AppEventStringProvider(LocalContext.current)
+        stringProvider = AppEventStringProvider(LocalContext.current),
+        iconProvider = AppEventIconProvider(LocalContext.current),
     )
 }

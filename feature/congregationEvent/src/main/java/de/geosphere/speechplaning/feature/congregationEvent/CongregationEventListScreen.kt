@@ -36,6 +36,7 @@ import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.core.model.Speaker
 import de.geosphere.speechplaning.core.model.Speech
 import de.geosphere.speechplaning.core.model.data.Event
+import de.geosphere.speechplaning.core.ui.provider.AppEventIconProvider
 import de.geosphere.speechplaning.core.ui.provider.AppEventStringProvider
 import de.geosphere.speechplaning.theme.R
 import de.geosphere.speechplaning.theme.SpeechPlaningTheme
@@ -46,18 +47,20 @@ import org.koin.compose.koinInject
 @Composable
 fun CongregationEventListScreen(
     viewModel: CongregationEventViewModel = koinViewModel(),
-    stringProvider: AppEventStringProvider = koinInject()
+    stringProvider: AppEventStringProvider = koinInject(),
+    iconProvider: AppEventIconProvider = koinInject()
 ) {
     val uiState by viewModel.filteredUiState.collectAsState()
 
-    RenderCongregationEventUiState(uiState, viewModel, stringProvider)
+    RenderCongregationEventUiState(uiState, viewModel, stringProvider, iconProvider)
 }
 
 @Composable
 private fun RenderCongregationEventUiState(
     uiState: CongregationEventUiState,
     viewModel: CongregationEventViewModel,
-    stringProvider: AppEventStringProvider
+    stringProvider: AppEventStringProvider,
+    iconProvider: AppEventIconProvider
 ) {
     when (uiState) {
         is CongregationEventUiState.LoadingUiState -> {
@@ -72,6 +75,7 @@ private fun RenderCongregationEventUiState(
             CongregationEventSuccessContent(
                 state = uiState,
                 stringProvider = stringProvider,
+                iconProvider = iconProvider,
                 onNavigateToDetails = { viewModel.selectCongregationEvent(it) },
                 onEventSelect = { navController, event ->
                     navController.navigate("details/${event.id}")
@@ -130,6 +134,7 @@ fun CongregationEventErrorContent(message: String) {
 fun CongregationEventSuccessContent(
     state: CongregationEventUiState.SuccessUiState,
     stringProvider: AppEventStringProvider,
+    iconProvider: AppEventIconProvider,
     onNavigateToDetails: (CongregationEvent?) -> Unit,
     onEventSelect: (NavController, CongregationEvent) -> Unit,
     onEditEvent: (NavController, CongregationEvent?) -> Unit,
@@ -161,6 +166,7 @@ fun CongregationEventSuccessContent(
                         congregationEvents = state.congregationEvents,
                         onSelectCongregationEvent = { onEventSelect(navController, it) },
                         stringProvider = stringProvider,
+                        iconProvider = iconProvider,
                         isWhatsAppInstalled = state.isWhatsAppInstalled,
                         onToggleShowPlanedItems = { { showUnplannedOnly = !showUnplannedOnly } },
                         selectedShowPlanedItems = showUnplannedOnly,
@@ -304,6 +310,7 @@ fun CongregationEventSuccessListPreview() = SpeechPlaningTheme {
                 congregationEvents = mockState.congregationEvents,
                 onSelectCongregationEvent = {},
                 stringProvider = AppEventStringProvider(context = LocalContext.current),
+                iconProvider = AppEventIconProvider(context = LocalContext.current),
                 isWhatsAppInstalled = true,
                 onToggleShowPlanedItems = { { showUnplannedOnly = !showUnplannedOnly } },
                 selectedShowPlanedItems = showUnplannedOnly,
