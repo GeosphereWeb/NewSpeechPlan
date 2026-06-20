@@ -38,7 +38,7 @@ data class BottomNavigationItem(
             ),
             BottomNavigationItem(
                 label = R.string.congregation_lb,
-                selectedIcon = R.drawable.assembly_hall,
+                selectedIcon = R.drawable.assembly_hall__fill,
                 unselectedIcon = R.drawable.assembly_hall,
                 hasNews = false,
                 route = Screen.CongregationRoute,
