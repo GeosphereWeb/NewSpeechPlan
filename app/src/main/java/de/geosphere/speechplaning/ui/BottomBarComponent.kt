@@ -1,5 +1,6 @@
 package de.geosphere.speechplaning.ui
 
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
@@ -11,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -63,7 +65,8 @@ fun BottomBarComponent(
                         val iconData = if (isSelected) navItem.selectedIcon else navItem.unselectedIcon
                         Icon(
                             painter = painterResource(id = iconData),
-                            contentDescription = stringResource(navItem.label)
+                            contentDescription = stringResource(navItem.label),
+                            modifier = Modifier.size(26.dp)
                         )
                     }
                 }

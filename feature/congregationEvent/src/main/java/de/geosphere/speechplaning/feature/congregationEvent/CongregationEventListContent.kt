@@ -48,6 +48,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import de.geosphere.speechplaning.core.model.CongregationEvent
 import de.geosphere.speechplaning.core.model.data.Event
+import de.geosphere.speechplaning.core.ui.provider.AppEventIconProvider
 import de.geosphere.speechplaning.core.ui.provider.AppEventStringProvider
 import de.geosphere.speechplaning.data.util.isInCurrentWeek
 import de.geosphere.speechplaning.theme.R
@@ -65,6 +66,7 @@ fun CongregationEventListContent(
     congregationEvents: List<CongregationEvent>,
     onSelectCongregationEvent: (CongregationEvent) -> Unit,
     stringProvider: AppEventStringProvider,
+    iconProvider: AppEventIconProvider,
     isWhatsAppInstalled: Boolean,
     onToggleShowPlanedItems: () -> () -> Unit,
     selectedShowPlanedItems: Boolean
@@ -80,7 +82,7 @@ fun CongregationEventListContent(
             congregationEvents.filter {
                 val isUnplanned = it.speechSubject.isNullOrBlank() || it.speakerName.isNullOrBlank()
                 val isFromThisWeekOrFuture = it.date?.let { date -> !date.isBefore(startOfCurrentWeek) } ?: false
-                
+
                 isUnplanned && isFromThisWeekOrFuture
             }
         } else {
@@ -137,6 +139,7 @@ fun CongregationEventListContent(
             { yearHeaderHeightPx = it },
             context,
             stringProvider,
+            iconProvider,
             isWhatsAppInstalled,
             onSelectCongregationEvent,
             listState
@@ -188,6 +191,7 @@ private fun EventsList(
     onYearHeaderHeightChanged: (Int) -> Unit,
     context: Context,
     stringProvider: AppEventStringProvider,
+    iconProvider: AppEventIconProvider,
     isWhatsAppInstalled: Boolean,
     onSelectCongregationEvent: (CongregationEvent) -> Unit,
     listState: LazyListState
@@ -205,7 +209,14 @@ private fun EventsList(
                     MonthHeader(month = month, year = year, modifier = Modifier)
                 }
                 items(eventsInMonth, key = { it.id.ifBlank { it.hashCode() } }) { event ->
-                    EventRow(event, context, stringProvider, isWhatsAppInstalled, onSelectCongregationEvent)
+                    EventRow(
+                        event,
+                        context,
+                        stringProvider,
+                        iconProvider,
+                        isWhatsAppInstalled,
+                        onSelectCongregationEvent
+                    )
                 }
             }
         }
@@ -217,6 +228,7 @@ private fun EventRow(
     event: CongregationEvent,
     context: Context,
     stringProvider: AppEventStringProvider,
+    iconProvider: AppEventIconProvider,
     isWhatsAppInstalled: Boolean,
     onSelectCongregationEvent: (CongregationEvent) -> Unit
 ) {
@@ -232,7 +244,8 @@ private fun EventRow(
             congregationEvent = event,
             onClick = { onSelectCongregationEvent(event) },
             onLongClick = null,
-            stringProvider = stringProvider
+            stringProvider = stringProvider,
+            iconProvider = iconProvider
         )
     }
     HorizontalDivider()
@@ -406,6 +419,7 @@ fun CongregationEventListContentPreview() = SpeechPlaningTheme {
         congregationEvents = mockEvents,
         onSelectCongregationEvent = { },
         stringProvider = AppEventStringProvider(context = LocalContext.current),
+        iconProvider = AppEventIconProvider(context = LocalContext.current),
         isWhatsAppInstalled = true,
         onToggleShowPlanedItems = { {} },
         selectedShowPlanedItems = true
