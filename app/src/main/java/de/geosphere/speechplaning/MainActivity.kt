@@ -80,4 +80,3 @@ private fun WindowInsetsControllerCompat.hidestSystemBars() {
     hide(WindowInsetsCompat.Type.navigationBars())
     systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 }
-
